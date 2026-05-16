@@ -1,0 +1,87 @@
+<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/contato.html -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Contato</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Nossos Contatos</h2>
+    <div id="contatos-content">Carregando...</div>
+  </section>
+
+  <script>
+    // ====================================================================
+    // ✅ CORREÇÃO 1: Hostname dinâmico
+    // ✅ CORREÇÃO 2: Validar resposta com res.ok
+    // ✅ CORREÇÃO 3: Usar textContent para segurança (evitar XSS)
+    // ✅ CORREÇÃO 4: Melhor tratamento de erro
+    // ====================================================================
+
+    const API_HOST = window.location.hostname;
+    const API_PORT = 3000;
+
+    fetch(`http://${API_HOST}:${API_PORT}/api/contato`)
+      .then(res => {
+        // ✅ Validar resposta
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        const container = document.getElementById('contatos-content');
+        
+        if (Array.isArray(data) && data.length > 0) {
+          container.innerHTML = '';
+          
+          data.forEach(contato => {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+
+            // ✅ Criar elementos ao invés de usar innerHTML
+            const nome = document.createElement('h3');
+            nome.textContent = contato.nome || 'Sem nome';
+
+            const email = document.createElement('p');
+            email.textContent = contato.email || 'Sem e-mail';
+
+            card.appendChild(nome);
+            card.appendChild(email);
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = "<p>Nenhum contato cadastrado.</p>";
+        }
+      })
+      .catch((error) => {
+        console.error("❌ Erro ao carregar contatos:", error);
+        document.getElementById('contatos-content').innerHTML = 
+          "<p>Não foi possível carregar os contatos. Tente novamente mais tarde.</p>";
+      });
+  </script>
+
+  <footer></footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

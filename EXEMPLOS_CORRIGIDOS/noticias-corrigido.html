@@ -1,0 +1,104 @@
+<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/noticias.html -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Notícias</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <style>
+    .noticia-imagem { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
+      
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <section class="section">
+    <h2>Notícias da Escola</h2>
+    <div id="noticias-content">Carregando...</div>
+  </section>
+
+  <script>
+    // ====================================================================
+    // ✅ CORREÇÃO: Arquivo noticias.html estava SEM FETCH!
+    // Agora ele carrega as notícias dinamicamente
+    // ====================================================================
+    
+    const API_HOST = window.location.hostname;
+    const API_PORT = 3000;
+
+    fetch(`http://${API_HOST}:${API_PORT}/api/noticias`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        const container = document.getElementById('noticias-content');
+        
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = "<p>Nenhuma notícia registada.</p>";
+          return;
+        }
+
+        // Ordena as notícias da mais recente para a mais antiga
+        data.sort((a, b) => {
+          const dateA = a.data ? new Date(a.data.seconds ? a.data.seconds * 1000 : a.data) : new Date(0);
+          const dateB = b.data ? new Date(b.data.seconds ? b.data.seconds * 1000 : b.data) : new Date(0);
+          return dateB - dateA;
+        });
+
+        container.innerHTML = '';
+        
+        data.forEach(noticia => {
+          const card = document.createElement('div');
+          card.className = 'noticia-card';
+
+          let imagemHTML = '';
+          if (noticia.imagem) {
+            try {
+              const imgUrl = new URL(noticia.imagem);
+              imgUrl.hostname = API_HOST;
+              imagemHTML = `<img src="${imgUrl.href}" alt="${noticia.titulo}" class="noticia-imagem">`;
+            } catch (e) {
+              console.error('URL de imagem inválida:', noticia.imagem);
+            }
+          }
+
+          const titulo = document.createElement('h3');
+          titulo.textContent = noticia.titulo;
+
+          const conteudo = document.createElement('p');
+          conteudo.textContent = noticia.conteudo;
+
+          card.innerHTML = imagemHTML;
+          card.appendChild(titulo);
+          card.appendChild(conteudo);
+
+          container.appendChild(card);
+        });
+      })
+      .catch((error) => {
+        console.error("❌ Erro ao carregar notícias:", error);
+        document.getElementById('noticias-content').innerHTML = 
+          `<p style="color: red;">Erro ao carregar notícias: ${error.message}</p>`;
+      });
+  </script>
+</body>
+</html>

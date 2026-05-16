@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel Administrativo - GETECO</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body class="dashboard-body">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
+        <h2>GETECO Admin</h2>
+    </div>
+    
+    <div class="sidebar-menu">
+        <h3>Aprovações Pendentes</h3>
+        <div id="pending-admins-container">
+            <div id="pending-admins-list"><p>A carregar...</p></div>
+        </div>
+    </div>
+
+    <a href="/logout" class="logout-btn">
+        <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg"><path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
+        Sair
+    </a>
+  </aside>
+
+  <main class="main-content">
+    <header><h1>Painel de Gestão</h1></header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
+      <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
+      <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
+      <button class="tab-btn" data-tab="logs">Logs</button>
+    </div>
+
+    <div id="cadastrar" class="tab-pane active">
+      <div class="grid-forms">
+          <div class="form-container" data-section="novidades">
+              <h3>Nova Notícia/Novidade</h3>
+              <form>
+                  <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                  <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                  <button type="submit" class="btn-submit">Salvar Novidade</button>
+              </form>
+          </div>
+
+          <div class="form-container" data-section="cargos">
+              <h3>Novo Cargo/Função</h3>
+              <form>
+                  <div class="input-group"><label>Nome do Cargo</label><input type="text" name="cargo" placeholder="Ex: Professor, Diretor" required></div>
+                  <div class="input-group"><label>Nível Hierárquico</label><input type="number" name="nivel" placeholder="1 = Mais alto" required></div>
+                  <button type="submit" class="btn-submit">Salvar Cargo</button>
+              </form>
+          </div>
+
+     <div class="form-container" data-section="docente">
+    <h3>Novo Docente</h3>
+    <form>
+        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+        <div class="input-group"><label>Cargo/Função</label><input type="text" name="cargo" placeholder="Ex: Professor de Matemática"></div>
+        <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
+
+        <div class="input-group">
+            <label>Foto</label>
+            <input type="file" name="foto" accept="image/*">
+        </div>
+
+        <button type="submit" class="btn-submit">Salvar Docente</button>
+    </form>
+</div>
+          <div class="form-container" data-section="cursos">
+              <h3>Novo Curso</h3>
+              <form>
+                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                  <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
+                  <button type="submit" class="btn-submit">Salvar Curso</button>
+              </form>
+          </div>
+
+          <div class="form-container" data-section="contato">
+              <h3>Novo Contacto</h3>
+              <form>
+                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                  <div class="input-group"><label>Email</label><input type="email" name="email" required></div>
+                  <button type="submit" class="btn-submit">Salvar Contacto</button>
+              </form>
+          </div>
+      </div>
+    </div>
+
+    <div id="informacoes" class="tab-pane">
+        <div class="grid-forms">
+            <div class="form-container" data-section="alunos">
+                <h3>Informações para Alunos</h3>
+                <form>
+                    <div class="input-group"><label>Semana de Provas</label><input type="text" name="semanaProvas"></div>
+                    <div class="input-group"><label>Gincana</label><input type="text" name="gincana"></div>
+                    <div class="input-group"><label>Feira de Ciências</label><input type="text" name="feiraCiencias"></div>
+                    <div class="input-group"><label>Semana Cultural</label><input type="text" name="semanaCultural"></div>
+                    <div class="input-group"><label>Férias</label><input type="text" name="ferias"></div>
+                    <button type="submit" class="btn-submit">Atualizar Alunos</button>
+                </form>
+            </div>
+            <div class="form-container" data-section="responsaveis">
+                <h3>Informações para Responsáveis</h3>
+                <form>
+                    <div class="input-group"><label>Reunião de Pais</label><input type="text" name="reuniaoPais"></div>
+                    <div class="input-group"><label>Entrega de Boletins</label><input type="text" name="entregaBoletins"></div>
+                    <button type="submit" class="btn-submit">Atualizar Responsáveis</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="gerenciar" class="tab-pane"></div>
+
+    <div id="logs" class="tab-pane">
+        <div class="list-container">
+            <h3>Histórico de Atividades Recentes</h3>
+            <ul id="logs-list" class="item-list"></ul>
+        </div>
+    </div>
+  </main>
+
+  <div id="delete-modal" class="modal-overlay">
+      <div class="modal-content">
+          <h2>Confirmar Exclusão</h2>
+          <p>Tem a certeza? Esta ação não pode ser desfeita.</p>
+          <div class="modal-buttons">
+              <button id="btn-confirm-delete" class="btn-confirm">Sim, Excluir</button>
+              <button id="btn-cancel-delete" class="btn-cancel">Cancelar</button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panes = document.querySelectorAll('.tab-pane');
+      const deleteModal = document.getElementById('delete-modal');
+      const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+      const btnCancelDelete = document.getElementById('btn-cancel-delete');
+      let itemToDelete = null;
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          panes.forEach(p => p.classList.remove('active'));
+          tab.classList.add('active');
+          const targetPane = document.getElementById(tab.dataset.tab);
+          targetPane.classList.add('active');
+          if (tab.dataset.tab === 'gerenciar') loadManagementContent();
+          if (tab.dataset.tab === 'logs') loadLogsContent();
+        });
+      });
+
+      async function apiRequest(endpoint, method = 'GET', body = null) {
+          const options = { method, headers: {} };
+          if (body) {
+              if (body instanceof FormData) {
+                  options.body = body;
+              } else {
+                  options.headers['Content-Type'] = 'application/json';
+                  options.body = JSON.stringify(body);
+              }
+          }
+          const response = await fetch(`/api/${endpoint}`, options);
+          if (!response.ok) throw new Error(await response.text());
+          return response.json();
+      }
+      
+      async function loadManagementContent() {
+          const container = document.getElementById('gerenciar');
+          container.innerHTML = '<div class="loader">A carregar...</div>';
+          
+          const collections = [
+              { name: 'novidades', title: 'Notícias e Novidades' },
+              { name: 'cursos', title: 'Cursos' },
+              { name: 'docente', title: 'Corpo Docente' },
+              { name: 'cargos', title: 'Cargos e Funções' }, // Nova coleção
+              { name: 'contato', title: 'Contactos' }
+          ];
+          
+          let finalHTML = '<div class="grid-lists">';
+          for (const collection of collections) {
+              finalHTML += `<div class="list-container"><h3>${collection.title}</h3><ul class="item-list" data-collection="${collection.name}">`;
+              try {
+                  const items = await apiRequest(collection.name);
+                  if (items.length > 0) {
+                      items.forEach(item => {
+                          const display = item.titulo || item.nome || item.cargo;
+                          const subDisplay = item.materia || item.nivel ? ` <small>(${item.materia || 'Nível ' + item.nivel})</small>` : '';
+                          finalHTML += `<li data-id="${item.id}">
+                                          <span>${display}${subDisplay}</span>
+                                          <button class="btn-delete" data-id="${item.id}" data-collection="${collection.name}">Excluir</button>
+                                        </li>`;
+                      });
+                  } else { finalHTML += `<li class="empty">Nenhum item encontrado.</li>`; }
+              } catch (e) {
+                  finalHTML += `<li class="error">Erro ao carregar.</li>`;
+              }
+              finalHTML += `</ul></div>`;
+          }
+          finalHTML += '</div>';
+          container.innerHTML = finalHTML;
+      }
+      
+      async function loadLogsContent() {
+        const list = document.getElementById('logs-list');
+        list.innerHTML = '<li>A carregar logs...</li>';
+        try {
+            const logs = await apiRequest('logs');
+            if (logs.length > 0) {
+                list.innerHTML = logs.map(log => {
+                    const date = new Date(log.timestamp).toLocaleString('pt-BR');
+                    return `<li>
+                                <div class="log-info">
+                                    <strong>${log.adminEmail}</strong> <span class="log-action">${log.action}</span> em <em>${log.collection}</em>
+                                    <br><small class="log-details">"${log.details || 'Sem detalhes'}"</small>
+                                </div>
+                                <span class="log-date">${date}</span>
+                            </li>`;
+                }).join('');
+            } else {
+                list.innerHTML = '<li>Nenhum registo de atividade encontrado.</li>';
+            }
+        } catch (error) {
+            list.innerHTML = '<li>Erro ao carregar os logs.</li>';
+        }
+      }
+
+      document.getElementById('gerenciar').addEventListener('click', (e) => {
+          if (e.target.classList.contains('btn-delete')) {
+              const { id, collection } = e.target.dataset;
+              itemToDelete = { id, collection, element: e.target.closest('li') };
+              deleteModal.classList.add('active');
+          }
+      });
+      
+      btnCancelDelete.addEventListener('click', () => {
+          deleteModal.classList.remove('active');
+          itemToDelete = null;
+      });
+      
+      btnConfirmDelete.addEventListener('click', async () => {
+          if (!itemToDelete) return;
+          try {
+              await apiRequest(`${itemToDelete.collection}/${itemToDelete.id}`, 'DELETE');
+              itemToDelete.element.remove();
+          } catch (error) { alert('Erro ao excluir.'); }
+          finally {
+              deleteModal.classList.remove('active');
+              itemToDelete = null;
+          }
+      });
+
+      async function loadPendingAdmins() {
+        try {
+          const admins = await apiRequest('pendentes');
+          document.getElementById('pending-admins-list').innerHTML = admins.length === 0 ? '<p style="text-align: center; color: #ccc; font-size: 0.9rem;">Nenhum registo pendente.</p>' :
+            admins.map(admin => `<div class="pending-admin"><p><strong>${admin.username}</strong></p><div class="admin-actions"><button class="btn-approve" data-uid="${admin.uid}">✓</button><button class="btn-deny" data-uid="${admin.uid}">✗</button></div></div>`).join('');
+        } catch (error) { console.error('Erro ao carregar admins pendentes:', error); }
+      }
+
+      document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
+        const uid = e.target.dataset.uid;
+        if (!uid) return;
+        const action = e.target.classList.contains('btn-approve') ? 'aceitar' : (e.target.classList.contains('btn-deny') ? 'negar' : null);
+        if (!action) return;
+        try {
+            await apiRequest(`pendentes/${action}`, 'POST', { uid });
+            loadPendingAdmins();
+        } catch (error) { alert(`Não foi possível ${action} o administrador.`); }
+      });
+
+      // Handler para todos os formulários
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const container = form.closest('.form-container');
+          if(!container) return; 
+          
+          const section = container.dataset.section;
+          const body = new FormData(form);
+          try {
+            await apiRequest(section, 'POST', body);
+            alert('Dados salvos com sucesso!');
+            // Não limpa o form se for Alunos/Responsáveis para manter os dados visíveis
+            if (section !== 'alunos' && section !== 'responsaveis') {
+                form.reset();
+            }
+          } catch (error) {
+            alert('Erro ao salvar.');
+          }
+        });
+      });
+
+      // Carrega dados iniciais para os formulários de informações
+      async function loadInitialData(section) {
+          try {
+              const data = await apiRequest(section);
+              const form = document.querySelector(`.form-container[data-section="${section}"] form`);
+              if (form && data) {
+                  Object.keys(data).forEach(key => {
+                      if(form.elements[key]) form.elements[key].value = data[key];
+                  });
+              }
+          } catch(e) {}
+      }
+      loadInitialData('alunos');
+      loadInitialData('responsaveis');
+      loadPendingAdmins();
+    });
+  </script>
+</body>
+</html>

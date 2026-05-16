@@ -1,0 +1,163 @@
+<!-- ✅ ARQUIVO CORRIGIDO PARA: testeRegistro/views/login.html -->
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Painel Administrativo GETECO</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="/images/logo.png" alt="Logo GETECO" class="login-logo">
+            <h2>Acesso Restrito</h2>
+            <div id="errorMessage" style="color: red; display: none; margin-bottom: 1rem;"></div>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Utilizador (E-mail):</label>
+                    <input type="email" id="username" name="username" required autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-submit">Entrar</button>
+            </form>
+
+            <div class="login-footer">
+                <p>Não tem uma conta? <a href="/register">Registe-se aqui</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    
+    <script>
+        // ====================================================================
+        // ✅ CORREÇÃO 1: Carregar config do Firebase de um arquivo externo
+        // NÃO coloque as credenciais diretamente no HTML!
+        // ====================================================================
+        
+        // Opção 1: Carregar do servidor (RECOMENDADO)
+        fetch('/firebase-config.json')
+          .then(res => res.json())
+          .then(firebaseConfig => {
+            initializeLoginForm(firebaseConfig);
+          })
+          .catch(err => {
+            console.error('Erro ao carregar configuração Firebase:', err);
+            showError('Erro ao carregar configuração do sistema.');
+          });
+
+        function initializeLoginForm(firebaseConfig) {
+          // ✅ CORREÇÃO 2: Inicializar Firebase com config carregada
+          firebase.initializeApp(firebaseConfig);
+
+          const loginForm = document.getElementById('loginForm');
+          const errorMessage = document.getElementById('errorMessage');
+
+          // ✅ CORREÇÃO 3: Usar addEventListener ao invés de inline event handlers
+          loginForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const email = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            // ✅ CORREÇÃO 4: Validar inputs no cliente
+            if (!email || !password) {
+              showError('Por favor, preencha todos os campos.');
+              return;
+            }
+
+            let idToken = null;
+
+            try {
+              // Desabilitar botão enquanto processa
+              const btn = loginForm.querySelector('button');
+              btn.disabled = true;
+              btn.textContent = 'A processar...';
+
+              // 1. Tenta fazer login no Firebase
+              const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+              idToken = await userCredential.user.getIdToken(true);
+
+              // 2. Verifica com o nosso servidor se o utilizador é um admin
+              const adminCheckResponse = await fetch('/checkAdmin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+              });
+
+              if (!adminCheckResponse.ok) {
+                const errorData = await adminCheckResponse.json().catch(() => ({}));
+                throw new Error(errorData.error || 'A sua conta ainda não foi aprovada.');
+              }
+
+              const adminCheckData = await adminCheckResponse.json();
+              
+              if (!adminCheckData.isAdmin) {
+                throw new Error('A sua conta não tem permissões de administrador.');
+              }
+
+              // 3. Se for admin, cria a sessão no servidor
+              const sessionResponse = await fetch('/sessionLogin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+              });
+
+              if (!sessionResponse.ok) {
+                throw new Error('Falha ao criar a sessão no servidor.');
+              }
+
+              // 4. Redireciona para o dashboard
+              window.location.assign('/dashboard');
+
+            } catch (error) {
+              console.error('❌ Erro de login:', error);
+              
+              // ✅ CORREÇÃO 5: Mensagens de erro mais específicas
+              let mensagem = "Erro ao fazer login. Tente novamente.";
+              
+              if (error.code === 'auth/user-not-found') {
+                mensagem = "Utilizador não encontrado.";
+              } else if (error.code === 'auth/wrong-password') {
+                mensagem = "Senha incorreta.";
+              } else if (error.code === 'auth/invalid-email') {
+                mensagem = "E-mail inválido.";
+              } else if (error.code === 'auth/too-many-requests') {
+                mensagem = "Muitas tentativas de login. Tente mais tarde.";
+              } else if (error.message) {
+                mensagem = error.message;
+              }
+              
+              showError(mensagem);
+              
+              // Limpar token
+              await firebase.auth().signOut().catch(() => {});
+              
+              // Reabilitar botão
+              const btn = loginForm.querySelector('button');
+              btn.disabled = false;
+              btn.textContent = 'Entrar';
+            }
+          });
+        }
+
+        function showError(message) {
+          const errorDiv = document.getElementById('errorMessage');
+          errorDiv.textContent = message;
+          errorDiv.style.display = 'block';
+          
+          // Limpar erro após 5 segundos
+          setTimeout(() => {
+            errorDiv.style.display = 'none';
+          }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+﻿<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/responsaveis.html -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Responsáveis</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis" class="active">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Informações para Responsáveis</h2>
+    <p style="text-align: center; max-width: 700px; margin: 0 auto 2rem auto;">
+        Acompanhe aqui as datas de reuniões e entregas de documentos importantes.
+    </p>
+    <div id="responsaveis-content">
+        <div class="loader" style="text-align:center;">Carregando informações...</div>
+    </div>
+  </section>
+
+  <footer></footer>
+
+  <script>
+    // ====================================================================
+    // ✅ CORREÇÃO 1: Hostname dinâmico
+    // ✅ CORREÇÃO 2: Validar resposta com res.ok
+    // ✅ CORREÇÃO 3: Criar elementos ao invés de usar innerHTML
+    // ✅ CORREÇÃO 4: Melhor tratamento de erro
+    // ====================================================================
+
+    const API_HOST = window.location.hostname;
+    const API_PORT = 3000;
+
+    fetch(`http://${API_HOST}:${API_PORT}/api/responsaveis`)
+      .then(res => {
+        // ✅ Validar resposta
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        const container = document.getElementById('responsaveis-content');
+        
+        if (data && Object.keys(data).length > 0) {
+          // ✅ Criar elementos ao invés de usar innerHTML
+          const grid = document.createElement('div');
+          grid.className = 'info-grid';
+
+          const campos = [
+            { key: 'reuniaoPais', titulo: 'Reunião de Pais' },
+            { key: 'entregaBoletins', titulo: 'Entrega de Boletins' }
+          ];
+
+          campos.forEach(campo => {
+            const box = document.createElement('div');
+            box.className = 'info-box';
+
+            const titulo = document.createElement('span');
+            titulo.className = 'info-title';
+            titulo.textContent = campo.titulo;
+
+            const valor = document.createElement('span');
+            valor.className = 'info-value';
+            valor.textContent = data[campo.key] || 'A definir';
+
+            box.appendChild(titulo);
+            box.appendChild(valor);
+            grid.appendChild(box);
+          });
+
+          container.innerHTML = '';
+          container.appendChild(grid);
+        } else {
+          container.innerHTML = "<p style='text-align:center;'>Nenhuma informação registada para os responsáveis.</p>";
+        }
+      })
+      .catch((error) => {
+        console.error("❌ Erro ao carregar informações:", error);
+        document.getElementById('responsaveis-content').innerHTML = 
+          "<p style='text-align:center; color: red;'>Não foi possível carregar as informações.</p>";
+      });
+  </script>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

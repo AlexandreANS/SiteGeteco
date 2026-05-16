@@ -1,0 +1,9 @@
+﻿node_modules/
+backup_code_*/
+*.bak
+.vscode/
+firebase-service-account.json
+*.env
+.env
+testeRegistro/public/uploads/
+ProjetoGetecoTeste/public/uploads/

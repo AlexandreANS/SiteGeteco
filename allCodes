@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Home</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h1>Bem-vindo à Escola Exemplar</h1>
+    <p>Educação de qualidade para o futuro dos seus filhos.</p>
+    <a href="contato.html" class="btn-primary">Entre em contato</a>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Sobre</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div id="sobre-container">
+    <h2>Sobre a Escola</h2>
+    <p id="sobre-content">Carregando...</p>
+  </div>
+  <script>
+    fetch('http://localhost:3000/api/sobre')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('sobre-content').textContent = data.sobreText;
+      });
+  </script>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Cursos</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Cursos e Séries Oferecidas</h2>
+    <p><strong>Ensino Fundamental I:</strong> 1º ao 5º ano - Formação básica.</p>
+    <p><strong>Ensino Fundamental II:</strong> 6º ao 9º ano - Ampliação do conhecimento.</p>
+    <p><strong>Ensino Médio:</strong> 1º ao 3º ano - Preparação para vestibular.</p>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO- Corpo Docente</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Corpo Docente</h2>
+    <p>Ana Silva - Coordenadora Pedagógica</p>
+    <p>Carlos Souza - Professor de Matemática</p>
+    <p>Marina Costa - Professora de Português</p>
+    <p>João Lima - Professor de Ciências</p>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO- Corpo Docente</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Corpo Docente</h2>
+    <p>Ana Silva - Coordenadora Pedagógica</p>
+    <p>Carlos Souza - Professor de Matemática</p>
+    <p>Marina Costa - Professora de Português</p>
+    <p>João Lima - Professor de Ciências</p>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Notícias</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Notícias da Escola</h2>
+    <p><strong>Feira de Ciências:</strong> 15 de julho de 2024.</p>
+    <p><strong>Semana Cultural:</strong> 1 a 5 de agosto de 2024.</p>
+    <p><strong>Novas Matrículas:</strong> Abertas para 2025.</p>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Contato</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Contato</h2>
+    <p><strong>Endereço:</strong> Rua das Flores, 123 - Centro</p>
+    <p><strong>Telefone:</strong> (11) 1234-5678</p>
+    <p><strong>E-mail:</strong> contato@escolaexemplar.com.br</p>
+    <p><strong>Horário:</strong> Seg a Sex, 8h às 18h</p>
+  </section>
+
+  <footer>
+    <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alunos - GETECO</title>
+  <link rel="stylesheet" href="projetoGetecoTeste/css/style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="index.html" class="logo">GETECO</a>
+      <ul class="nav-links">
+        <li><a href="/index">Home</a></li>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Corpo Docente</a></li>
+        <li><a href="/noticias">Notícias</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container section">
+    <h2>Informações para Alunos</h2>
+    <p><strong>Semana de Provas:</strong> <span id="semana-provas"></span></p>
+    <p><strong>Eventos Esportivos:</strong> <span id="gincana"></span></p>
+    <p><strong>Feira de Ciências:</strong> <span id="feira"></span></p>
+    <p><strong>Semana Cultural:</strong> <span id="cultural"></span></p>
+    <p><strong>Férias Escolares:</strong> <span id="ferias"></span></p>
+  </main>
+
+  <footer>
+    <div class="container footer-container">
+      <p>© 2024 Escola Exemplar. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script>
+    fetch("/api/config")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("semana-provas").textContent = data.semanaProvas;
+        document.getElementById("gincana").textContent = data.eventos.gincana;
+        document.getElementById("feira").textContent = data.eventos.feiraCiencias;
+        document.getElementById("cultural").textContent = data.eventos.semanaCultural;
+        document.getElementById("ferias").textContent = data.eventos.ferias;
+      })
+      .catch(err => console.error("Erro ao carregar config:", err));
+  </script>
+</body>
+</html>

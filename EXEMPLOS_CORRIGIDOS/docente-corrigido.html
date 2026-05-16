@@ -1,0 +1,163 @@
+<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/docente.html -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Corpo Docente</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/" class="logo"><img src="/images/logo.png" alt="GETECO" class="site-logo"></a>
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente" class="active">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Corpo Docente e Diretivo</h2>
+    
+    <div id="arvore-docentes" class="organograma">
+        <p>Carregando organograma...</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 EMEP Dr. Antenor Gonçalves Pereira. Todos os direitos reservados.</p>
+  </footer>
+
+  <script>
+    // ====================================================================
+    // ✅ CORREÇÃO 1: Usar hostname dinâmico
+    // ✅ CORREÇÃO 2: Validar resposta com res.ok
+    // ✅ CORREÇÃO 3: Usar textContent para dados dinâmicos
+    // ✅ CORREÇÃO 4: Melhor tratamento de erro
+    // ====================================================================
+
+    const API_HOST = window.location.hostname;
+    const API_PORT = 3000;
+    const API_URL = `http://${API_HOST}:${API_PORT}/api`;
+
+    async function montarArvore() {
+        const container = document.getElementById('arvore-docentes');
+        
+        try {
+            // Buscar dados de ambos endpoints
+            const resDocentes = await fetch(`${API_URL}/docente`);
+            const resCargos = await fetch(`${API_URL}/cargos`);
+
+            // ✅ Validar respostas
+            if (!resDocentes.ok || !resCargos.ok) {
+                throw new Error('Erro ao carregar dados do servidor');
+            }
+
+            const docentes = await resDocentes.json();
+            const cargos = await resCargos.json();
+
+            if (!docentes || !Array.isArray(docentes) || docentes.length === 0) {
+                container.innerHTML = "<p>Nenhum docente cadastrado.</p>";
+                return;
+            }
+
+            // Mapear cargos e seus níveis
+            const mapaNiveis = {};
+            if (Array.isArray(cargos)) {
+                cargos.forEach(c => {
+                    if (c.cargo && c.nivel) {
+                        mapaNiveis[c.cargo.toLowerCase().trim()] = parseInt(c.nivel);
+                    }
+                });
+            }
+
+            // Função para descobrir nível
+            const descobrirNivel = (cargoDocente) => {
+                if (!cargoDocente) return 999;
+                const cargoLimpo = cargoDocente.toLowerCase().trim();
+                
+                if (mapaNiveis[cargoLimpo]) return mapaNiveis[cargoLimpo];
+                
+                for (let cargoChave in mapaNiveis) {
+                    if (cargoLimpo.includes(cargoChave)) return mapaNiveis[cargoChave];
+                }
+                return 999;
+            };
+
+            // Agrupar por nível
+            const niveisAgrupados = {};
+            docentes.forEach(doc => {
+                const nivel = descobrirNivel(doc.cargo);
+                if (!niveisAgrupados[nivel]) niveisAgrupados[nivel] = [];
+                niveisAgrupados[nivel].push(doc);
+            });
+
+            // Ordenar
+            const niveisOrdenados = Object.keys(niveisAgrupados).sort((a, b) => a - b);
+
+            // Gerar HTML seguro
+            let html = '';
+            
+            niveisOrdenados.forEach(nivel => {
+                const grupo = niveisAgrupados[nivel];
+                grupo.sort((a, b) => a.nome.localeCompare(b.nome));
+
+                html += `<div class="nivel">`;
+                
+                grupo.forEach(pessoa => {
+                    // ✅ Criar elementos ao invés de usar innerHTML
+                    const card = document.createElement('div');
+                    card.className = 'card-docente';
+
+                    const img = document.createElement('img');
+                    img.className = 'foto-docente';
+                    img.src = pessoa.foto || '/images/default-user.png';
+                    img.alt = pessoa.nome || 'Docente';
+
+                    const nome = document.createElement('h3');
+                    // ✅ Usar textContent para segurança
+                    nome.textContent = pessoa.nome;
+
+                    const cargo = document.createElement('div');
+                    cargo.className = 'cargo';
+                    cargo.textContent = pessoa.cargo || 'Docente';
+
+                    card.appendChild(img);
+                    card.appendChild(nome);
+                    card.appendChild(cargo);
+
+                    if (pessoa.materia) {
+                        const materia = document.createElement('div');
+                        materia.className = 'materia';
+                        materia.textContent = pessoa.materia;
+                        card.appendChild(materia);
+                    }
+
+                    html += card.outerHTML;
+                });
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+
+        } catch (error) {
+            console.error("❌ Erro na árvore:", error);
+            container.innerHTML = "<p>Não foi possível carregar o organograma. Tente novamente mais tarde.</p>";
+        }
+    }
+
+    montarArvore();
+  </script>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

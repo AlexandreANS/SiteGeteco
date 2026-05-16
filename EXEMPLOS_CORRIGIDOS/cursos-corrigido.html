@@ -1,0 +1,119 @@
+<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/cursos.html -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Cursos</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Cursos e Séries Oferecidas</h2>
+
+    <!-- Intro collapsible: clubes / cursos -->
+    <div class="courses-intro" id="coursesIntro">
+      <button class="intro-toggle" aria-expanded="false" aria-controls="coursesIntroText">
+        <span class="intro-toggle-arrow" aria-hidden="true">▶</span>
+        <span class="intro-title">Como funcionam os Clubes e Cursos</span>
+      </button>
+
+      <div class="intro-content" id="coursesIntroText" hidden>
+        <p>
+          Nesta seção você encontra os cursos e clubes oferecidos pelo GETECO. Os cursos técnicos e clubes são atividades complementares que visam
+          desenvolver habilidades práticas e experiências colaborativas. Cada postagem na lista mostra o nome do curso/club e a logo — clique sobre ela
+          para ver mais informações (inscrições, duração, horários e requisitos). Use a seta ao lado para abrir ou fechar esta introdução.
+        </p>
+        <p>
+          Dúvidas sobre inscrições? Entre em contato com a coordenação através do link de contato ou verifique a página de cada curso para requisitos.
+        </p>
+      </div>
+    </div>
+
+    <div id="cursos-content">Carregando...</div>
+  </section>
+  
+  <script>
+    // ====================================================================
+    // ✅ CORREÇÃO 1: Hostname dinâmico
+    // ✅ CORREÇÃO 2: Validar resposta com res.ok
+    // ✅ CORREÇÃO 3: Usar textContent ao invés de innerHTML
+    // ====================================================================
+    
+    const API_HOST = window.location.hostname;
+    const API_PORT = 3000;
+
+    fetch(`http://${API_HOST}:${API_PORT}/api/cursos`)
+      .then(res => {
+        // ✅ Validar resposta
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        const container = document.getElementById('cursos-content');
+        
+        if (Array.isArray(data) && data.length > 0) {
+          container.innerHTML = '';
+          
+          data.forEach(curso => {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+
+            // Título com logo da escola
+            const titleWrapper = document.createElement('div');
+            titleWrapper.className = 'course-title';
+
+            const schoolLogo = document.createElement('img');
+            schoolLogo.className = 'course-school-logo';
+            schoolLogo.src = '/images/logo.png';
+            schoolLogo.alt = 'GETECO - Logo';
+
+            const h3 = document.createElement('h3');
+            // ✅ Usar textContent ao invés de innerHTML
+            h3.textContent = curso.nome || 'Curso';
+
+            const desc = document.createElement('p');
+            // ✅ Usar textContent para texto puro
+            desc.textContent = curso.descricao || '';
+
+            titleWrapper.appendChild(schoolLogo);
+            titleWrapper.appendChild(h3);
+
+            card.appendChild(titleWrapper);
+            card.appendChild(desc);
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = "<p>Nenhum curso cadastrado.</p>";
+        }
+      })
+      .catch((error) => {
+        console.error("❌ Erro ao carregar cursos:", error);
+        document.getElementById('cursos-content').innerHTML = 
+          "<p>Não foi possível carregar os cursos. Tente novamente mais tarde.</p>";
+      });
+  </script>
+
+  <footer></footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GETECO - Novidades</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+  <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
+  
+      
+      
+      <ul class="nav-links">
+        <li><a href="/sobre">História</a></li>
+        <li><a href="/cursos">Cursos</a></li>
+        <li><a href="/docente">Docentes</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/alunos">Alunos</a></li>
+        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/novidades">Infraestrutura</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="section">
+    <h2>Novidades da Escola</h2>
+    <div id="novidades-content">A carregar...</div>
+  </section>
+
+<footer></footer>
+
+  <script>
+    // ==================================================================
+    // CORREÇÃO: Usar o hostname dinâmico ao invés de 'localhost'
+    // ==================================================================
+    fetch(`http://${window.location.hostname}:3000/api/novidades`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('novidades-content');
+        if (Array.isArray(data) && data.length > 0) {
+          container.innerHTML = '';
+          // Opcional: Ordena as novidades da mais recente para a mais antiga
+          data.sort((a, b) => {
+            // Verifica se a propriedade 'data' existe antes de comparar
+            const dateA = a.data ? new Date(a.data.seconds * 1000) : new Date(0);
+            const dateB = b.data ? new Date(b.data.seconds * 1000) : new Date(0);
+            return dateB - dateA;
+          });
+          data.forEach(novidade => {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+            let imagemHTML = '';
+            if (novidade.imagem) {
+              // CORREÇÃO: Garante que a imagem use o mesmo host dinâmico
+              const imgUrl = new URL(novidade.imagem);
+              imgUrl.hostname = window.location.hostname;
+              imagemHTML = `<img src="${imgUrl.href}" alt="${novidade.titulo}" class="novidade-imagem">`;
+            }
+            
+            card.innerHTML = `${imagemHTML}<h3>${novidade.titulo}</h3><p>${novidade.conteudo}</p>`;
+            
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = "<p>Nenhuma novidade registada.</p>";
+        }
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar novidades:", error);
+        document.getElementById('novidades-content').innerHTML = "<p>Não foi possível carregar as novidades.</p>";
+      });
+  </script>
+<script src="/js/main.js"></script>
+</body>
+</html>
+

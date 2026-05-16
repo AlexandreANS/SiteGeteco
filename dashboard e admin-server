@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h2>Painel Administrativo</h2>
+  <form id="sobreForm">
+    <h3>Sobre a Escola</h3>
+    <textarea id="sobreText" name="sobreText"></textarea>
+    <button type="submit">Salvar</button>
+  </form>
+  <form id="form-noticia">
+    <h3>Notícias</h3>
+    <input type="text" name="titulo" placeholder="Título" required>
+    <textarea name="conteudo" placeholder="Conteúdo" required></textarea>
+    <button type="submit">Cadastrar Notícia</button>
+  </form>
+  <form id="contatosForm">
+    <h3>Contatos</h3>
+    <input type="text" id="contatoNome" name="contatoNome" placeholder="Nome">
+    <input type="email" id="contatoEmail" name="contatoEmail" placeholder="Email">
+    <button type="submit">Salvar Contato</button>
+  </form>
+  <form id="docentesForm">
+    <h3>Docentes</h3>
+    <input type="text" id="docenteNome" name="docenteNome" placeholder="Nome">
+    <input type="text" id="docenteMateria" name="docenteMateria" placeholder="Matéria">
+    <button type="submit">Salvar Docente</button>
+  </form>
+  <form id="alunosForm">
+    <h3>Informações para Alunos</h3>
+    <input type="text" id="semanaProvasAluno" name="semanaProvasAluno" placeholder="Semana de Provas">
+    <input type="text" id="gincanaAluno" name="gincanaAluno" placeholder="Eventos Esportivos">
+    <input type="text" id="feiraAluno" name="feiraAluno" placeholder="Feira de Ciências">
+    <input type="text" id="culturalAluno" name="culturalAluno" placeholder="Semana Cultural">
+    <input type="text" id="feriasAluno" name="feriasAluno" placeholder="Férias Escolares">
+    <button type="submit">Salvar Informações de Alunos</button>
+  </form>
+  <form id="responsaveisForm">
+    <h3>Informações para Responsáveis</h3>
+    <input type="text" id="semanaProvasResp" name="semanaProvasResp" placeholder="Semana de Provas">
+    <input type="text" id="gincanaResp" name="gincanaResp" placeholder="Eventos Esportivos">
+    <input type="text" id="feiraResp" name="feiraResp" placeholder="Feira de Ciências">
+    <input type="text" id="culturalResp" name="culturalResp" placeholder="Semana Cultural">
+    <input type="text" id="feriasResp" name="feriasResp" placeholder="Férias Escolares">
+    <input type="text" id="reuniaoResp" name="reuniaoResp" placeholder="Reunião de Pais">
+    <input type="text" id="boletinsResp" name="boletinsResp" placeholder="Entrega de Boletins">
+    <button type="submit">Salvar Informações de Responsáveis</button>
+  </form>
+  <form id="cursosForm">
+    <h3>Cursos</h3>
+    <input type="text" id="cursoNome" name="cursoNome" placeholder="Nome do Curso">
+    <textarea id="cursoDescricao" name="cursoDescricao" placeholder="Descrição"></textarea>
+    <button type="submit">Salvar Curso</button>
+  </form>
+  <script>
+    // SOBRE
+    fetch('http://localhost:3000/api/sobre')
+      .then(res => res.json())
+      .then(data => { document.getElementById('sobreText').value = data.sobreText; });
+    document.getElementById('sobreForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/sobre', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sobreText: document.getElementById('sobreText').value })
+      }).then(res => res.json()).then(() => { alert('Texto "Sobre" atualizado!'); });
+    });
+
+    // NOTÍCIAS
+    document.getElementById('form-noticia').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/noticias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: this.titulo.value,
+          conteudo: this.conteudo.value
+        })
+      }).then(res => res.json()).then(() => { alert('Notícia cadastrada!'); this.reset(); });
+    });
+
+    // CONTATOS
+    document.getElementById('contatosForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/contatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: document.getElementById('contatoNome').value,
+          email: document.getElementById('contatoEmail').value
+        })
+      }).then(res => res.json()).then(() => { alert('Contato salvo!'); this.reset(); });
+    });
+
+    // DOCENTES
+    document.getElementById('docentesForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/docentes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: document.getElementById('docenteNome').value,
+          materia: document.getElementById('docenteMateria').value
+        })
+      }).then(res => res.json()).then(() => { alert('Docente salvo!'); this.reset(); });
+    });
+
+    // ALUNOS
+    document.getElementById('alunosForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/alunos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          semanaProvas: document.getElementById('semanaProvasAluno').value,
+          gincana: document.getElementById('gincanaAluno').value,
+          feiraCiencias: document.getElementById('feiraAluno').value,
+          semanaCultural: document.getElementById('culturalAluno').value,
+          ferias: document.getElementById('feriasAluno').value
+        })
+      }).then(res => res.json()).then(() => { alert('Informações de alunos salvas!'); this.reset(); });
+    });
+
+    // RESPONSÁVEIS
+    document.getElementById('responsaveisForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/responsaveis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          semanaProvas: document.getElementById('semanaProvasResp').value,
+          gincana: document.getElementById('gincanaResp').value,
+          feiraCiencias: document.getElementById('feiraResp').value,
+          semanaCultural: document.getElementById('culturalResp').value,
+          ferias: document.getElementById('feriasResp').value,
+          reuniaoPais: document.getElementById('reuniaoResp').value,
+          entregaBoletins: document.getElementById('boletinsResp').value
+        })
+      }).then(res => res.json()).then(() => { alert('Informações de responsáveis salvas!'); this.reset(); });
+    });
+
+    // CURSOS
+    document.getElementById('cursosForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fetch('http://localhost:3000/api/cursos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: document.getElementById('cursoNome').value,
+          descricao: document.getElementById('cursoDescricao').value
+        })
+      }).then(res => res.json()).then(() => { alert('Curso cadastrado!'); this.reset(); });
+    });
+  </script>
+</body>
+</html>
+
+
+
+---------
+
+
+
+
+const express = require("express");
+const path = require("path");
+const mongoose = require("mongoose");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
+const cors = require("cors");
+
+const app = express();
+const PORT = 3000;
+
+// Admin schema/model
+const AdminSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  isAdmin: { type: Boolean, default: true }
+});
+const Admin = mongoose.model("Admin", AdminSchema);
+
+// Pending Admin schema/model
+const PendingAdminSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  requestedAt: { type: Date, default: Date.now }
+});
+const PendingAdmin = mongoose.model("PendingAdmin", PendingAdminSchema);
+
+// Login attempt schema/model
+const LoginAttemptSchema = new mongoose.Schema({
+  username: String,
+  success: Boolean,
+  timestamp: { type: Date, default: Date.now }
+});
+const LoginAttempt = mongoose.model("LoginAttempt", LoginAttemptSchema);
+
+// Modelos
+const noticiasSchema = new mongoose.Schema({
+  titulo: String,
+  conteudo: String,
+  data: { type: Date, default: Date.now }
+});
+const noticias = mongoose.model("noticias", noticiasSchema);
+
+const contatoSchema = new mongoose.Schema({
+  nome: String,
+  email: String
+});
+const contato = mongoose.model("contato", contatoSchema);
+
+const docenteSchema = new mongoose.Schema({
+  nome: String,
+  materia: String
+});
+const docente = mongoose.model("docente", docenteSchema);
+
+const alunosSchema = new mongoose.Schema({
+  semanaProvas: String,
+  gincana: String,
+  feiraCiencias: String,
+  semanaCultural: String,
+  ferias: String
+});
+const alunos = mongoose.model("alunos", alunosSchema);
+
+const responsaveisSchema = new mongoose.Schema({
+  semanaProvas: String,
+  gincana: String,
+  feiraCiencias: String,
+  semanaCultural: String,
+  ferias: String,
+  reuniaoPais: String,
+  entregaBoletins: String
+});
+const responsaveis = mongoose.model("responsaveis", responsaveisSchema);
+
+const cursosSchema = new mongoose.Schema({
+  nome: String,
+  descricao: String
+});
+const cursos = mongoose.model("cursos", cursosSchema);
+
+let sobreText = "Texto padrão sobre a escola";
+let noticiasPadrao = [{ titulo: "Nenhuma notícia cadastrada", conteudo: "Em breve novidades." }];
+let docentesPadrao = [{ nome: "Nenhum docente cadastrado", materia: "" }];
+let contatosPadrao = [{ nome: "Nenhum contato cadastrado", email: "" }];
+let alunosPadrao = { semanaProvas: "", gincana: "", feiraCiencias: "", semanaCultural: "", ferias: "" };
+let responsaveisPadrao = { semanaProvas: "", gincana: "", feiraCiencias: "", semanaCultural: "", ferias: "", reuniaoPais: "", entregaBoletins: "" };
+
+// Passport config
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+// Login: só permite admins já aprovados
+passport.use(new LocalStrategy(async (username, password, done) => {
+  const user = await Admin.findOne({ username });
+  if (!user) return done(null, false, { message: "Usuário não encontrado" });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return done(null, false, { message: "Senha incorreta" });
+  return done(null, user);
+}));
+
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  const user = await Admin.findById(id);
+  done(null, user);
+});
+
+// Servir arquivos estáticos
+app.use(express.static(path.join(__dirname, "public")));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+
+// Rotas de registro
+app.post("/register", async (req, res) => {
+  const { username, password, confirmPassword } = req.body;
+  if (password !== confirmPassword) {
+    return res.status(400).send("As senhas não coincidem.");
+  }
+  const exists = await Admin.findOne({ username });
+  const pendingExists = await PendingAdmin.findOne({ username });
+  if (exists) return res.status(400).send("Usuário já existe.");
+  if (pendingExists) {
+    req.session.pendenteId = pendingExists._id;
+    return res.redirect("/aguardando");
+  }
+  const hash = await bcrypt.hash(password, 10);
+  const pendente = await PendingAdmin.create({ username, password: hash });
+  req.session.pendenteId = pendente._id;
+  res.redirect("/aguardando");
+});
+
+// Rotas de login
+app.post("/login", async (req, res, next) => {
+  passport.authenticate("local", async (err, user, info) => {
+    await LoginAttempt.create({
+      username: req.body.username,
+      success: !!user,
+      timestamp: new Date()
+    });
+
+    if (err) return next(err);
+    if (!user) {
+      // Redireciona para login com erro
+      return res.redirect("/login?error=1");
+    }
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.redirect("/dashboard");
+    });
+  })(req, res, next);
+});
+
+// Rotas para páginas
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "login.html"));
+});
+app.get("/register", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "register.html"));
+});
+app.get("/dashboard", (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect("/login");
+  res.sendFile(path.join(__dirname, "views", "dashboard.html"));
+});
+app.get("/", (req, res) => res.redirect("/login"));
+app.get("/aguardando", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "aguardando.html"));
+});
+
+// Novas rotas para gerenciar pendentes
+function requireAdmin(req, res, next) {
+  if (!req.isAuthenticated() || !req.user || !req.user.isAdmin) {
+    return res.status(403).send("Acesso negado");
+  }
+  next();
+}
+
+app.get('/api/pendentes', requireAdmin, async (req, res) => {
+  const pendentes = await PendingAdmin.find({});
+  res.json(pendentes);
+});
+// NOTÍCIAS
+app.post('/api/noticias', requireAdmin, async (req, res) => {
+  const { titulo, conteudo } = req.body;
+  await noticias.create({ titulo, conteudo });
+  res.json({ success: true });
+});
+app.get('/api/noticias', async (req, res) => {
+  const lista = await noticias.find({});
+  res.json(lista);
+});
+
+// DOCENTES
+app.post('/api/docentes', requireAdmin, async (req, res) => {
+  const { nome, materia } = req.body;
+  await docente.create({ nome, materia });
+  res.json({ success: true });
+});
+app.get('/api/docentes', async (req, res) => {
+  const lista = await docente.find({});
+  res.json(lista);
+});
+
+// CONTATOS
+app.post('/api/contatos', requireAdmin, async (req, res) => {
+  const { nome, email } = req.body;
+  await contato.create({ nome, email });
+  res.json({ success: true });
+});
+app.get('/api/contatos', async (req, res) => {
+  const lista = await contato.find({});
+  res.json(lista);
+});
+
+// ALUNOS
+app.post('/api/alunos', requireAdmin, async (req, res) => {
+  await alunos.deleteMany({});
+  await alunos.create(req.body);
+  res.json({ success: true });
+});
+app.get('/api/alunos', async (req, res) => {
+  const info = await alunos.findOne({});
+  res.json(info || {});
+});
+
+// RESPONSÁVEIS
+app.post('/api/responsaveis', requireAdmin, async (req, res) => {
+  await responsaveis.deleteMany({});
+  await responsaveis.create(req.body);
+  res.json({ success: true });
+});
+app.get('/api/responsaveis', async (req, res) => {
+  const info = await responsaveis.findOne({});
+  res.json(info || {});
+});
+
+app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).send("Não autorizado");
+  const { id } = req.body;
+  const pendente = await PendingAdmin.findById(id);
+  if (pendente) {
+    await Admin.create({ username: pendente.username, password: pendente.password });
+    await PendingAdmin.findByIdAndDelete(id);
+
+    // Se o usuário pendente está na sessão, redirecione
+    if (req.session.pendenteId && req.session.pendenteId == id) {
+      req.session.pendenteId = null;
+      return res.json({ redirect: "/dashboard?accepted=1" });
+    }
+    res.json({ success: true });
+  } else {
+    res.status(404).send("Pendente não encontrado");
+  }
+});
+
+app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).send("Não autorizado");
+  const { id } = req.body;
+  await PendingAdmin.findByIdAndDelete(id);
+
+  // Se o usuário pendente está na sessão, redirecione
+  if (req.session.pendenteId && req.session.pendenteId == id) {
+    req.session.pendenteId = null;
+    return res.json({ redirect: "/register?denied=1" });
+  }
+  res.json({ success: true });
+});
+app.get('/api/check-pendente', async (req, res) => {
+  if (!req.session.pendenteId) return res.json({ status: "none" });
+  const pendente = await PendingAdmin.findById(req.session.pendenteId);
+  if (pendente) return res.json({ status: "pending" });
+  const aprovado = await Admin.findOne({ _id: req.session.pendenteId });
+  if (aprovado) return res.json({ status: "accepted" });
+  return res.json({ status: "denied" });
+});
+
+app.post('/api/clear-pendente', (req, res) => {
+  req.session.pendenteId = null;
+  res.json({ success: true });
+});
+
+app.get('/api/sobre', (req, res) => {
+  res.json({ sobreText });
+});
+
+app.post('/api/sobre', (req, res) => {
+  sobreText = req.body.sobreText || sobreText;
+  res.json({ success: true, sobreText });
+});
+
+app.post('/api/cursos', requireAdmin, async (req, res) => {
+  const { nome, descricao } = req.body;
+  await cursos.create({ nome, descricao });
+  res.json({ success: true });
+});
+app.get('/api/cursos', async (req, res) => {
+  const lista = await cursos.find({});
+  res.json(lista);
+});
+
+// INÍCIO CORRETO DO SERVIDOR
+const startServer = async () => {
+  try {
+    await mongoose.connect("mongodb+srv://geteco:123@cluster0.ppygoob.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Conexão com o MongoDB Atlas estabelecida.');
+
+    // Mostra admins cadastrados no console para debug
+    const admins = await Admin.find({});
+    console.log('Admins cadastrados:', admins.map(a => a.username));
+
+    app.listen(PORT, () => {
+      console.log(`Painel admin rodando em http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Não foi possível conectar ao banco de dados.', error);
+    process.exit(1);
+  }
+};
+
+startServer();
+
