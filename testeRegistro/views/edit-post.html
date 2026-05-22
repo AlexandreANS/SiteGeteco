@@ -1,29 +1,6 @@
-<!-- ✅ ARQUIVO CORRIGIDO PARA: testeRegistro/views/edit-post.html -->
-
-<!-- 
-⚠️  IMPORTANTE: Este arquivo tem um PROBLEMA CRÍTICO!
-
-O arquivo original usa sintaxe EJS (Embedded JavaScript):
-  - <% %>
-  - <%= %>
-
-MAS o arquivo é servido como HTML puro (não processado pelo servidor)!
-
-SOLUÇÕES POSSÍVEIS:
-
-1. ✅ OPÇÃO 1 (RECOMENDADA): Usar uma API REST para carregar/editar
-   - Carregar dados via fetch ao invés de template
-   - Enviar dados via POST/PUT
-   
-2. ⚠️  OPÇÃO 2: Configurar o servidor para renderizar EJS
-   - app.set('view engine', 'ejs')
-   - res.render('edit-post', { post: data })
-   
-Aqui está a OPÇÃO 1 (JavaScript puro):
--->
-
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,11 +8,12 @@ Aqui está a OPÇÃO 1 (JavaScript puro):
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/watermark.png">
 </head>
+
 <body>
     <div class="container">
         <h2>Editar Postagem</h2>
         <div id="statusMessage" style="display: none; margin-bottom: 1rem; padding: 1rem; border-radius: 4px;"></div>
-        
+
         <form id="editForm">
             <div class="input-group">
                 <label for="title">Título:</label>
@@ -71,7 +49,7 @@ Aqui está a OPÇÃO 1 (JavaScript puro):
         async function carregarPostagem() {
             try {
                 const response = await fetch(`${API_URL}/novidades/${postId}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`Erro ${response.status}: Postagem não encontrada`);
                 }
@@ -117,7 +95,7 @@ Aqui está a OPÇÃO 1 (JavaScript puro):
                 }
 
                 showStatus('✅ Postagem atualizada com sucesso!', 'success');
-                
+
                 // Redirecionar após 2 segundos
                 setTimeout(() => {
                     window.location.assign('/dashboard');
@@ -133,7 +111,7 @@ Aqui está a OPÇÃO 1 (JavaScript puro):
             const statusDiv = document.getElementById('statusMessage');
             statusDiv.textContent = message;
             statusDiv.style.display = 'block';
-            
+
             if (type === 'success') {
                 statusDiv.style.backgroundColor = '#d4edda';
                 statusDiv.style.color = '#155724';
@@ -150,6 +128,7 @@ Aqui está a OPÇÃO 1 (JavaScript puro):
         carregarPostagem();
     </script>
 </body>
+
 </html>
 
 <!-- 

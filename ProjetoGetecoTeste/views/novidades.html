@@ -1,18 +1,19 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <title>GETECO - Novidades</title>
+  <title>GETECO - Infraestrutura</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
+
 <body>
   <header>
     <nav class="navbar">
-  <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
-  
-      
-      
+      <a href="/" class="logo" aria-label="Ir para a página inicial">
+        <img src="/images/logo.png" alt="GETECO - Início" class="site-logo">
+      </a>
       <ul class="nav-links">
         <li><a href="/sobre">História</a></li>
         <li><a href="/cursos">Cursos</a></li>
@@ -20,60 +21,89 @@
         <li><a href="/contato">Contato</a></li>
         <li><a href="/alunos">Alunos</a></li>
         <li><a href="/responsaveis">Responsáveis</a></li>
-        <li><a href="/novidades">Infraestrutura</a></li>
+        <li><a href="/novidades" class="active">Infraestrutura</a></li>
       </ul>
     </nav>
   </header>
 
   <section class="section">
-    <h2>Novidades da Escola</h2>
-    <div id="novidades-content">A carregar...</div>
+    <h2>Infraestrutura e Novidades</h2>
+    <div id="novidades-content" class="cards-grid">A carregar...</div>
   </section>
 
-<footer></footer>
+  <footer></footer>
+
+  <!-- POPUP -->
+  <div id="popup-overlay" class="popup-overlay" role="dialog" aria-modal="true" aria-labelledby="popup-titulo">
+    <div class="popup-box">
+      <button class="popup-close" id="popup-close" aria-label="Fechar">&times;</button>
+      <img id="popup-img" src="" alt="" class="popup-img" style="display:none">
+      <div class="popup-body">
+        <span class="popup-badge">Novidade</span>
+        <h2 id="popup-titulo"></h2>
+        <p id="popup-conteudo"></p>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // ==================================================================
-    // CORREÇÃO: Usar o hostname dinâmico ao invés de 'localhost'
-    // ==================================================================
+    const overlay = document.getElementById('popup-overlay');
+    const pImg = document.getElementById('popup-img');
+    const pTitulo = document.getElementById('popup-titulo');
+    const pConteudo = document.getElementById('popup-conteudo');
+
+    function abrirPopup(titulo, conteudo, imgSrc) {
+      pTitulo.textContent = titulo;
+      pConteudo.textContent = conteudo;
+      if (imgSrc) { pImg.src = imgSrc; pImg.style.display = 'block'; }
+      else { pImg.src = ''; pImg.style.display = 'none'; }
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function fecharPopup() { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+
+    document.getElementById('popup-close').addEventListener('click', fecharPopup);
+    overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
+
     fetch(`http://${window.location.hostname}:3000/api/novidades`)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById('novidades-content');
-        if (Array.isArray(data) && data.length > 0) {
-          container.innerHTML = '';
-          // Opcional: Ordena as novidades da mais recente para a mais antiga
-          data.sort((a, b) => {
-            // Verifica se a propriedade 'data' existe antes de comparar
-            const dateA = a.data ? new Date(a.data.seconds * 1000) : new Date(0);
-            const dateB = b.data ? new Date(b.data.seconds * 1000) : new Date(0);
-            return dateB - dateA;
-          });
-          data.forEach(novidade => {
-            const card = document.createElement('div');
-            card.className = 'content-card';
-            let imagemHTML = '';
-            if (novidade.imagem) {
-              // CORREÇÃO: Garante que a imagem use o mesmo host dinâmico
-              const imgUrl = new URL(novidade.imagem);
-              imgUrl.hostname = window.location.hostname;
-              imagemHTML = `<img src="${imgUrl.href}" alt="${novidade.titulo}" class="novidade-imagem">`;
-            }
-            
-            card.innerHTML = `${imagemHTML}<h3>${novidade.titulo}</h3><p>${novidade.conteudo}</p>`;
-            
-            container.appendChild(card);
-          });
-        } else {
-          container.innerHTML = "<p>Nenhuma novidade registada.</p>";
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p>Nenhuma novidade registada.</p>'; return;
         }
+        data.sort((a, b) => {
+          const dA = a.data ? new Date(a.data.seconds * 1000) : 0;
+          const dB = b.data ? new Date(b.data.seconds * 1000) : 0;
+          return dB - dA;
+        });
+        container.innerHTML = '';
+        data.forEach(n => {
+          let imgSrc = '';
+          if (n.imagem) {
+            try { const u = new URL(n.imagem); u.hostname = window.location.hostname; imgSrc = u.href; } catch (_) { }
+          }
+          const card = document.createElement('div');
+          card.className = 'news-card';
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.innerHTML = `
+            ${imgSrc ? `<div class="news-card-img"><img src="${imgSrc}" alt="${n.titulo}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>🏫</span></div>'}
+            <div class="news-card-body">
+              <span class="news-card-badge">Novidade</span>
+              <h3 class="news-card-title">${n.titulo}</h3>
+              <p class="news-card-excerpt">${n.conteudo}</p>
+              <span class="news-card-cta">Ver mais →</span>
+            </div>`;
+          card.addEventListener('click', () => abrirPopup(n.titulo, n.conteudo, imgSrc));
+          card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirPopup(n.titulo, n.conteudo, imgSrc); } });
+          container.appendChild(card);
+        });
       })
-      .catch((error) => {
-        console.error("Erro ao carregar novidades:", error);
-        document.getElementById('novidades-content').innerHTML = "<p>Não foi possível carregar as novidades.</p>";
-      });
+      .catch(() => { document.getElementById('novidades-content').innerHTML = '<p>Não foi possível carregar as novidades.</p>'; });
   </script>
-<script src="/js/main.js"></script>
+  <script src="/js/main.js"></script>
 </body>
-</html>
 
+</html>

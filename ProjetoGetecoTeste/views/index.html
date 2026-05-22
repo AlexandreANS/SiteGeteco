@@ -1,20 +1,19 @@
-﻿<!-- ✅ ARQUIVO CORRIGIDO PARA: ProjetoGetecoTeste/views/index.html -->
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <title>GETECO</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
+
 <body>
   <header>
     <nav class="navbar">
-  <a href="/" class="logo" aria-label="Ir para a página inicial"><img src="/images/logo.png" alt="GETECO - Início" class="site-logo"></a>
-  
-      
-      
+      <a href="/" class="logo" aria-label="Ir para a página inicial">
+        <img src="/images/logo.png" alt="GETECO - Início" class="site-logo">
+      </a>
       <ul class="nav-links">
         <li><a href="/sobre">História</a></li>
         <li><a href="/cursos">Cursos</a></li>
@@ -27,76 +26,92 @@
     </nav>
   </header>
 
-<section class="section">
+  <section class="section">
     <h2>Notícias da Escola</h2>
-    <div id="noticias-content">A carregar...</div>
-</section>
+    <div id="noticias-content" class="cards-grid">A carregar...</div>
+  </section>
 
-<footer></footer>
+  <footer></footer>
 
-<script>
-    // ====================================================================
-    // ✅ CORREÇÃO 1: Usar hostname dinâmico (não localhost)
-    // ====================================================================
-    // ANTES: fetch(`http://localhost:3000/api/noticias`)
-    // DEPOIS:
+  <!-- POPUP MODAL -->
+  <div id="popup-overlay" class="popup-overlay" role="dialog" aria-modal="true" aria-labelledby="popup-titulo">
+    <div class="popup-box">
+      <button class="popup-close" id="popup-close" aria-label="Fechar">&times;</button>
+      <img id="popup-img" src="" alt="" class="popup-img" style="display:none">
+      <div class="popup-body">
+        <span class="popup-badge">Notícia</span>
+        <h2 id="popup-titulo"></h2>
+        <p id="popup-conteudo"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
     const API_HOST = window.location.hostname;
     const API_PORT = 3000;
-    
+
+    // --- Popup ---
+    const overlay = document.getElementById('popup-overlay');
+    const pImg = document.getElementById('popup-img');
+    const pTitulo = document.getElementById('popup-titulo');
+    const pConteudo = document.getElementById('popup-conteudo');
+
+    function abrirPopup(titulo, conteudo, imgSrc) {
+      pTitulo.textContent = titulo;
+      pConteudo.textContent = conteudo;
+      if (imgSrc) { pImg.src = imgSrc; pImg.style.display = 'block'; }
+      else { pImg.src = ''; pImg.style.display = 'none'; }
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function fecharPopup() {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('popup-close').addEventListener('click', fecharPopup);
+    overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
+
+    // --- Carregar notícias ---
     fetch(`http://${API_HOST}:${API_PORT}/api/noticias`)
-      .then(res => {
-        // ✅ CORREÇÃO 2: Validar resposta
-        if (!res.ok) {
-          throw new Error(`Erro ${res.status}: Não foi possível carregar as notícias`);
-        }
-        return res.json();
-      })
+      .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
         const container = document.getElementById('noticias-content');
-        
-        // ✅ CORREÇÃO 3: Validar se dados é um array
-        if (Array.isArray(data) && data.length > 0) {
-          container.innerHTML = '';
-          
-          data.forEach(noticia => {
-            const card = document.createElement('div');
-            card.className = 'content-card';
-            let imagemHTML = '';
-            
-            // ✅ CORREÇÃO 4: Ajustar URL de imagem para o hostname dinâmico
-            if (noticia.imagem) {
-              try {
-                const imgUrl = new URL(noticia.imagem);
-                imgUrl.hostname = API_HOST;  // Usa o mesmo hostname
-                imagemHTML = `<img src="${imgUrl.href}" alt="${noticia.titulo}" class="noticia-imagem">`;
-              } catch (e) {
-                console.error('URL de imagem inválida:', noticia.imagem);
-              }
-            }
-            
-            // ✅ CORREÇÃO 5: Escape de HTML para evitar XSS
-            const titulo = document.createElement('h3');
-            titulo.textContent = noticia.titulo;
-            
-            const conteudo = document.createElement('p');
-            conteudo.textContent = noticia.conteudo;
-            
-            card.innerHTML = imagemHTML;
-            card.appendChild(titulo);
-            card.appendChild(conteudo);
-            
-            container.appendChild(card);
-          });
-        } else {
-          container.innerHTML = "<p>Nenhuma notícia registada.</p>";
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p>Nenhuma notícia registada.</p>'; return;
         }
+        container.innerHTML = '';
+        data.forEach(n => {
+          let imgSrc = '';
+          if (n.imagem) {
+            try { const u = new URL(n.imagem); u.hostname = API_HOST; imgSrc = u.href; } catch (_) { }
+          }
+          const card = document.createElement('div');
+          card.className = 'news-card';
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('aria-label', `Ler notícia: ${n.titulo}`);
+          card.innerHTML = `
+            ${imgSrc ? `<div class="news-card-img"><img src="${imgSrc}" alt="${n.titulo}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>📰</span></div>'}
+            <div class="news-card-body">
+              <span class="news-card-badge">Notícia</span>
+              <h3 class="news-card-title">${n.titulo}</h3>
+              <p class="news-card-excerpt">${n.conteudo}</p>
+              <span class="news-card-cta">Ler mais →</span>
+            </div>`;
+          card.addEventListener('click', () => abrirPopup(n.titulo, n.conteudo, imgSrc));
+          card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirPopup(n.titulo, n.conteudo, imgSrc); } });
+          container.appendChild(card);
+        });
       })
-      .catch((error) => {
-        console.error("❌ Erro ao carregar notícias:", error);
-        document.getElementById('noticias-content').innerHTML = 
-          "<p>Não foi possível carregar as notícias. Verifique se o servidor admin está online.</p>";
+      .catch(() => {
+        document.getElementById('noticias-content').innerHTML =
+          '<p>Não foi possível carregar as notícias.</p>';
       });
-</script>
-<script src="/js/main.js"></script>
+  </script>
+  <script src="/js/main.js"></script>
 </body>
+
 </html>
