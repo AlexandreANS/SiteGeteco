@@ -47,8 +47,8 @@
   </div>
 
   <script>
-    const API_HOST = window.location.hostname;
-    const API_PORT = 3000;
+    const API_BASE = 'https://escola-geteco.onrender.com';
+    
 
     // --- Popup ---
     const overlay = document.getElementById('popup-overlay');
@@ -75,7 +75,7 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
 
     // --- Carregar notícias ---
-    fetch(`http://${API_HOST}:${API_PORT}/api/noticias`)
+    fetch(`/api/noticias`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
         const container = document.getElementById('noticias-content');
@@ -86,7 +86,7 @@
         data.forEach(n => {
           let imgSrc = '';
           if (n.imagem) {
-            try { const u = new URL(n.imagem); u.hostname = API_HOST; imgSrc = u.href; } catch (_) { }
+            try { const u = new URL(n.imagem); u.hostname = 'escola-geteco.onrender.com'; imgSrc = u.href; } catch (_) { }
           }
           const card = document.createElement('div');
           card.className = 'news-card';

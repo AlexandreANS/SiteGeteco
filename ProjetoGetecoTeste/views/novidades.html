@@ -66,7 +66,7 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
 
-    fetch(`http://${window.location.hostname}:3000/api/novidades`)
+    fetch(`https://escola-geteco.onrender.com/api/novidades`)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById('novidades-content');

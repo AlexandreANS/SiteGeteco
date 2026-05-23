@@ -60,8 +60,8 @@
   </div>
 
   <script>
-    const API_HOST = window.location.hostname;
-    const API_PORT = 3000;
+    const API_BASE = 'https://escola-geteco.onrender.com';
+    
 
     const overlay = document.getElementById('popup-overlay');
     const pTitulo = document.getElementById('popup-titulo');
@@ -83,7 +83,7 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
 
-    fetch(`http://${API_HOST}:${API_PORT}/api/cursos`)
+    fetch(`/api/cursos`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
         const container = document.getElementById('cursos-content');

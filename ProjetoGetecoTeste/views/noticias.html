@@ -39,10 +39,10 @@
     // Agora ele carrega as notícias dinamicamente
     // ====================================================================
     
-    const API_HOST = window.location.hostname;
-    const API_PORT = 3000;
+    const API_BASE = 'https://escola-geteco.onrender.com';
+    
 
-    fetch(`http://${API_HOST}:${API_PORT}/api/noticias`)
+    fetch(`/api/noticias`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`Erro ${res.status}: ${res.statusText}`);
@@ -74,7 +74,7 @@
           if (noticia.imagem) {
             try {
               const imgUrl = new URL(noticia.imagem);
-              imgUrl.hostname = API_HOST;
+              imgUrl.hostname = 'escola-geteco.onrender.com';
               imagemHTML = `<img src="${imgUrl.href}" alt="${noticia.titulo}" class="noticia-imagem">`;
             } catch (e) {
               console.error('URL de imagem inválida:', noticia.imagem);

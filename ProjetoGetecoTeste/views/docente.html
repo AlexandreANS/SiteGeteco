@@ -44,9 +44,9 @@
     // ✅ CORREÇÃO 4: Melhor tratamento de erro
     // ====================================================================
 
-    const API_HOST = window.location.hostname;
-    const API_PORT = 3000;
-    const API_URL = `http://${API_HOST}:${API_PORT}/api`;
+    const API_BASE = 'https://escola-geteco.onrender.com';
+    
+    const API_URL = `https://escola-geteco.onrender.com/api`;
 
     async function montarArvore() {
         const container = document.getElementById('arvore-docentes');

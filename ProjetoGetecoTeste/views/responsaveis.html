@@ -39,10 +39,10 @@
   <footer></footer>
 
   <script>
-    const API_HOST = window.location.hostname;
-    const API_PORT = 3000;
+    const API_BASE = 'https://escola-geteco.onrender.com';
+    
 
-    fetch(`http://${API_HOST}:${API_PORT}/api/responsaveis`)
+    fetch(`/api/responsaveis`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
         const container = document.getElementById('responsaveis-content');
