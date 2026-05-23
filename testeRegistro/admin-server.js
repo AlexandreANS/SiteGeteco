@@ -33,7 +33,7 @@ app.use(cookieParser());
 
 // CORS: Permite o site público (5000) e o admin (3000) quando executando o arquivo para testes locais
 app.use(cors({ 
-    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://escola-geteco.onrender.com', 'https://geteco-admin.onrender.com'],
+    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://sitegeteco.onrender.com', 'https://escola-geteco.onrender.com'],
     credentials: true 
 }));
 
