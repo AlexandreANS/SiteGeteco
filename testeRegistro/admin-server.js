@@ -15,7 +15,7 @@ const db = admin.firestore();
 const auth = admin.auth();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // --- UPLOAD ---
 const uploadDir = path.join(__dirname, 'public', 'uploads');
@@ -31,9 +31,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS: Permite o site público (5000) e o admin (3000)
+// CORS: Permite o site público (5000) e o admin (3000) quando executando o arquivo para testes locais
 app.use(cors({ 
-    origin: ['http://localhost:5000', 'http://localhost:3000'],
+    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://escola-geteco.onrender.com', 'https://geteco-admin.onrender.com'],
     credentials: true 
 }));
 
@@ -110,8 +110,8 @@ app.get("/logout", (req, res) => {
     res.redirect('/login');
 });
 
-// --- CRUD GENÉRICO (INCLUINDO CARGOS) ---
-const collections = ['noticias', 'novidades', 'cursos', 'docente', 'contato', 'cargos'];
+// --- CRUD GENÉRICO (EXCETO DOCENTE) ---
+const collections = ['noticias', 'novidades', 'cursos', 'contato', 'cargos'];
 
 collections.forEach(col => {
     // Listar
@@ -144,6 +144,48 @@ collections.forEach(col => {
         await db.collection(col).doc(req.params.id).delete();
         res.json({ success: true });
     });
+});
+
+// --- CRUD DOCENTE (campo foto separado) ---
+
+// Listar docentes
+app.get('/api/docente', async (req, res) => {
+    const snap = await db.collection('docente').get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+});
+
+// Criar docente — campo de upload é 'foto', salvo como 'foto' no Firestore
+app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) => {
+    const data = {
+        nome: req.body.nome || '',
+        cargo: req.body.cargo || '',
+        materia: req.body.materia || '',
+        foto: '',          // campo foto sempre presente no documento
+        data: new Date()
+    };
+
+    if (req.file) {
+        // URL acessível publicamente para a foto
+        data.foto = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    const ref = await db.collection('docente').add(data);
+
+    db.collection('logs').add({
+        adminEmail: req.user.email,
+        action: 'criou',
+        collection: 'docente',
+        details: data.nome,
+        timestamp: new Date()
+    });
+
+    res.json({ success: true, id: ref.id });
+});
+
+// Deletar docente
+app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
+    await db.collection('docente').doc(req.params.id).delete();
+    res.json({ success: true });
 });
 
 // Dados Únicos (Alunos/Responsaveis)
@@ -208,7 +250,7 @@ app.put('/api/novidades/:id', requireAdmin, async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar' });
     }
 });
-
+// Iniciar servidor de maneira local "NPM START"(Para testes!!!)
 app.listen(PORT, () => {
     console.log(`Admin Server rodando em http://localhost:${PORT}`);
 });

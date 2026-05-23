@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Define a pasta 'ProjetoGetecoTeste' como o diretório raiz para servir ficheiros estáticos (CSS, JS, Imagens)
 app.use(express.static(path.join(__dirname)));
