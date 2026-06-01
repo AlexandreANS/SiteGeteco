@@ -1,13 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>GETECO - Contato</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
-
 <body>
   <header>
     <nav class="navbar">
@@ -37,9 +35,7 @@
   <footer></footer>
 
   <script>
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-
+    // ✅ CORRIGIDO: usa /api/contato (proxy repassa ao admin-server)
     fetch(`/api/contato`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
@@ -71,5 +67,4 @@
 
   <script src="/js/main.js"></script>
 </body>
-
 </html>

@@ -1,13 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>GETECO - Alunos</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
-
 <body>
   <header>
     <nav class="navbar">
@@ -39,9 +37,6 @@
   <footer></footer>
 
   <script>
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-
     const ICONES = {
       semanaProvas: '📝',
       gincana: '🏆',
@@ -50,6 +45,7 @@
       ferias: '🌴',
     };
 
+    // ✅ CORRIGIDO: usa /api/alunos (proxy repassa ao admin-server)
     fetch(`/api/alunos`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
@@ -84,10 +80,6 @@
       });
   </script>
 
-  <!-- rodrigo esteve aqui -->
-  <!-- Alexandre come o Rodrigo -->
-
   <script src="/js/main.js"></script>
 </body>
-
 </html>

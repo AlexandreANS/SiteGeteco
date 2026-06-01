@@ -1,13 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <title>GETECO - Cursos</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
-
 <body>
   <header>
     <nav class="navbar">
@@ -36,8 +34,7 @@
       </button>
       <div class="intro-content" id="coursesIntroText" hidden>
         <p>Nesta seção você encontra os cursos e clubes oferecidos pelo GETECO. Os cursos técnicos e clubes visam
-          desenvolver habilidades práticas e experiências colaborativas. Clique sobre um curso para ver mais detalhes.
-        </p>
+          desenvolver habilidades práticas e experiências colaborativas. Clique sobre um curso para ver mais detalhes.</p>
         <p>Dúvidas sobre inscrições? Entre em contato com a coordenação através do link de contato.</p>
       </div>
     </div>
@@ -60,9 +57,6 @@
   </div>
 
   <script>
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-
     const overlay = document.getElementById('popup-overlay');
     const pTitulo = document.getElementById('popup-titulo');
     const pConteudo = document.getElementById('popup-conteudo');
@@ -83,6 +77,7 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
 
+    // ✅ CORRIGIDO: usa /api/cursos (proxy repassa ao admin-server)
     fetch(`/api/cursos`)
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
@@ -122,5 +117,4 @@
 
   <script src="/js/main.js"></script>
 </body>
-
 </html>
