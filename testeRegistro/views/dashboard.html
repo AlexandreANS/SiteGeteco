@@ -5,6 +5,69 @@
   <title>Painel Administrativo - GETECO</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
+  <style>
+    .btn-edit {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-right: 4px;
+    }
+    .btn-edit:hover { background: #1d4ed8; }
+    .btn-delete {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .btn-delete:hover { background: #b91c1c; }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-content h2 { margin-bottom: 1rem; }
+    .modal-content .input-group { margin-bottom: 1rem; }
+    .modal-content label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9rem; }
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    .modal-content textarea { min-height: 80px; resize: vertical; }
+    .modal-buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .btn-confirm { background: #16a34a; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
+    .btn-confirm:hover { background: #15803d; }
+    .btn-cancel { background: #6b7280; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
+    .btn-cancel:hover { background: #4b5563; }
+    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+    li span { flex: 1; }
+    .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  </style>
 </head>
 <body class="dashboard-body">
 
@@ -13,14 +76,12 @@
         <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
         <h2>GETECO Admin</h2>
     </div>
-    
     <div class="sidebar-menu">
         <h3>Aprovações Pendentes</h3>
         <div id="pending-admins-container">
             <div id="pending-admins-list"><p>A carregar...</p></div>
         </div>
     </div>
-
     <a href="/logout" class="logout-btn">
         <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg"><path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
         Sair
@@ -58,21 +119,17 @@
               </form>
           </div>
 
-     <div class="form-container" data-section="docente">
-    <h3>Novo Docente</h3>
-    <form>
-        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-        <div class="input-group"><label>Cargo/Função</label><input type="text" name="cargo" placeholder="Ex: Professor de Matemática"></div>
-        <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
+          <div class="form-container" data-section="docente">
+              <h3>Novo Docente</h3>
+              <form>
+                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                  <div class="input-group"><label>Cargo/Função</label><input type="text" name="cargo" placeholder="Ex: Professor de Matemática"></div>
+                  <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
+                  <div class="input-group"><label>Foto</label><input type="file" name="foto" accept="image/*"></div>
+                  <button type="submit" class="btn-submit">Salvar Docente</button>
+              </form>
+          </div>
 
-        <div class="input-group">
-            <label>Foto</label>
-            <input type="file" name="foto" accept="image/*">
-        </div>
-
-        <button type="submit" class="btn-submit">Salvar Docente</button>
-    </form>
-</div>
           <div class="form-container" data-section="cursos">
               <h3>Novo Curso</h3>
               <form>
@@ -127,6 +184,7 @@
     </div>
   </main>
 
+  <!-- Modal de Confirmação de Exclusão -->
   <div id="delete-modal" class="modal-overlay">
       <div class="modal-content">
           <h2>Confirmar Exclusão</h2>
@@ -138,14 +196,63 @@
       </div>
   </div>
 
+  <!-- ✅ Modal de Edição -->
+  <div id="edit-modal" class="modal-overlay">
+      <div class="modal-content">
+          <h2>Editar Item</h2>
+          <div id="edit-fields"></div>
+          <div class="modal-buttons">
+              <button id="btn-confirm-edit" class="btn-confirm">Salvar Alterações</button>
+              <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
+          </div>
+      </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const tabs = document.querySelectorAll('.tab-btn');
       const panes = document.querySelectorAll('.tab-pane');
       const deleteModal = document.getElementById('delete-modal');
+      const editModal = document.getElementById('edit-modal');
       const btnConfirmDelete = document.getElementById('btn-confirm-delete');
       const btnCancelDelete = document.getElementById('btn-cancel-delete');
+      const btnConfirmEdit = document.getElementById('btn-confirm-edit');
+      const btnCancelEdit = document.getElementById('btn-cancel-edit');
+      const editFields = document.getElementById('edit-fields');
       let itemToDelete = null;
+      let itemToEdit = null;
+
+      // Campos de cada coleção para o modal de edição
+      const fieldsByCollection = {
+        novidades: [
+          { name: 'titulo', label: 'Título', type: 'text' },
+          { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+          { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+        ],
+        cargos: [
+          { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
+          { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
+        ],
+        docente: [
+          { name: 'nome', label: 'Nome', type: 'text' },
+          { name: 'cargo', label: 'Cargo/Função', type: 'text' },
+          { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
+          { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
+        ],
+        cursos: [
+          { name: 'nome', label: 'Nome', type: 'text' },
+          { name: 'descricao', label: 'Descrição', type: 'textarea' }
+        ],
+        contato: [
+          { name: 'nome', label: 'Nome', type: 'text' },
+          { name: 'email', label: 'Email', type: 'email' }
+        ],
+        noticias: [
+          { name: 'titulo', label: 'Título', type: 'text' },
+          { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+          { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+        ]
+      };
 
       tabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -173,19 +280,19 @@
           if (!response.ok) throw new Error(await response.text());
           return response.json();
       }
-      
+
       async function loadManagementContent() {
           const container = document.getElementById('gerenciar');
           container.innerHTML = '<div class="loader">A carregar...</div>';
-          
+
           const collections = [
               { name: 'novidades', title: 'Notícias e Novidades' },
               { name: 'cursos', title: 'Cursos' },
               { name: 'docente', title: 'Corpo Docente' },
-              { name: 'cargos', title: 'Cargos e Funções' }, // Nova coleção
+              { name: 'cargos', title: 'Cargos e Funções' },
               { name: 'contato', title: 'Contactos' }
           ];
-          
+
           let finalHTML = '<div class="grid-lists">';
           for (const collection of collections) {
               finalHTML += `<div class="list-container"><h3>${collection.title}</h3><ul class="item-list" data-collection="${collection.name}">`;
@@ -195,9 +302,13 @@
                       items.forEach(item => {
                           const display = item.titulo || item.nome || item.cargo;
                           const subDisplay = item.materia || item.nivel ? ` <small>(${item.materia || 'Nível ' + item.nivel})</small>` : '';
+                          // ✅ Dois botões: Editar e Excluir
                           finalHTML += `<li data-id="${item.id}">
                                           <span>${display}${subDisplay}</span>
-                                          <button class="btn-delete" data-id="${item.id}" data-collection="${collection.name}">Excluir</button>
+                                          <div class="li-actions">
+                                            <button class="btn-edit" data-id="${item.id}" data-collection="${collection.name}">Editar</button>
+                                            <button class="btn-delete" data-id="${item.id}" data-collection="${collection.name}">Excluir</button>
+                                          </div>
                                         </li>`;
                       });
                   } else { finalHTML += `<li class="empty">Nenhum item encontrado.</li>`; }
@@ -209,7 +320,7 @@
           finalHTML += '</div>';
           container.innerHTML = finalHTML;
       }
-      
+
       async function loadLogsContent() {
         const list = document.getElementById('logs-list');
         list.innerHTML = '<li>A carregar logs...</li>';
@@ -234,19 +345,86 @@
         }
       }
 
-      document.getElementById('gerenciar').addEventListener('click', (e) => {
+      // ✅ Clique em Editar ou Excluir na lista
+      document.getElementById('gerenciar').addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          const collection = e.target.dataset.collection;
+
+          // Excluir
           if (e.target.classList.contains('btn-delete')) {
-              const { id, collection } = e.target.dataset;
               itemToDelete = { id, collection, element: e.target.closest('li') };
               deleteModal.classList.add('active');
           }
+
+          // ✅ Editar — abre modal com os campos preenchidos
+          if (e.target.classList.contains('btn-edit')) {
+              try {
+                  const item = await apiRequest(`${collection}/${id}`);
+                  const fields = fieldsByCollection[collection] || [];
+
+                  editFields.innerHTML = fields.map(f => {
+                      if (f.type === 'textarea') {
+                          return `<div class="input-group">
+                            <label>${f.label}</label>
+                            <textarea name="${f.name}">${item[f.name] || ''}</textarea>
+                          </div>`;
+                      }
+                      if (f.type === 'file') {
+                          return `<div class="input-group">
+                            <label>${f.label}</label>
+                            <input type="file" name="${f.name}" accept="image/*">
+                          </div>`;
+                      }
+                      return `<div class="input-group">
+                        <label>${f.label}</label>
+                        <input type="${f.type}" name="${f.name}" value="${item[f.name] || ''}">
+                      </div>`;
+                  }).join('');
+
+                  itemToEdit = { id, collection };
+                  editModal.classList.add('active');
+              } catch (err) {
+                  alert('Erro ao carregar item para edição.');
+              }
+          }
       });
-      
+
+      // ✅ Confirmar edição
+      btnConfirmEdit.addEventListener('click', async () => {
+          if (!itemToEdit) return;
+          const formData = new FormData();
+          editFields.querySelectorAll('input, textarea').forEach(input => {
+              if (input.type === 'file') {
+                  if (input.files[0]) formData.append(input.name, input.files[0]);
+              } else {
+                  formData.append(input.name, input.value);
+              }
+          });
+          try {
+              await fetch(`/api/${itemToEdit.collection}/${itemToEdit.id}`, {
+                  method: 'PUT',
+                  body: formData
+              });
+              editModal.classList.remove('active');
+              itemToEdit = null;
+              alert('✅ Alterações salvas com sucesso!');
+              loadManagementContent(); // Recarrega a lista
+          } catch (err) {
+              alert('Erro ao salvar alterações.');
+          }
+      });
+
+      btnCancelEdit.addEventListener('click', () => {
+          editModal.classList.remove('active');
+          itemToEdit = null;
+      });
+
+      // Confirmar exclusão
       btnCancelDelete.addEventListener('click', () => {
           deleteModal.classList.remove('active');
           itemToDelete = null;
       });
-      
+
       btnConfirmDelete.addEventListener('click', async () => {
           if (!itemToDelete) return;
           try {
@@ -262,8 +440,9 @@
       async function loadPendingAdmins() {
         try {
           const admins = await apiRequest('pendentes');
-          document.getElementById('pending-admins-list').innerHTML = admins.length === 0 ? '<p style="text-align: center; color: #ccc; font-size: 0.9rem;">Nenhum registo pendente.</p>' :
-            admins.map(admin => `<div class="pending-admin"><p><strong>${admin.username}</strong></p><div class="admin-actions"><button class="btn-approve" data-uid="${admin.uid}">✓</button><button class="btn-deny" data-uid="${admin.uid}">✗</button></div></div>`).join('');
+          document.getElementById('pending-admins-list').innerHTML = admins.length === 0
+            ? '<p style="text-align: center; color: #ccc; font-size: 0.9rem;">Nenhum registo pendente.</p>'
+            : admins.map(admin => `<div class="pending-admin"><p><strong>${admin.username}</strong></p><div class="admin-actions"><button class="btn-approve" data-uid="${admin.uid}">✓</button><button class="btn-deny" data-uid="${admin.uid}">✗</button></div></div>`).join('');
         } catch (error) { console.error('Erro ao carregar admins pendentes:', error); }
       }
 
@@ -278,36 +457,31 @@
         } catch (error) { alert(`Não foi possível ${action} o administrador.`); }
       });
 
-      // Handler para todos os formulários
+      // Handler para formulários de cadastro
       document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const container = form.closest('.form-container');
-          if(!container) return; 
-          
+          if (!container) return;
           const section = container.dataset.section;
           const body = new FormData(form);
           try {
             await apiRequest(section, 'POST', body);
             alert('Dados salvos com sucesso!');
-            // Não limpa o form se for Alunos/Responsáveis para manter os dados visíveis
-            if (section !== 'alunos' && section !== 'responsaveis') {
-                form.reset();
-            }
+            if (section !== 'alunos' && section !== 'responsaveis') form.reset();
           } catch (error) {
             alert('Erro ao salvar.');
           }
         });
       });
 
-      // Carrega dados iniciais para os formulários de informações
       async function loadInitialData(section) {
           try {
               const data = await apiRequest(section);
               const form = document.querySelector(`.form-container[data-section="${section}"] form`);
               if (form && data) {
                   Object.keys(data).forEach(key => {
-                      if(form.elements[key]) form.elements[key].value = data[key];
+                      if (form.elements[key]) form.elements[key].value = data[key];
                   });
               }
           } catch(e) {}
