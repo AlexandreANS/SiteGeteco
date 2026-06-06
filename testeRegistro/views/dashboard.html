@@ -465,11 +465,20 @@
           const container = form.closest('.form-container');
           if (!container) return;
           const section = container.dataset.section;
-          const body = new FormData(form);
+          // alunos e responsaveis usam doc único — enviar como JSON (req.body)
+          const isDocUnico = section === 'alunos' || section === 'responsaveis';
+          let body;
+          if (isDocUnico) {
+            const obj = {};
+            new FormData(form).forEach((v, k) => { obj[k] = v; });
+            body = obj; // apiRequest vai serializar como JSON
+          } else {
+            body = new FormData(form);
+          }
           try {
             await apiRequest(section, 'POST', body);
             alert('Dados salvos com sucesso!');
-            if (section !== 'alunos' && section !== 'responsaveis') form.reset();
+            if (!isDocUnico) form.reset();
           } catch (error) {
             alert('Erro ao salvar.');
           }
