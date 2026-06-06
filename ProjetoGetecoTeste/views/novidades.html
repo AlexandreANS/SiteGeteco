@@ -80,10 +80,7 @@
         });
         container.innerHTML = '';
         data.forEach(n => {
-          let imgSrc = '';
-          if (n.imagem) {
-            try { const u = new URL(n.imagem); u.hostname = window.location.hostname; imgSrc = u.href; } catch (_) { }
-          }
+          let imgSrc = n.imagem || '';
           const card = document.createElement('div');
           card.className = 'news-card';
           card.setAttribute('role', 'button');
