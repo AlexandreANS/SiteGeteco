@@ -25,15 +25,14 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Log para confirmar se as variáveis estão chegando
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'DEFINIDO' : 'NÃO DEFINIDO');
 
-// Multer salva o arquivo em memória (sem tocar no disco do servidor)
+// Multer salva em memória (sem tocar no disco do servidor)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Função que envia a imagem para o Cloudinary e retorna a URL pública permanente
+// Envia imagem para o Cloudinary e retorna a URL pública permanente
 async function uploadImagem(file) {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -42,8 +41,7 @@ async function uploadImagem(file) {
                 if (error) {
                     console.error('CLOUDINARY ERRO:', JSON.stringify(error));
                     reject(error);
-                }
-                else {
+                } else {
                     console.log('CLOUDINARY SUCESSO:', result.secure_url);
                     resolve(result.secure_url);
                 }
@@ -58,10 +56,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS: Permite o site público (5000) e o admin (3000) quando executando o arquivo para testes locais
-app.use(cors({ 
+app.use(cors({
     origin: ['http://localhost:5000', 'http://localhost:3000', 'https://sitegeteco.onrender.com', 'https://escola-geteco.onrender.com'],
-    credentials: true 
+    credentials: true
 }));
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -92,7 +89,7 @@ app.post("/sessionLogin", async (req, res) => {
         const { idToken } = req.body;
         const decoded = await auth.verifyIdToken(idToken);
         if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
-        const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 }); // 5 dias
+        const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
         res.cookie('session', cookie, { maxAge: 432000000, httpOnly: true });
         res.json({ status: 'success' });
     } catch (e) { res.status(401).send('Erro'); }
@@ -108,23 +105,14 @@ app.post("/checkAdmin", async (req, res) => {
 app.post('/register', async (req, res) => {
     try {
         const { uid, email, timestamp } = req.body;
-        if (!uid || !email) {
-            return res.status(400).json({ error: 'Dados de registro incompletos.' });
-        }
-
+        if (!uid || !email) return res.status(400).json({ error: 'Dados de registro incompletos.' });
         const user = await auth.getUser(uid);
-        if (user.email !== email) {
-            return res.status(400).json({ error: 'Dados de usuário inválidos.' });
-        }
-
+        if (user.email !== email) return res.status(400).json({ error: 'Dados de usuário inválidos.' });
         await auth.setCustomUserClaims(uid, { status: 'pending' });
         await db.collection('registrations').doc(uid).set({
-            email,
-            uid,
-            status: 'pending',
+            email, uid, status: 'pending',
             requestedAt: timestamp ? new Date(timestamp) : new Date()
         });
-
         res.json({ success: true });
     } catch (e) {
         console.error('Erro ao processar registro:', e);
@@ -137,14 +125,25 @@ app.get("/logout", (req, res) => {
     res.redirect('/login');
 });
 
-// --- CRUD GENÉRICO (EXCETO DOCENTE) ---
+// --- CRUD GENÉRICO (noticias, novidades, cursos, contato, cargos) ---
 const collections = ['noticias', 'novidades', 'cursos', 'contato', 'cargos'];
 
 collections.forEach(col => {
     // Listar
     app.get(`/api/${col}`, async (req, res) => {
-        const snap = await db.collection(col).get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        try {
+            const snap = await db.collection(col).get();
+            res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch (e) { res.status(500).json({ error: 'Erro ao listar.' }); }
+    });
+
+    // Buscar por ID
+    app.get(`/api/${col}/:id`, async (req, res) => {
+        try {
+            const doc = await db.collection(col).doc(req.params.id).get();
+            if (!doc.exists) return res.status(404).json({ error: 'Item não encontrado' });
+            res.json({ id: doc.id, ...doc.data() });
+        } catch (e) { res.status(500).json({ error: 'Erro ao buscar item.' }); }
     });
 
     // Criar
@@ -152,17 +151,11 @@ collections.forEach(col => {
         try {
             const data = { ...req.body, data: new Date() };
             if (req.file) data.imagem = await uploadImagem(req.file);
-            
             const ref = await db.collection(col).add(data);
-            
             db.collection('logs').add({
-                adminEmail: req.user.email,
-                action: 'criou',
-                collection: col,
-                details: data.titulo || data.nome || data.cargo,
-                timestamp: new Date()
+                adminEmail: req.user.email, action: 'criou', collection: col,
+                details: data.titulo || data.nome || data.cargo, timestamp: new Date()
             });
-
             res.json({ success: true, id: ref.id });
         } catch (e) {
             console.error(`ERRO ao criar em ${col}:`, JSON.stringify(e));
@@ -170,22 +163,53 @@ collections.forEach(col => {
         }
     });
 
+    // Editar
+    app.put(`/api/${col}/:id`, requireAdmin, upload.single('imagem'), async (req, res) => {
+        try {
+            const data = { ...req.body, dataAtualizacao: new Date() };
+            Object.keys(data).forEach(k => { if (data[k] === '') delete data[k]; });
+            if (req.file) data.imagem = await uploadImagem(req.file);
+            await db.collection(col).doc(req.params.id).update(data);
+            db.collection('logs').add({
+                adminEmail: req.user.email, action: 'editou', collection: col,
+                details: data.titulo || data.nome || data.cargo || req.params.id, timestamp: new Date()
+            });
+            res.json({ success: true });
+        } catch (e) {
+            console.error(`ERRO ao editar em ${col}:`, JSON.stringify(e));
+            res.status(500).json({ error: 'Erro ao editar registro.', detalhe: e.message });
+        }
+    });
+
     // Deletar
     app.delete(`/api/${col}/:id`, requireAdmin, async (req, res) => {
-        await db.collection(col).doc(req.params.id).delete();
-        res.json({ success: true });
+        try {
+            await db.collection(col).doc(req.params.id).delete();
+            db.collection('logs').add({
+                adminEmail: req.user?.email || 'admin', action: 'excluiu', collection: col,
+                details: req.params.id, timestamp: new Date()
+            });
+            res.json({ success: true });
+        } catch (e) { res.status(500).json({ error: 'Erro ao deletar.' }); }
     });
 });
 
 // --- CRUD DOCENTE (campo foto separado) ---
-
-// Listar docentes
 app.get('/api/docente', async (req, res) => {
-    const snap = await db.collection('docente').get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    try {
+        const snap = await db.collection('docente').get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) { res.status(500).json({ error: 'Erro ao listar docentes.' }); }
 });
 
-// Criar docente — campo de upload é 'foto', salvo como 'foto' no Firestore
+app.get('/api/docente/:id', async (req, res) => {
+    try {
+        const doc = await db.collection('docente').doc(req.params.id).get();
+        if (!doc.exists) return res.status(404).json({ error: 'Docente não encontrado' });
+        res.json({ id: doc.id, ...doc.data() });
+    } catch (e) { res.status(500).json({ error: 'Erro ao buscar docente.' }); }
+});
+
 app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) => {
     try {
         const data = {
@@ -195,21 +219,12 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
             foto: '',
             data: new Date()
         };
-
-        if (req.file) {
-            data.foto = await uploadImagem(req.file);
-        }
-
+        if (req.file) data.foto = await uploadImagem(req.file);
         const ref = await db.collection('docente').add(data);
-
         db.collection('logs').add({
-            adminEmail: req.user.email,
-            action: 'criou',
-            collection: 'docente',
-            details: data.nome,
-            timestamp: new Date()
+            adminEmail: req.user.email, action: 'criou', collection: 'docente',
+            details: data.nome, timestamp: new Date()
         });
-
         res.json({ success: true, id: ref.id });
     } catch (e) {
         console.error('ERRO ao criar docente:', JSON.stringify(e));
@@ -217,77 +232,78 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
     }
 });
 
-// Deletar docente
-app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
-    await db.collection('docente').doc(req.params.id).delete();
-    res.json({ success: true });
+app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res) => {
+    try {
+        const data = {
+            nome: req.body.nome,
+            cargo: req.body.cargo,
+            materia: req.body.materia,
+            dataAtualizacao: new Date()
+        };
+        Object.keys(data).forEach(k => { if (!data[k]) delete data[k]; });
+        if (req.file) data.foto = await uploadImagem(req.file);
+        await db.collection('docente').doc(req.params.id).update(data);
+        db.collection('logs').add({
+            adminEmail: req.user.email, action: 'editou', collection: 'docente',
+            details: data.nome || req.params.id, timestamp: new Date()
+        });
+        res.json({ success: true });
+    } catch (e) {
+        console.error('ERRO ao editar docente:', JSON.stringify(e));
+        res.status(500).json({ error: 'Erro ao editar docente.', detalhe: e.message });
+    }
 });
 
-// Dados Únicos (Alunos/Responsaveis)
+app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
+    try {
+        await db.collection('docente').doc(req.params.id).delete();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: 'Erro ao deletar docente.' }); }
+});
+
+// --- DADOS ÚNICOS (Alunos / Responsáveis) ---
 ['alunos', 'responsaveis'].forEach(col => {
     app.get(`/api/${col}`, async (req, res) => {
-        const doc = await db.collection(col).doc('main').get();
-        res.json(doc.data() || {});
+        try {
+            const doc = await db.collection(col).doc('main').get();
+            res.json(doc.data() || {});
+        } catch (e) { res.status(500).json({ error: 'Erro ao buscar dados.' }); }
     });
     app.post(`/api/${col}`, requireAdmin, async (req, res) => {
-        await db.collection(col).doc('main').set(req.body, { merge: true });
-        res.json({ success: true });
+        try {
+            await db.collection(col).doc('main').set(req.body, { merge: true });
+            res.json({ success: true });
+        } catch (e) { res.status(500).json({ error: 'Erro ao salvar dados.' }); }
     });
 });
 
-// Pendentes e Logs
+// --- PENDENTES E LOGS ---
 app.get('/api/pendentes', requireAdmin, async (req, res) => {
-    const list = await auth.listUsers(100);
-    res.json(list.users.filter(u => u.customClaims?.status === 'pending').map(u => ({ uid: u.uid, username: u.email })));
+    try {
+        const list = await auth.listUsers(100);
+        res.json(list.users.filter(u => u.customClaims?.status === 'pending').map(u => ({ uid: u.uid, username: u.email })));
+    } catch (e) { res.status(500).json({ error: 'Erro ao listar pendentes.' }); }
 });
 app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
-    await auth.setCustomUserClaims(req.body.uid, { isAdmin: true, status: null });
-    res.json({ success: true });
+    try {
+        await auth.setCustomUserClaims(req.body.uid, { isAdmin: true, status: null });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: 'Erro ao aceitar.' }); }
 });
 app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
-    await auth.deleteUser(req.body.uid);
-    res.json({ success: true });
+    try {
+        await auth.deleteUser(req.body.uid);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: 'Erro ao negar.' }); }
 });
 app.get('/api/logs', requireAdmin, async (req, res) => {
-    const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
-    res.json(snap.docs.map(d => d.data()));
-});
-
-// GET uma postagem por ID
-app.get('/api/novidades/:id', async (req, res) => {
     try {
-        const doc = await db.collection('novidades').doc(req.params.id).get();
-        if (!doc.exists) {
-            return res.status(404).json({ error: 'Postagem não encontrada' });
-        }
-        res.json({ id: doc.id, ...doc.data() });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao buscar postagem' });
-    }
+        const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
+        res.json(snap.docs.map(d => d.data()));
+    } catch (e) { res.status(500).json({ error: 'Erro ao buscar logs.' }); }
 });
 
-// PUT atualizar uma postagem
-app.put('/api/novidades/:id', requireAdmin, async (req, res) => {
-    try {
-        const { titulo, conteudo } = req.body;
-        
-        if (!titulo || !conteudo) {
-            return res.status(400).json({ error: 'Título e conteúdo são obrigatórios' });
-        }
-
-        await db.collection('novidades').doc(req.params.id).update({
-            titulo: titulo,
-            conteudo: conteudo,
-            dataAtualizacao: new Date()
-        });
-
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao atualizar' });
-    }
-});
-
-// Iniciar servidor de maneira local "NPM START"(Para testes!!!)
+// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`Admin Server rodando em http://localhost:${PORT}`);
 });
@@ -425,11 +441,10 @@ collections.forEach(col => {
         res.json({ success: true, id: ref.id });
     });
 
-    // ✅ NOVO: Editar
+    // NOVO: Editar
     app.put(`/api/${col}/:id`, requireAdmin, upload.single('imagem'), async (req, res) => {
         try {
             const data = { ...req.body, dataAtualizacao: new Date() };
-            // Remove campos vazios
             Object.keys(data).forEach(k => { if (data[k] === '') delete data[k]; });
             if (req.file) data.imagem = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
             await db.collection(col).doc(req.params.id).update(data);
@@ -483,7 +498,7 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
     res.json({ success: true, id: ref.id });
 });
 
-// ✅ NOVO: Editar docente
+// NOVO: Editar docente
 app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res) => {
     try {
         const data = {
@@ -492,7 +507,6 @@ app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res
             materia: req.body.materia,
             dataAtualizacao: new Date()
         };
-        // Remove campos vazios
         Object.keys(data).forEach(k => { if (!data[k]) delete data[k]; });
         if (req.file) data.foto = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         await db.collection('docente').doc(req.params.id).update(data);
