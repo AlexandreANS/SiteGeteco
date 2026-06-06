@@ -25,6 +25,11 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Log para confirmar se as variáveis estão chegando
+console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'NÃO DEFINIDO');
+console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY || 'NÃO DEFINIDO');
+console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'DEFINIDO' : 'NÃO DEFINIDO');
+
 // Multer salva o arquivo em memória (sem tocar no disco do servidor)
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -34,8 +39,14 @@ async function uploadImagem(file) {
         const stream = cloudinary.uploader.upload_stream(
             { folder: 'geteco' },
             (error, result) => {
-                if (error) reject(error);
-                else resolve(result.secure_url);
+                if (error) {
+                    console.error('CLOUDINARY ERRO:', JSON.stringify(error));
+                    reject(error);
+                }
+                else {
+                    console.log('CLOUDINARY SUCESSO:', result.secure_url);
+                    resolve(result.secure_url);
+                }
             }
         );
         stream.end(file.buffer);
@@ -138,21 +149,25 @@ collections.forEach(col => {
 
     // Criar
     app.post(`/api/${col}`, requireAdmin, upload.single('imagem'), async (req, res) => {
-        const data = { ...req.body, data: new Date() };
-        if (req.file) data.imagem = await uploadImagem(req.file);
-        
-        const ref = await db.collection(col).add(data);
-        
-        // Log simples
-        db.collection('logs').add({
-            adminEmail: req.user.email,
-            action: 'criou',
-            collection: col,
-            details: data.titulo || data.nome || data.cargo,
-            timestamp: new Date()
-        });
+        try {
+            const data = { ...req.body, data: new Date() };
+            if (req.file) data.imagem = await uploadImagem(req.file);
+            
+            const ref = await db.collection(col).add(data);
+            
+            db.collection('logs').add({
+                adminEmail: req.user.email,
+                action: 'criou',
+                collection: col,
+                details: data.titulo || data.nome || data.cargo,
+                timestamp: new Date()
+            });
 
-        res.json({ success: true, id: ref.id });
+            res.json({ success: true, id: ref.id });
+        } catch (e) {
+            console.error(`ERRO ao criar em ${col}:`, JSON.stringify(e));
+            res.status(500).json({ error: 'Erro ao criar registro.', detalhe: e.message });
+        }
     });
 
     // Deletar
@@ -172,30 +187,34 @@ app.get('/api/docente', async (req, res) => {
 
 // Criar docente — campo de upload é 'foto', salvo como 'foto' no Firestore
 app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) => {
-    const data = {
-        nome: req.body.nome || '',
-        cargo: req.body.cargo || '',
-        materia: req.body.materia || '',
-        foto: '',          // campo foto sempre presente no documento
-        data: new Date()
-    };
+    try {
+        const data = {
+            nome: req.body.nome || '',
+            cargo: req.body.cargo || '',
+            materia: req.body.materia || '',
+            foto: '',
+            data: new Date()
+        };
 
-    if (req.file) {
-        // URL pública permanente gerada pelo Cloudinary
-        data.foto = await uploadImagem(req.file);
+        if (req.file) {
+            data.foto = await uploadImagem(req.file);
+        }
+
+        const ref = await db.collection('docente').add(data);
+
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'docente',
+            details: data.nome,
+            timestamp: new Date()
+        });
+
+        res.json({ success: true, id: ref.id });
+    } catch (e) {
+        console.error('ERRO ao criar docente:', JSON.stringify(e));
+        res.status(500).json({ error: 'Erro ao criar docente.', detalhe: e.message });
     }
-
-    const ref = await db.collection('docente').add(data);
-
-    db.collection('logs').add({
-        adminEmail: req.user.email,
-        action: 'criou',
-        collection: 'docente',
-        details: data.nome,
-        timestamp: new Date()
-    });
-
-    res.json({ success: true, id: ref.id });
 });
 
 // Deletar docente
@@ -233,6 +252,7 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(20).get();
     res.json(snap.docs.map(d => d.data()));
 });
+
 // GET uma postagem por ID
 app.get('/api/novidades/:id', async (req, res) => {
     try {
@@ -266,12 +286,11 @@ app.put('/api/novidades/:id', requireAdmin, async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar' });
     }
 });
+
 // Iniciar servidor de maneira local "NPM START"(Para testes!!!)
 app.listen(PORT, () => {
     console.log(`Admin Server rodando em http://localhost:${PORT}`);
 });
-
-
 
 /*const express = require("express");
 const path = require("path");
