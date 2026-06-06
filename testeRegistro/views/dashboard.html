@@ -135,6 +135,7 @@
               <form>
                   <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
                   <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
+                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
                   <button type="submit" class="btn-submit">Salvar Curso</button>
               </form>
           </div>
@@ -196,7 +197,7 @@
       </div>
   </div>
 
-  <!-- ✅ Modal de Edição -->
+  <!-- Modal de Edição -->
   <div id="edit-modal" class="modal-overlay">
       <div class="modal-content">
           <h2>Editar Item</h2>
@@ -241,7 +242,8 @@
         ],
         cursos: [
           { name: 'nome', label: 'Nome', type: 'text' },
-          { name: 'descricao', label: 'Descrição', type: 'textarea' }
+          { name: 'descricao', label: 'Descrição', type: 'textarea' },
+          { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
         ],
         contato: [
           { name: 'nome', label: 'Nome', type: 'text' },
@@ -302,7 +304,6 @@
                       items.forEach(item => {
                           const display = item.titulo || item.nome || item.cargo;
                           const subDisplay = item.materia || item.nivel ? ` <small>(${item.materia || 'Nível ' + item.nivel})</small>` : '';
-                          // ✅ Dois botões: Editar e Excluir
                           finalHTML += `<li data-id="${item.id}">
                                           <span>${display}${subDisplay}</span>
                                           <div class="li-actions">
@@ -345,7 +346,7 @@
         }
       }
 
-      // ✅ Clique em Editar ou Excluir na lista
+      // Clique em Editar ou Excluir na lista
       document.getElementById('gerenciar').addEventListener('click', async (e) => {
           const id = e.target.dataset.id;
           const collection = e.target.dataset.collection;
@@ -356,7 +357,7 @@
               deleteModal.classList.add('active');
           }
 
-          // ✅ Editar — abre modal com os campos preenchidos
+          // Editar — abre modal com os campos preenchidos
           if (e.target.classList.contains('btn-edit')) {
               try {
                   const item = await apiRequest(`${collection}/${id}`);
@@ -389,7 +390,7 @@
           }
       });
 
-      // ✅ Confirmar edição
+      // Confirmar edição
       btnConfirmEdit.addEventListener('click', async () => {
           if (!itemToEdit) return;
           const formData = new FormData();
@@ -408,7 +409,7 @@
               editModal.classList.remove('active');
               itemToEdit = null;
               alert('✅ Alterações salvas com sucesso!');
-              loadManagementContent(); // Recarrega a lista
+              loadManagementContent();
           } catch (err) {
               alert('Erro ao salvar alterações.');
           }
