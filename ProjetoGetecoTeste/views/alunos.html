@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>GETECO - Alunos</title>
+  <title>GETECO - Calendário Escolar</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
 </head>
@@ -17,65 +17,170 @@
         <li><a href="/cursos">Cursos</a></li>
         <li><a href="/docente">Docentes</a></li>
         <li><a href="/contato">Contato</a></li>
-        <li><a href="/alunos" class="active">Alunos</a></li>
-        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/alunos" class="active">Calendário</a></li>
+        <li><a href="/responsaveis">Biblioteca</a></li>
         <li><a href="/novidades">Infraestrutura</a></li>
       </ul>
     </nav>
   </header>
 
   <section class="section">
-    <h2>Informações Acadêmicas</h2>
+    <h2>Calendário Escolar</h2>
     <p style="text-align:center;color:var(--texto-suave,#6b7280);max-width:600px;margin:0 auto 2.5rem;">
-      Fique atento às datas importantes do calendário escolar.
+      Fique atento às datas importantes para alunos e responsáveis.
     </p>
-    <div id="alunos-content">
-      <div style="text-align:center;color:var(--texto-suave,#6b7280)">Carregando informações...</div>
+
+    <!-- Abas internas -->
+    <div class="cal-tabs" role="tablist" aria-label="Selecionar público">
+      <button class="cal-tab active" id="tab-alunos" role="tab" aria-selected="true" aria-controls="painel-alunos" onclick="trocarAba('alunos')">
+        🎒 Alunos
+      </button>
+      <button class="cal-tab" id="tab-responsaveis" role="tab" aria-selected="false" aria-controls="painel-responsaveis" onclick="trocarAba('responsaveis')">
+        👨‍👩‍👧 Responsáveis
+      </button>
+    </div>
+
+    <!-- Painel Alunos -->
+    <div id="painel-alunos" role="tabpanel" aria-labelledby="tab-alunos">
+      <p class="cal-subtitulo">Eventos e datas do calendário acadêmico.</p>
+      <div id="alunos-content">
+        <div style="text-align:center;color:var(--texto-suave,#6b7280)">Carregando informações...</div>
+      </div>
+    </div>
+
+    <!-- Painel Responsáveis -->
+    <div id="painel-responsaveis" role="tabpanel" aria-labelledby="tab-responsaveis" hidden>
+      <p class="cal-subtitulo">Datas de reuniões e entrega de documentos importantes.</p>
+      <div id="responsaveis-content">
+        <div style="text-align:center;color:var(--texto-suave,#6b7280)">Carregando informações...</div>
+      </div>
     </div>
   </section>
 
   <footer></footer>
 
+  <style>
+    .cal-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .cal-tab {
+      padding: 0.55rem 1.5rem;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      background: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--texto-suave, #6b7280);
+      transition: all 0.2s ease;
+    }
+    .cal-tab:hover {
+      color: var(--cor-primaria, #1d4ed8);
+      border-color: var(--cor-primaria, #1d4ed8);
+    }
+    .cal-tab.active {
+      background: var(--cor-primaria, #1d4ed8);
+      color: #fff;
+      border-color: var(--cor-primaria, #1d4ed8);
+    }
+    .cal-subtitulo {
+      text-align: center;
+      color: var(--texto-suave, #6b7280);
+      max-width: 520px;
+      margin: 0 auto 2rem;
+      font-size: 0.92rem;
+    }
+  </style>
+
   <script>
-    const ICONES = {
-      semanaProvas: '📝',
-      gincana: '🏆',
-      feiraCiencias: '🔬',
+    const ICONES_ALUNOS = {
+      semanaProvas:   '📝',
+      gincana:        '🏆',
+      feiraCiencias:  '🔬',
       semanaCultural: '🎭',
-      ferias: '🌴',
+      ferias:         '🌴',
     };
 
-    // ✅ CORRIGIDO: usa /api/alunos (proxy repassa ao admin-server)
-    fetch(`/api/alunos`)
+    const ICONES_RESP = {
+      reuniaoPais:      '👨‍👩‍👧',
+      entregaBoletins:  '📋',
+    };
+
+    function trocarAba(aba) {
+      const painelAlunos       = document.getElementById('painel-alunos');
+      const painelResponsaveis = document.getElementById('painel-responsaveis');
+      const tabAlunos          = document.getElementById('tab-alunos');
+      const tabResponsaveis    = document.getElementById('tab-responsaveis');
+
+      if (aba === 'alunos') {
+        painelAlunos.hidden       = false;
+        painelResponsaveis.hidden = true;
+        tabAlunos.classList.add('active');
+        tabAlunos.setAttribute('aria-selected', 'true');
+        tabResponsaveis.classList.remove('active');
+        tabResponsaveis.setAttribute('aria-selected', 'false');
+      } else {
+        painelAlunos.hidden       = true;
+        painelResponsaveis.hidden = false;
+        tabResponsaveis.classList.add('active');
+        tabResponsaveis.setAttribute('aria-selected', 'true');
+        tabAlunos.classList.remove('active');
+        tabAlunos.setAttribute('aria-selected', 'false');
+      }
+    }
+
+    function renderGrid(containerId, campos, data, icones) {
+      const container = document.getElementById(containerId);
+      if (!data || Object.keys(data).length === 0) {
+        container.innerHTML = '<p style="text-align:center">Nenhuma informação registada no momento.</p>';
+        return;
+      }
+      const grid = document.createElement('div');
+      grid.className = 'info-grid';
+      campos.forEach(c => {
+        const box = document.createElement('div');
+        box.className = 'info-box';
+        box.innerHTML = `
+          <span class="info-box-icon">${icones[c.key] || '📅'}</span>
+          <span class="info-title">${c.titulo}</span>
+          <span class="info-value">${data[c.key] || 'A definir'}</span>`;
+        grid.appendChild(box);
+      });
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    // Carregar dados de Alunos
+    fetch('/api/alunos')
       .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
-        const container = document.getElementById('alunos-content');
-        if (!data || Object.keys(data).length === 0) {
-          container.innerHTML = '<p style="text-align:center">Nenhuma informação registada para os alunos no momento.</p>'; return;
-        }
-        const grid = document.createElement('div');
-        grid.className = 'info-grid';
-        const campos = [
-          { key: 'semanaProvas', titulo: 'Semana de Provas' },
-          { key: 'gincana', titulo: 'Gincana Escolar' },
-          { key: 'feiraCiencias', titulo: 'Feira de Ciências' },
-          { key: 'semanaCultural', titulo: 'Semana Cultural' },
-          { key: 'ferias', titulo: 'Férias Escolares' },
-        ];
-        campos.forEach(c => {
-          const box = document.createElement('div');
-          box.className = 'info-box';
-          box.innerHTML = `
-            <span class="info-box-icon">${ICONES[c.key] || '📅'}</span>
-            <span class="info-title">${c.titulo}</span>
-            <span class="info-value">${data[c.key] || 'A definir'}</span>`;
-          grid.appendChild(box);
-        });
-        container.innerHTML = '';
-        container.appendChild(grid);
+        renderGrid('alunos-content', [
+          { key: 'semanaProvas',   titulo: 'Semana de Provas'   },
+          { key: 'gincana',        titulo: 'Gincana Escolar'     },
+          { key: 'feiraCiencias',  titulo: 'Feira de Ciências'  },
+          { key: 'semanaCultural', titulo: 'Semana Cultural'     },
+          { key: 'ferias',         titulo: 'Férias Escolares'    },
+        ], data, ICONES_ALUNOS);
       })
       .catch(() => {
         document.getElementById('alunos-content').innerHTML =
+          '<p style="text-align:center">Não foi possível carregar as informações.</p>';
+      });
+
+    // Carregar dados de Responsáveis
+    fetch('/api/responsaveis')
+      .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+      .then(data => {
+        renderGrid('responsaveis-content', [
+          { key: 'reuniaoPais',     titulo: 'Reunião de Pais'      },
+          { key: 'entregaBoletins', titulo: 'Entrega de Boletins'  },
+        ], data, ICONES_RESP);
+      })
+      .catch(() => {
+        document.getElementById('responsaveis-content').innerHTML =
           '<p style="text-align:center">Não foi possível carregar as informações.</p>';
       });
   </script>
