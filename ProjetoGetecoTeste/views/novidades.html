@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO - Infraestrutura</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -66,19 +67,26 @@
     overlay.addEventListener('click', e => { if (e.target === overlay) fecharPopup(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharPopup(); });
 
-    fetch(`https://escola-geteco.onrender.com/api/novidades`)
-      .then(res => res.json())
+    fetch(`/api/novidades`)
+      .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
       .then(data => {
         const container = document.getElementById('novidades-content');
         if (!Array.isArray(data) || data.length === 0) {
           container.innerHTML = '<p>Nenhuma novidade registada.</p>'; return;
         }
         data.sort((a, b) => {
-          const dA = a.data ? new Date(a.data.seconds * 1000) : 0;
-          const dB = b.data ? new Date(b.data.seconds * 1000) : 0;
-          return dB - dA;
+          const toMs = ts => ts
+            ? (ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : new Date(ts).getTime())
+            : 0;
+          return toMs(b.data) - toMs(a.data);
         });
         container.innerHTML = '';
+        // Escapa HTML para prevenir XSS
+        function escapeHtml(str) {
+          if (!str) return '';
+          return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
         data.forEach(n => {
           let imgSrc = n.imagem || '';
           const card = document.createElement('div');
@@ -86,11 +94,11 @@
           card.setAttribute('role', 'button');
           card.setAttribute('tabindex', '0');
           card.innerHTML = `
-            ${imgSrc ? `<div class="news-card-img"><img src="${imgSrc}" alt="${n.titulo}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>🏫</span></div>'}
+            ${imgSrc ? `<div class="news-card-img"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(n.titulo)}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>🏫</span></div>'}
             <div class="news-card-body">
               <span class="news-card-badge">Novidade</span>
-              <h3 class="news-card-title">${n.titulo}</h3>
-              <p class="news-card-excerpt">${n.conteudo}</p>
+              <h3 class="news-card-title">${escapeHtml(n.titulo)}</h3>
+              <p class="news-card-excerpt">${escapeHtml(n.conteudo)}</p>
               <span class="news-card-cta">Ver mais →</span>
             </div>`;
           card.addEventListener('click', () => abrirPopup(n.titulo, n.conteudo, imgSrc));

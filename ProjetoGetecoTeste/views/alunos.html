@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO - Calendário Escolar</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -138,15 +139,29 @@
         container.innerHTML = '<p style="text-align:center">Nenhuma informação registada no momento.</p>';
         return;
       }
+      // Escapa HTML para prevenir XSS
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
       const grid = document.createElement('div');
       grid.className = 'info-grid';
       campos.forEach(c => {
         const box = document.createElement('div');
         box.className = 'info-box';
-        box.innerHTML = `
-          <span class="info-box-icon">${icones[c.key] || '📅'}</span>
-          <span class="info-title">${c.titulo}</span>
-          <span class="info-value">${data[c.key] || 'A definir'}</span>`;
+        const icon = document.createElement('span');
+        icon.className = 'info-box-icon';
+        icon.textContent = icones[c.key] || '📅';
+        const title = document.createElement('span');
+        title.className = 'info-title';
+        title.textContent = c.titulo;
+        const value = document.createElement('span');
+        value.className = 'info-value';
+        value.textContent = data[c.key] || 'A definir';
+        box.appendChild(icon);
+        box.appendChild(title);
+        box.appendChild(value);
         grid.appendChild(box);
       });
       container.innerHTML = '';

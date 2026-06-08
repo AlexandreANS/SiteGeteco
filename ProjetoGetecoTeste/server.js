@@ -59,16 +59,32 @@ app.post("/api/update-config", (req, res) => {
 });
 
 // ✅ PROXY: repassa /api/* para o admin-server no Render
+// ✅ CORRIGIDO: express.json() consome o body antes deste ponto; para POST/PUT,
+//    o body precisa ser re-serializado — não se pode usar req.pipe() diretamente.
 app.use('/api', (req, res) => {
+  let bodyStr = '';
+  const contentType = req.headers['content-type'] || '';
+
+  if (req.body && Object.keys(req.body).length > 0 && contentType.includes('application/json')) {
+    bodyStr = JSON.stringify(req.body);
+  }
+
+  const proxyHeaders = {
+    ...req.headers,
+    host: ADMIN_URL
+  };
+
+  if (bodyStr) {
+    proxyHeaders['content-type'] = 'application/json';
+    proxyHeaders['content-length'] = Buffer.byteLength(bodyStr);
+  }
+
   const options = {
     hostname: ADMIN_URL,
     port: 443,
     path: '/api' + req.url,
     method: req.method,
-    headers: {
-      ...req.headers,
-      host: ADMIN_URL
-    }
+    headers: proxyHeaders
   };
 
   const proxy = https.request(options, (proxyRes) => {
@@ -81,7 +97,11 @@ app.use('/api', (req, res) => {
     res.status(503).json({ error: 'Admin server indisponível.' });
   });
 
-  req.pipe(proxy);
+  if (bodyStr) {
+    proxy.end(bodyStr);
+  } else {
+    req.pipe(proxy);
+  }
 });
 
 app.listen(PORT, () => {

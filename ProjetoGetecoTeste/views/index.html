@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -47,9 +48,6 @@
   </div>
 
   <script>
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-
     // --- Popup ---
     const overlay = document.getElementById('popup-overlay');
     const pImg = document.getElementById('popup-img');
@@ -83,22 +81,28 @@
           container.innerHTML = '<p>Nenhuma notícia registada.</p>'; return;
         }
         container.innerHTML = '';
+        // Escapa HTML para prevenir XSS
+        function escapeHtml(str) {
+          if (!str) return '';
+          return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
         data.forEach(n => {
           let imgSrc = '';
           if (n.imagem) {
-            try { const u = new URL(n.imagem); u.hostname = 'escola-geteco.onrender.com'; imgSrc = u.href; } catch (_) { }
+            imgSrc = n.imagem; // URL do Cloudinary usada diretamente
           }
           const card = document.createElement('div');
           card.className = 'news-card';
           card.setAttribute('role', 'button');
           card.setAttribute('tabindex', '0');
-          card.setAttribute('aria-label', `Ler notícia: ${n.titulo}`);
+          card.setAttribute('aria-label', `Ler notícia: ${escapeHtml(n.titulo)}`);
           card.innerHTML = `
-            ${imgSrc ? `<div class="news-card-img"><img src="${imgSrc}" alt="${n.titulo}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>📰</span></div>'}
+            ${imgSrc ? `<div class="news-card-img"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(n.titulo)}"></div>` : '<div class="news-card-img news-card-img--placeholder"><span>📰</span></div>'}
             <div class="news-card-body">
               <span class="news-card-badge">Notícia</span>
-              <h3 class="news-card-title">${n.titulo}</h3>
-              <p class="news-card-excerpt">${n.conteudo}</p>
+              <h3 class="news-card-title">${escapeHtml(n.titulo)}</h3>
+              <p class="news-card-excerpt">${escapeHtml(n.conteudo)}</p>
               <span class="news-card-cta">Ler mais →</span>
             </div>`;
           card.addEventListener('click', () => abrirPopup(n.titulo, n.conteudo, imgSrc));

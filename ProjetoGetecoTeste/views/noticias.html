@@ -4,8 +4,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO - Notícias</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
   <style>
     .noticia-imagem { max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; }
@@ -21,8 +22,8 @@
         <li><a href="/cursos">Cursos</a></li>
         <li><a href="/docente">Docentes</a></li>
         <li><a href="/contato">Contato</a></li>
-        <li><a href="/alunos">Alunos</a></li>
-        <li><a href="/responsaveis">Responsáveis</a></li>
+        <li><a href="/alunos">Calendário</a></li>
+        <li><a href="/responsaveis">Biblioteca</a></li>
         <li><a href="/novidades">Infraestrutura</a></li>
       </ul>
     </nav>
@@ -33,15 +34,14 @@
     <div id="noticias-content">Carregando...</div>
   </section>
 
+  <footer></footer>
+
   <script>
     // ====================================================================
     // ✅ CORREÇÃO: Arquivo noticias.html estava SEM FETCH!
     // Agora ele carrega as notícias dinamicamente
     // ====================================================================
     
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-
     fetch(`/api/noticias`)
       .then(res => {
         if (!res.ok) {
@@ -72,13 +72,8 @@
 
           let imagemHTML = '';
           if (noticia.imagem) {
-            try {
-              const imgUrl = new URL(noticia.imagem);
-              imgUrl.hostname = 'escola-geteco.onrender.com';
-              imagemHTML = `<img src="${imgUrl.href}" alt="${noticia.titulo}" class="noticia-imagem">`;
-            } catch (e) {
-              console.error('URL de imagem inválida:', noticia.imagem);
-            }
+            // Usa a URL diretamente (Cloudinary ou outro CDN) sem reescrever o hostname
+            imagemHTML = `<img src="${noticia.imagem}" alt="${noticia.titulo}" class="noticia-imagem">`;
           }
 
           const titulo = document.createElement('h3');
@@ -96,9 +91,15 @@
       })
       .catch((error) => {
         console.error("❌ Erro ao carregar notícias:", error);
-        document.getElementById('noticias-content').innerHTML = 
-          `<p style="color: red;">Erro ao carregar notícias: ${error.message}</p>`;
+        const _nc = document.getElementById('noticias-content');
+        _nc.innerHTML = '';
+        const _np = document.createElement('p');
+        _np.style.color = 'red';
+        _np.textContent = 'Erro ao carregar notícias. Tente novamente mais tarde.';
+        _nc.appendChild(_np);
       });
   </script>
+
+  <script src="/js/main.js"></script>
 </body>
 </html>

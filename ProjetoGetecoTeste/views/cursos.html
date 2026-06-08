@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO - Cursos</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -86,19 +87,25 @@
           container.innerHTML = '<p>Nenhum curso cadastrado.</p>'; return;
         }
         container.innerHTML = '';
+        // Escapa HTML para prevenir XSS
+        function escapeHtml(str) {
+          if (!str) return '';
+          return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
         data.forEach(curso => {
           const imgSrc = curso.imagem || '';
           const card = document.createElement('div');
           card.className = 'news-card curso-card';
           card.setAttribute('role', 'button');
           card.setAttribute('tabindex', '0');
-          card.setAttribute('aria-label', `Ver detalhes: ${curso.nome}`);
+          card.setAttribute('aria-label', `Ver detalhes: ${escapeHtml(curso.nome)}`);
           card.innerHTML = `
-            ${imgSrc ? `<div class="news-card-img"><img src="${imgSrc}" alt="${curso.nome}"></div>` : `<div class="news-card-img news-card-img--placeholder curso-placeholder"><img src="/images/logo.png" alt="${curso.nome}" class="curso-logo-thumb"></div>`}
+            ${imgSrc ? `<div class="news-card-img"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(curso.nome)}"></div>` : `<div class="news-card-img news-card-img--placeholder curso-placeholder"><img src="/images/logo.png" alt="${escapeHtml(curso.nome)}" class="curso-logo-thumb"></div>`}
             <div class="news-card-body">
               <span class="news-card-badge">Curso</span>
-              <h3 class="news-card-title">${curso.nome || 'Curso'}</h3>
-              <p class="news-card-excerpt">${curso.descricao || 'Clique para ver os detalhes deste curso.'}</p>
+              <h3 class="news-card-title">${escapeHtml(curso.nome) || 'Curso'}</h3>
+              <p class="news-card-excerpt">${escapeHtml(curso.descricao) || 'Clique para ver os detalhes deste curso.'}</p>
               <span class="news-card-cta">Ver detalhes →</span>
             </div>`;
           card.addEventListener('click', () => abrirPopup(curso.nome, curso.descricao));

@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Administrativo - GETECO</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -67,6 +68,78 @@
     li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
     li span { flex: 1; }
     .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* ── Biblioteca ── */
+    .bib-filtro {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      box-sizing: border-box;
+    }
+    .bib-select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      padding: 4px;
+      min-height: 100px;
+    }
+    .tabela-bib {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .tabela-bib th {
+      background: #f3f4f6;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tabela-bib td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .tabela-bib tr:hover td { background: #fafafa; }
+    .btn-devolver {
+      background: #f59e0b;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .btn-devolver:hover { background: #d97706; }
+    .btn-reload {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-reload:hover { background: #4b5563; }
+    .bib-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .badge-ativo    { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .badge-devolvido{ background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    #lista-historico-aluno li,
+    #lista-historico-livro li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body class="dashboard-body">
@@ -95,13 +168,25 @@
       <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
       <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
       <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
+      <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
       <button class="tab-btn" data-tab="logs">Logs</button>
     </div>
 
+    <!-- ── ABA: CADASTRAR ── -->
     <div id="cadastrar" class="tab-pane active">
       <div class="grid-forms">
+          <div class="form-container" data-section="noticias">
+              <h3>Nova Notícia</h3>
+              <form>
+                  <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                  <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                  <button type="submit" class="btn-submit">Salvar Notícia</button>
+              </form>
+          </div>
+
           <div class="form-container" data-section="novidades">
-              <h3>Nova Notícia/Novidade</h3>
+              <h3>Nova Novidade/Infraestrutura</h3>
               <form>
                   <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
                   <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
@@ -148,9 +233,34 @@
                   <button type="submit" class="btn-submit">Salvar Contacto</button>
               </form>
           </div>
+
+          <!-- CORRIGIDO: era data-section="contato" -->
+          <div class="form-container" data-section="alunosBib">
+              <h3>Novo Aluno (Biblioteca)</h3>
+              <form>
+                  <div class="input-group"><label>Matrícula</label><input type="text" name="matricula" required></div>
+                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                  <button type="submit" class="btn-submit">Salvar Aluno</button>
+              </form>
+          </div>
+
+          <!-- CORRIGIDO: era data-section="contato" -->
+          <div class="form-container" data-section="livros">
+              <h3>Novo Livro</h3>
+              <form>
+                  <div class="input-group"><label>Código</label><input type="text" name="codigo" required></div>
+                  <div class="input-group"><label>Título</label><input type="text" name="nome" required></div>
+                  <div class="input-group"><label>Autor</label><input type="text" name="autor" required></div>
+                  <button type="submit" class="btn-submit">Salvar Livro</button>
+              </form>
+          </div>
       </div>
     </div>
 
+    <!-- ── ABA: GERIR ── -->
+    <div id="gerenciar" class="tab-pane"></div>
+
+    <!-- ── ABA: INFORMAÇÕES ── -->
     <div id="informacoes" class="tab-pane">
         <div class="grid-forms">
             <div class="form-container" data-section="alunos">
@@ -175,8 +285,65 @@
         </div>
     </div>
 
-    <div id="gerenciar" class="tab-pane"></div>
+    <!-- ── ABA: BIBLIOTECA ── -->
+    <div id="biblioteca" class="tab-pane">
+      <div class="grid-forms">
 
+        <!-- Registrar Empréstimo -->
+        <div class="form-container">
+          <h3>Registrar Empréstimo</h3>
+          <div class="input-group">
+            <label>Aluno</label>
+            <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
+            <select id="sel-aluno-emp" class="bib-select" size="5"></select>
+          </div>
+          <div class="input-group">
+            <label>Livro disponível</label>
+            <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
+            <select id="sel-livro-emp" class="bib-select" size="5"></select>
+          </div>
+          <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
+        </div>
+
+        <!-- Histórico por Aluno -->
+        <div class="form-container">
+          <h3>Histórico por Aluno</h3>
+          <div class="input-group">
+            <label>Selecionar aluno</label>
+            <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar aluno...">
+            <select id="sel-aluno-hist" class="bib-select" size="5"></select>
+          </div>
+          <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+          <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
+        </div>
+
+        <!-- Histórico por Livro -->
+        <div class="form-container">
+          <h3>Histórico por Livro</h3>
+          <div class="input-group">
+            <label>Selecionar livro</label>
+            <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
+            <select id="sel-livro-hist" class="bib-select" size="5"></select>
+          </div>
+          <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+          <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
+        </div>
+
+      </div>
+
+      <!-- Tabela de empréstimos em andamento -->
+      <div class="list-container" style="margin-top:1.5rem">
+        <div class="bib-header">
+          <h3>Empréstimos em Andamento</h3>
+          <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
+        </div>
+        <div id="tabela-emprestimos-container">
+          <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ABA: LOGS ── -->
     <div id="logs" class="tab-pane">
         <div class="list-container">
             <h3>Histórico de Atividades Recentes</h3>
@@ -253,6 +420,27 @@
           { name: 'titulo', label: 'Título', type: 'text' },
           { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
           { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+        ],
+        // Calendário (doc único) — editado pelo modal, salvo via POST
+        alunos: [
+          { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
+          { name: 'gincana', label: 'Gincana', type: 'text' },
+          { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
+          { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
+          { name: 'ferias', label: 'Férias', type: 'text' }
+        ],
+        responsaveis: [
+          { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
+          { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
+        ],
+        alunosBib: [
+          { name: 'matricula', label: 'Matrícula', type: 'text' },
+          { name: 'nome', label: 'Nome', type: 'text' }
+        ],
+        livros: [
+          { name: 'codigo', label: 'Código', type: 'text' },
+          { name: 'nome', label: 'Título', type: 'text' },
+          { name: 'autor', label: 'Autor', type: 'text' }
         ]
       };
 
@@ -265,6 +453,7 @@
           targetPane.classList.add('active');
           if (tab.dataset.tab === 'gerenciar') loadManagementContent();
           if (tab.dataset.tab === 'logs') loadLogsContent();
+          if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
         });
       });
 
@@ -288,31 +477,60 @@
           container.innerHTML = '<div class="loader">A carregar...</div>';
 
           const collections = [
-              { name: 'novidades', title: 'Notícias e Novidades' },
+              { name: 'noticias', title: 'Notícias' },
+              { name: 'novidades', title: 'Novidades/Infraestrutura' },
               { name: 'cursos', title: 'Cursos' },
               { name: 'docente', title: 'Corpo Docente' },
               { name: 'cargos', title: 'Cargos e Funções' },
-              { name: 'contato', title: 'Contactos' }
+              { name: 'contato', title: 'Contactos' },
+              { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
+              { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
+              { name: 'alunosBib', title: 'Alunos (Biblioteca)' },
+              { name: 'livros', title: 'Livros' }
           ];
 
           let finalHTML = '<div class="grid-lists">';
           for (const collection of collections) {
               finalHTML += `<div class="list-container"><h3>${collection.title}</h3><ul class="item-list" data-collection="${collection.name}">`;
               try {
-                  const items = await apiRequest(collection.name);
-                  if (items.length > 0) {
-                      items.forEach(item => {
-                          const display = item.titulo || item.nome || item.cargo;
-                          const subDisplay = item.materia || item.nivel ? ` <small>(${item.materia || 'Nível ' + item.nivel})</small>` : '';
-                          finalHTML += `<li data-id="${item.id}">
-                                          <span>${display}${subDisplay}</span>
-                                          <div class="li-actions">
-                                            <button class="btn-edit" data-id="${item.id}" data-collection="${collection.name}">Editar</button>
-                                            <button class="btn-delete" data-id="${item.id}" data-collection="${collection.name}">Excluir</button>
-                                          </div>
-                                        </li>`;
-                      });
-                  } else { finalHTML += `<li class="empty">Nenhum item encontrado.</li>`; }
+                  if (collection.isDocUnico) {
+                      // Doc único: exibe campos atuais e um único botão de edição
+                      const data = await apiRequest(collection.name);
+                      const fields = fieldsByCollection[collection.name] || [];
+                      const temDados = fields.some(f => data[f.name]);
+                      if (temDados) {
+                          fields.forEach(f => {
+                              if (data[f.name]) {
+                                  finalHTML += `<li><span><strong>${f.label}:</strong> ${data[f.name]}</span></li>`;
+                              }
+                          });
+                      } else {
+                          finalHTML += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
+                      }
+                      finalHTML += `<li style="border-top:1px solid #e5e7eb;padding-top:0.5rem;margin-top:0.25rem">
+                                      <span></span>
+                                      <button class="btn-edit btn-edit-docunico" data-collection="${collection.name}">Editar</button>
+                                    </li>`;
+                  } else {
+                      const items = await apiRequest(collection.name);
+                      if (items.length > 0) {
+                          items.forEach(item => {
+                              const display = item.titulo || item.nome || item.cargo;
+                              let subDisplay = '';
+                              if (item.matricula) subDisplay = ` <small>(Mat: ${item.matricula})</small>`;
+                              else if (item.autor) subDisplay = ` <small>(${item.autor})</small>`;
+                              else if (item.materia) subDisplay = ` <small>(${item.materia})</small>`;
+                              else if (item.nivel !== undefined) subDisplay = ` <small>(Nível ${item.nivel})</small>`;
+                              finalHTML += `<li data-id="${item.id}">
+                                              <span>${display}${subDisplay}</span>
+                                              <div class="li-actions">
+                                                <button class="btn-edit" data-id="${item.id}" data-collection="${collection.name}">Editar</button>
+                                                <button class="btn-delete" data-id="${item.id}" data-collection="${collection.name}">Excluir</button>
+                                              </div>
+                                            </li>`;
+                          });
+                      } else { finalHTML += `<li class="empty">Nenhum item encontrado.</li>`; }
+                  }
               } catch (e) {
                   finalHTML += `<li class="error">Erro ao carregar.</li>`;
               }
@@ -329,7 +547,11 @@
             const logs = await apiRequest('logs');
             if (logs.length > 0) {
                 list.innerHTML = logs.map(log => {
-                    const date = new Date(log.timestamp).toLocaleString('pt-BR');
+                    const ts = log.timestamp;
+                    const ms = ts?.seconds ? ts.seconds * 1000 : ts?._seconds ? ts._seconds * 1000 : null;
+                    const date = ms !== null
+                        ? new Date(ms).toLocaleString('pt-BR')
+                        : new Date(ts).toLocaleString('pt-BR');
                     return `<li>
                                 <div class="log-info">
                                     <strong>${log.adminEmail}</strong> <span class="log-action">${log.action}</span> em <em>${log.collection}</em>
@@ -346,19 +568,18 @@
         }
       }
 
-      // Clique em Editar ou Excluir na lista
+      // Clique em Editar ou Excluir na lista de gerenciar
       document.getElementById('gerenciar').addEventListener('click', async (e) => {
           const id = e.target.dataset.id;
           const collection = e.target.dataset.collection;
 
-          // Excluir
           if (e.target.classList.contains('btn-delete')) {
               itemToDelete = { id, collection, element: e.target.closest('li') };
               deleteModal.classList.add('active');
           }
 
-          // Editar — abre modal com os campos preenchidos
-          if (e.target.classList.contains('btn-edit')) {
+          // Edição de item de coleção (tem ID)
+          if (e.target.classList.contains('btn-edit') && !e.target.classList.contains('btn-edit-docunico')) {
               try {
                   const item = await apiRequest(`${collection}/${id}`);
                   const fields = fieldsByCollection[collection] || [];
@@ -382,10 +603,30 @@
                       </div>`;
                   }).join('');
 
-                  itemToEdit = { id, collection };
+                  itemToEdit = { id, collection, isDocUnico: false };
                   editModal.classList.add('active');
               } catch (err) {
                   alert('Erro ao carregar item para edição.');
+              }
+          }
+
+          // Edição de doc único (sem ID — alunos, responsaveis)
+          if (e.target.classList.contains('btn-edit-docunico')) {
+              try {
+                  const data = await apiRequest(collection);
+                  const fields = fieldsByCollection[collection] || [];
+
+                  editFields.innerHTML = fields.map(f =>
+                      `<div class="input-group">
+                        <label>${f.label}</label>
+                        <input type="text" name="${f.name}" value="${data[f.name] || ''}">
+                      </div>`
+                  ).join('');
+
+                  itemToEdit = { collection, isDocUnico: true };
+                  editModal.classList.add('active');
+              } catch (err) {
+                  alert('Erro ao carregar dados para edição.');
               }
           }
       });
@@ -393,19 +634,48 @@
       // Confirmar edição
       btnConfirmEdit.addEventListener('click', async () => {
           if (!itemToEdit) return;
-          const formData = new FormData();
-          editFields.querySelectorAll('input, textarea').forEach(input => {
-              if (input.type === 'file') {
-                  if (input.files[0]) formData.append(input.name, input.files[0]);
-              } else {
-                  formData.append(input.name, input.value);
-              }
-          });
           try {
-              await fetch(`/api/${itemToEdit.collection}/${itemToEdit.id}`, {
-                  method: 'PUT',
-                  body: formData
-              });
+              const { collection, isDocUnico } = itemToEdit;
+              const semArquivo = ['alunosBib', 'livros'];
+
+              if (isDocUnico) {
+                  // Doc único (alunos, responsaveis): POST /api/{col} com merge
+                  const obj = {};
+                  editFields.querySelectorAll('input, textarea').forEach(input => {
+                      obj[input.name] = input.value;
+                  });
+                  await fetch(`/api/${collection}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(obj)
+                  });
+              } else if (semArquivo.includes(collection)) {
+                  // Coleção sem arquivo (alunosBib, livros): PUT JSON
+                  const obj = {};
+                  editFields.querySelectorAll('input, textarea').forEach(input => {
+                      obj[input.name] = input.value;
+                  });
+                  await fetch(`/api/${collection}/${itemToEdit.id}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(obj)
+                  });
+              } else {
+                  // Coleção com arquivo (novidades, cursos, etc.): PUT FormData
+                  const formData = new FormData();
+                  editFields.querySelectorAll('input, textarea').forEach(input => {
+                      if (input.type === 'file') {
+                          if (input.files[0]) formData.append(input.name, input.files[0]);
+                      } else {
+                          formData.append(input.name, input.value);
+                      }
+                  });
+                  await fetch(`/api/${collection}/${itemToEdit.id}`, {
+                      method: 'PUT',
+                      body: formData
+                  });
+              }
+
               editModal.classList.remove('active');
               itemToEdit = null;
               alert('✅ Alterações salvas com sucesso!');
@@ -420,7 +690,6 @@
           itemToEdit = null;
       });
 
-      // Confirmar exclusão
       btnCancelDelete.addEventListener('click', () => {
           deleteModal.classList.remove('active');
           itemToDelete = null;
@@ -431,12 +700,64 @@
           try {
               await apiRequest(`${itemToDelete.collection}/${itemToDelete.id}`, 'DELETE');
               itemToDelete.element.remove();
-          } catch (error) { alert('Erro ao excluir.'); }
+          } catch (error) {
+              let msg = 'Erro ao excluir.';
+              try { msg = JSON.parse(error.message)?.error || msg; } catch {}
+              alert(msg);
+          }
           finally {
               deleteModal.classList.remove('active');
               itemToDelete = null;
           }
       });
+
+      // Handler para formulários de cadastro
+      document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const container = form.closest('.form-container');
+          if (!container) return;
+          const section = container.dataset.section;
+
+          // Docs únicos (calendário) — envia como JSON e não faz reset
+          const isDocUnico = section === 'alunos' || section === 'responsaveis';
+          // Coleções sem arquivo — envia como JSON mas faz reset
+          const semArquivo = ['alunosBib', 'livros'];
+          const useJson = isDocUnico || semArquivo.includes(section);
+
+          let body;
+          if (useJson) {
+            const obj = {};
+            new FormData(form).forEach((v, k) => { obj[k] = v; });
+            body = obj;
+          } else {
+            body = new FormData(form);
+          }
+          try {
+            await apiRequest(section, 'POST', body);
+            alert('Dados salvos com sucesso!');
+            if (!isDocUnico) form.reset();
+            // Reload dos selects da biblioteca — falha silenciosa (não crítica)
+            if (semArquivo.includes(section) && bibliotecaCarregada) {
+              try { await recarregarDadosBiblioteca(); } catch {}
+            }
+          } catch (error) {
+            alert('Erro ao salvar.');
+          }
+        });
+      });
+
+      async function loadInitialData(section) {
+          try {
+              const data = await apiRequest(section);
+              const form = document.querySelector(`.form-container[data-section="${section}"] form`);
+              if (form && data) {
+                  Object.keys(data).forEach(key => {
+                      if (form.elements[key]) form.elements[key].value = data[key];
+                  });
+              }
+          } catch(e) {}
+      }
 
       async function loadPendingAdmins() {
         try {
@@ -458,48 +779,230 @@
         } catch (error) { alert(`Não foi possível ${action} o administrador.`); }
       });
 
-      // Handler para formulários de cadastro
-      document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const container = form.closest('.form-container');
-          if (!container) return;
-          const section = container.dataset.section;
-          // alunos e responsaveis usam doc único — enviar como JSON (req.body)
-          const isDocUnico = section === 'alunos' || section === 'responsaveis';
-          let body;
-          if (isDocUnico) {
-            const obj = {};
-            new FormData(form).forEach((v, k) => { obj[k] = v; });
-            body = obj; // apiRequest vai serializar como JSON
-          } else {
-            body = new FormData(form);
-          }
-          try {
-            await apiRequest(section, 'POST', body);
-            alert('Dados salvos com sucesso!');
-            if (!isDocUnico) form.reset();
-          } catch (error) {
-            alert('Erro ao salvar.');
-          }
-        });
-      });
-
-      async function loadInitialData(section) {
-          try {
-              const data = await apiRequest(section);
-              const form = document.querySelector(`.form-container[data-section="${section}"] form`);
-              if (form && data) {
-                  Object.keys(data).forEach(key => {
-                      if (form.elements[key]) form.elements[key].value = data[key];
-                  });
-              }
-          } catch(e) {}
-      }
       loadInitialData('alunos');
       loadInitialData('responsaveis');
       loadPendingAdmins();
-    });
+
+      // ══════════════════════════════════════════════
+      // BIBLIOTECA
+      // ══════════════════════════════════════════════
+
+      let todosAlunos = [];
+      let todosLivros = [];
+      let bibliotecaCarregada = false;
+      let filtrosInicializados = false;
+
+      function formatarData(ts) {
+        if (!ts) return '—';
+        // Firestore Admin SDK serializa como { seconds, nanoseconds } sem underscore
+        const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+        const d = ms !== null ? new Date(ms) : new Date(ts);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('pt-BR');
+      }
+
+      function popularSelect(id, items, labelFn) {
+        const sel = document.getElementById(id);
+        if (!items.length) {
+          sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+          return;
+        }
+        sel.innerHTML = items.map(i => `<option value="${i.id}">${labelFn(i)}</option>`).join('');
+      }
+
+      async function recarregarDadosBiblioteca() {
+        [todosAlunos, todosLivros] = await Promise.all([
+          apiRequest('alunosBib'),
+          apiRequest('livros')
+        ]);
+        atualizarSelects();
+      }
+
+      function atualizarSelects() {
+        const livrosDisp = todosLivros.filter(l => !l.emprestado);
+        popularSelect('sel-aluno-emp', todosAlunos, a => `${a.nome} — ${a.matricula}`);
+        popularSelect('sel-livro-emp', livrosDisp, l => `${l.nome} — ${l.autor} (Cód: ${l.codigo})`);
+        popularSelect('sel-aluno-hist', todosAlunos, a => `${a.nome} — ${a.matricula}`);
+        popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
+      }
+
+      function inicializarFiltros() {
+        if (filtrosInicializados) return;
+        filtrosInicializados = true;
+
+        document.getElementById('filtro-aluno-emp').addEventListener('input', e => {
+          const q = e.target.value.toLowerCase();
+          const lista = q ? todosAlunos.filter(a =>
+            a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)
+          ) : todosAlunos;
+          popularSelect('sel-aluno-emp', lista, a => `${a.nome} — ${a.matricula}`);
+        });
+
+        document.getElementById('filtro-livro-emp').addEventListener('input', e => {
+          const q = e.target.value.toLowerCase();
+          const disps = todosLivros.filter(l => !l.emprestado);
+          const lista = q ? disps.filter(l =>
+            l.nome.toLowerCase().includes(q) ||
+            (l.autor || '').toLowerCase().includes(q) ||
+            (l.codigo || '').toLowerCase().includes(q)
+          ) : disps;
+          popularSelect('sel-livro-emp', lista, l => `${l.nome} — ${l.autor} (Cód: ${l.codigo})`);
+        });
+
+        document.getElementById('filtro-aluno-hist').addEventListener('input', e => {
+          const q = e.target.value.toLowerCase();
+          const lista = q ? todosAlunos.filter(a =>
+            a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)
+          ) : todosAlunos;
+          popularSelect('sel-aluno-hist', lista, a => `${a.nome} — ${a.matricula}`);
+        });
+
+        document.getElementById('filtro-livro-hist').addEventListener('input', e => {
+          const q = e.target.value.toLowerCase();
+          const lista = q ? todosLivros.filter(l =>
+            l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)
+          ) : todosLivros;
+          popularSelect('sel-livro-hist', lista, l => `${l.nome} — ${l.autor}`);
+        });
+
+        // Registrar empréstimo
+        document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
+          const selAluno = document.getElementById('sel-aluno-emp');
+          const selLivro = document.getElementById('sel-livro-emp');
+          if (!selAluno.value || !selLivro.value) {
+            alert('Selecione um aluno e um livro.');
+            return;
+          }
+          const aluno = todosAlunos.find(a => a.id === selAluno.value);
+          const livro = todosLivros.find(l => l.id === selLivro.value);
+          try {
+            await apiRequest('emprestimos', 'POST', {
+              alunoId: aluno.id,
+              livroId: livro.id,
+              alunoNome: aluno.nome,
+              alunoMatricula: aluno.matricula,
+              livroNome: livro.nome,
+              livroCodigo: livro.codigo
+            });
+            alert('✅ Empréstimo registrado com sucesso!');
+            document.getElementById('filtro-aluno-emp').value = '';
+            document.getElementById('filtro-livro-emp').value = '';
+            await recarregarDadosBiblioteca();
+            await carregarEmprestimosAtivos();
+          } catch (err) {
+            let msg = 'Erro ao registrar empréstimo.';
+            try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+            alert(msg);
+          }
+        });
+
+        // Devolver (click delegado na tabela)
+        document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
+          if (!e.target.classList.contains('btn-devolver')) return;
+          if (!confirm('Confirmar devolução?')) return;
+          try {
+            await apiRequest(`emprestimos/${e.target.dataset.id}/devolver`, 'PUT');
+            await recarregarDadosBiblioteca();
+            await carregarEmprestimosAtivos();
+          } catch (err) {
+            alert('Erro ao registrar devolução.');
+          }
+        });
+
+        // Histórico por aluno
+        document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
+          const sel = document.getElementById('sel-aluno-hist');
+          const lista = document.getElementById('lista-historico-aluno');
+          if (!sel.value) { alert('Selecione um aluno.'); return; }
+          lista.innerHTML = '<li>Carregando...</li>';
+          try {
+            const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
+            lista.innerHTML = emp.length
+              ? emp.map(e => {
+                  const badge = e.devolvido
+                    ? `<span class="badge-devolvido">✓ Devolvido ${formatarData(e.dataDevolucao)}</span>`
+                    : `<span class="badge-ativo">📚 Em andamento</span>`;
+                  return `<li><span>${e.livroNome} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                }).join('')
+              : '<li>Nenhum empréstimo encontrado.</li>';
+          } catch (err) { lista.innerHTML = '<li>Erro ao buscar.</li>'; }
+        });
+
+        // Histórico por livro
+        document.getElementById('btn-ver-livro').addEventListener('click', async () => {
+          const sel = document.getElementById('sel-livro-hist');
+          const lista = document.getElementById('lista-historico-livro');
+          if (!sel.value) { alert('Selecione um livro.'); return; }
+          lista.innerHTML = '<li>Carregando...</li>';
+          try {
+            const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
+            lista.innerHTML = emp.length
+              ? emp.map(e => {
+                  const badge = e.devolvido
+                    ? `<span class="badge-devolvido">✓ Devolvido ${formatarData(e.dataDevolucao)}</span>`
+                    : `<span class="badge-ativo">📚 Em andamento</span>`;
+                  return `<li><span>${e.alunoNome} (${e.alunoMatricula}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                }).join('')
+              : '<li>Nenhum empréstimo encontrado.</li>';
+          } catch (err) { lista.innerHTML = '<li>Erro ao buscar.</li>'; }
+        });
+
+        // Botão de recarregar empréstimos
+        document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
+          await recarregarDadosBiblioteca();
+          await carregarEmprestimosAtivos();
+        });
+      }
+
+      async function carregarEmprestimosAtivos() {
+        const container = document.getElementById('tabela-emprestimos-container');
+        container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>';
+        try {
+          const lista = await apiRequest('emprestimos?ativos=true');
+          if (!lista.length) {
+            container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+            return;
+          }
+          container.innerHTML = `
+            <table class="tabela-bib">
+              <thead>
+                <tr>
+                  <th>Aluno</th>
+                  <th>Livro</th>
+                  <th>Código</th>
+                  <th>Data</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map(e => `
+                  <tr>
+                    <td>${e.alunoNome} <small style="color:#6b7280">(${e.alunoMatricula})</small></td>
+                    <td>${e.livroNome}</td>
+                    <td><small>${e.livroCodigo || '—'}</small></td>
+                    <td>${formatarData(e.dataEmprestimo)}</td>
+                    <td><button class="btn-devolver" data-id="${e.id}">Devolver</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>`;
+        } catch (err) {
+          container.innerHTML = '<p style="color:#dc2626;text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+        }
+      }
+
+      async function carregarBiblioteca() {
+        try {
+          await recarregarDadosBiblioteca();
+          inicializarFiltros();
+          await carregarEmprestimosAtivos();
+          bibliotecaCarregada = true;
+        } catch (err) {
+          console.error('Erro ao carregar biblioteca:', err);
+        }
+      }
+
+    }); // fim DOMContentLoaded
   </script>
 </body>
 </html>

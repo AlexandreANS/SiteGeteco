@@ -32,9 +32,8 @@
         // ✅ CORREÇÃO: Usar API REST ao invés de EJS templates
         // ====================================================================
 
-        const API_HOST = window.location.hostname;
-        const API_PORT = 3000;
-        const API_URL = `http://${API_HOST}:${API_PORT}/api`;
+        // ✅ CORRIGIDO: URL relativa para funcionar em qualquer ambiente (local e produção)
+        const API_URL = '/api';
 
         // Pegar ID da postagem da URL
         const urlParams = new URLSearchParams(window.location.search);

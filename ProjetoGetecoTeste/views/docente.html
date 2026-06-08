@@ -4,6 +4,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GETECO - Corpo Docente</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
@@ -32,9 +33,7 @@
     </div>
   </section>
 
-  <footer>
-    <p>&copy; 2025 EMEP Dr. Antenor Gonçalves Pereira. Todos os direitos reservados.</p>
-  </footer>
+  <footer></footer>
 
   <script>
     // ====================================================================
@@ -44,9 +43,7 @@
     // ✅ CORREÇÃO 4: Melhor tratamento de erro
     // ====================================================================
 
-    const API_BASE = 'https://escola-geteco.onrender.com';
-    
-    const API_URL = `https://escola-geteco.onrender.com/api`;
+    const API_URL = `/api`;
 
     async function montarArvore() {
         const container = document.getElementById('arvore-docentes');

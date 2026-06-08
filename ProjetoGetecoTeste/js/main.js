@@ -48,19 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
  
     /**
-     * Função para o carrossel de imagens com animação ruim
+     * Função para o carrossel de imagens com animação de carrossel
      */
     const handleCarousel = () => {
         const carousel = document.querySelector('.hero .carousel');
         if (carousel) {
             const images = carousel.querySelectorAll('img');
+            if (images.length <= 1) return; // Nada a fazer com 0 ou 1 imagem
             let currentIndex = 0;
 
             setInterval(() => {
                 images[currentIndex].classList.remove('active');
                 currentIndex = (currentIndex + 1) % images.length;
                 images[currentIndex].classList.add('active');
-            }, 800); // Muda a imagem a cada 0.8 segundos para um efeito caótico
+            }, 4000); // Muda a imagem a cada 4 segundos
         }
     };
 
