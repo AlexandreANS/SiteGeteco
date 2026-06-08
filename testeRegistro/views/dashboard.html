@@ -95,16 +95,16 @@
       font-size: 0.9rem;
     }
     .tabela-bib th {
-      background: #1e3a8a; /* mesma cor do painel (ajuste se necessário) */
-      color: #ffffff;
+      background: #6b7280; /* mesma cor do painel (ajuste se necessário) */
+      color: #6b7280;
       padding: 8px 12px;
       text-align: left;
       font-weight: 600;
-      border-bottom: 2px solid #1e40af;
+      border-bottom: 2px solid #6b7280;
     }
     .tabela-bib td {
       padding: 8px 12px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid #6b7280;
       vertical-align: middle;
     }
     .tabela-bib tr:hover td { background: #fafafa; }
@@ -982,7 +982,7 @@
                     <td>${e.livroNome}</td>
                     <td><small>${e.livroCodigo || '—'}</small></td>
                     <td>${formatarData(e.dataEmprestimo)}</td>
-                    <td><button class="btn-devolver" data-id="${e.id}">Devolver</button></td>
+                    <td><button class="btn-submit" data-id="${e.id}">Devolver</button></td>
                   </tr>
                 `).join('')}
               </tbody>
