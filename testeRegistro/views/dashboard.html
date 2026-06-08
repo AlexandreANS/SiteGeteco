@@ -7,130 +7,204 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
   <style>
+    /* ── Botões de ação inline (Editar nas listas) ── */
     .btn-edit {
-      background: #2563eb;
-      color: white;
-      border: none;
+      background: var(--blue-dim);
+      color: var(--blue);
+      border: 1px solid rgba(58,130,246,.2);
       padding: 4px 10px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--font);
+      transition: var(--trans-fast);
       margin-right: 4px;
     }
-    .btn-edit:hover { background: #1d4ed8; }
-    .btn-delete {
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    .btn-delete:hover { background: #b91c1c; }
+    .btn-edit:hover { background: var(--blue); color: white; border-color: var(--blue); }
+
+    /* ── Modal ── */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
       z-index: 1000;
       align-items: center;
       justify-content: center;
     }
     .modal-overlay.active { display: flex; }
     .modal-content {
-      background: white;
-      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
       padding: 2rem;
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: var(--shadow-lg);
     }
-    .modal-content h2 { margin-bottom: 1rem; }
+    .modal-content h2 {
+      margin-bottom: 1rem;
+      color: var(--txt-primary);
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .modal-content p { color: var(--txt-secondary); font-size: 0.9rem; }
     .modal-content .input-group { margin-bottom: 1rem; }
-    .modal-content label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9rem; }
+    .modal-content label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--txt-secondary);
+    }
     .modal-content input,
     .modal-content textarea {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 0.95rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--txt-primary);
+      font-family: var(--font);
       box-sizing: border-box;
+      outline: none;
+      transition: var(--trans-fast);
+    }
+    .modal-content input:focus,
+    .modal-content textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(58,130,246,.1);
     }
     .modal-content textarea { min-height: 80px; resize: vertical; }
-    .modal-buttons { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    .btn-confirm { background: #16a34a; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
-    .btn-confirm:hover { background: #15803d; }
-    .btn-cancel { background: #6b7280; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
-    .btn-cancel:hover { background: #4b5563; }
-    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+    .modal-buttons { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
+
+    /* ── li (itens de lista genéricos) ── */
+    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
     li span { flex: 1; }
     .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
-    /* ── Biblioteca ── */
+    /* ── Biblioteca — filtros e selects ── */
     .bib-filtro {
       width: 100%;
-      padding: 7px 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      padding: 0.6rem 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--txt-primary);
+      font-family: var(--font);
       margin-bottom: 4px;
       box-sizing: border-box;
+      outline: none;
+      transition: var(--trans-fast);
     }
+    .bib-filtro::placeholder { color: var(--txt-muted); }
+    .bib-filtro:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
+
     .bib-select {
       width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--txt-primary);
+      font-family: var(--font);
       box-sizing: border-box;
       padding: 4px;
       min-height: 100px;
+      outline: none;
     }
+    .bib-select option { background: var(--bg-card); }
+    .bib-select:focus { border-color: var(--border-focus); }
+
+    /* ── Tabela Empréstimos ── */
     .tabela-bib {
       width: 100%;
       border-collapse: collapse;
       margin-top: 0.5rem;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
     }
+    .tabela-bib thead tr { background: var(--bg-input); }
     .tabela-bib th {
-      background: #6b7280; /* mesma cor do painel (ajuste se necessário) */
-      color: #6b7280;
-      padding: 8px 12px;
+      padding: 10px 14px;
       text-align: left;
-      font-weight: 600;
-      border-bottom: 2px solid #6b7280;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: var(--txt-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
     .tabela-bib td {
-      padding: 8px 12px;
-      border-bottom: 1px solid #6b7280;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
       vertical-align: middle;
+      color: var(--txt-secondary);
     }
-    .tabela-bib tr:hover td { background: #fafafa; }
+    .tabela-bib td:first-child { color: var(--txt-primary); font-weight: 500; }
+    .tabela-bib tbody tr:last-child td { border-bottom: none; }
+    .tabela-bib tbody tr:hover td { background: rgba(58,130,246,.04); }
+
+    /* ── Botão Devolver ── */
     .btn-devolver {
-      background: #f59e0b;
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 4px;
+      background: var(--amber-dim);
+      color: var(--amber);
+      border: 1px solid rgba(245,158,11,.25);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: var(--font);
+      transition: var(--trans-fast);
+      white-space: nowrap;
     }
-    .btn-devolver:hover { background: #d97706; }
+    .btn-devolver:hover { background: var(--amber); color: #1a1000; border-color: var(--amber); }
+
+    /* ── Botão Atualizar ── */
     .btn-reload {
-      background: #6b7280;
-      color: white;
-      border: none;
+      background: rgba(255,255,255,.05);
+      color: var(--txt-muted);
+      border: 1px solid var(--border);
       padding: 5px 12px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      font-family: var(--font);
+      transition: var(--trans-fast);
     }
-    .btn-reload:hover { background: #4b5563; }
+    .btn-reload:hover { background: rgba(255,255,255,.09); color: var(--txt-secondary); }
+
     .bib-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .badge-ativo    { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
-    .badge-devolvido{ background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+    /* ── Badges ── */
+    .badge-ativo {
+      background: var(--amber-dim);
+      color: var(--amber);
+      border: 1px solid rgba(245,158,11,.2);
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-devolvido {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(34,197,94,.2);
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     #lista-historico-aluno li,
     #lista-historico-livro li {
       display: flex;
@@ -138,7 +212,7 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.4rem 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border);
       font-size: 0.85rem;
     }
   </style>
@@ -957,11 +1031,11 @@
 
       async function carregarEmprestimosAtivos() {
         const container = document.getElementById('tabela-emprestimos-container');
-        container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>';
+        container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
         try {
           const lista = await apiRequest('emprestimos?ativos=true');
           if (!lista.length) {
-            container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+            container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
             return;
           }
           container.innerHTML = `
@@ -978,17 +1052,17 @@
               <tbody>
                 ${lista.map(e => `
                   <tr>
-                    <td>${e.alunoNome} <small style="color:#6b7280">(${e.alunoMatricula})</small></td>
+                    <td>${e.alunoNome} <small style="color:var(--txt-muted)">(${e.alunoMatricula})</small></td>
                     <td>${e.livroNome}</td>
                     <td><small>${e.livroCodigo || '—'}</small></td>
                     <td>${formatarData(e.dataEmprestimo)}</td>
-                    <td><button class="btn-submit" data-id="${e.id}">Devolver</button></td>
+                    <td><button class="btn-devolver" data-id="${e.id}">Devolver</button></td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>`;
         } catch (err) {
-          container.innerHTML = '<p style="color:#dc2626;text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+          container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
         }
       }
 
