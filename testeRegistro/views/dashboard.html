@@ -65,64 +65,77 @@
     .btn-confirm:hover { background: #15803d; }
     .btn-cancel { background: #6b7280; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
     .btn-cancel:hover { background: #4b5563; }
-    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid darkblue; }
+    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
     li span { flex: 1; }
     .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
-    /* Biblioteca */
-
-.bib-filtro,
-.bib-select {
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #111827;
-}
-
-.tabela-bib {
+    /* ── Biblioteca ── */
+    .bib-filtro {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      box-sizing: border-box;
+    }
+    .bib-select {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      padding: 4px;
+      min-height: 100px;
+    }
+    .tabela-bib {
   width: 100%;
   border-collapse: collapse;
-  margin-top: .5rem;
-  font-size: .9rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .tabela-bib th {
-  background: #f8fafc;
-  color: #374151;
-  padding: 10px 12px;
+  background: #f3f4f6;
+  padding: 8px 12px;
   text-align: left;
+  font-weight: 600;
   border-bottom: 2px solid #e5e7eb;
 }
 
 .tabela-bib td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #111827;
+  padding: 8px 12px;
+  border-bottom: 1px solid darkblue;
+  vertical-align: middle;
 }
 
 .tabela-bib tr:hover td {
-  background: #f9fafb;
+  background: darkblue;
 }
-
-#lista-historico-aluno li,
-#lista-historico-livro li,
-.item-list li {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.btn-devolver {
-  background: #f59e0b;
-  color: white;
-  border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: .8rem;
-  transition: .2s;
-}
-
-.btn-devolver:hover {
-  background: #d97706;
-}
+    .btn-devolver:hover { background: #d97706; }
+    .btn-reload {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-reload:hover { background: #4b5563; }
+    .bib-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .badge-ativo    { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .badge-devolvido{ background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    #lista-historico-aluno li,
+    #lista-historico-livro li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body class="dashboard-body">
