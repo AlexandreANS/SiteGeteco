@@ -1,1235 +1,1572 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo - GETECO</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" type="image/png" href="/images/logo.png">
-  <style>
-    /* ── Botões de ação inline ── */
-    .btn-edit {
-      background: var(--blue-dim); color: var(--blue);
-      border: 1px solid rgba(58,130,246,.2); padding: 4px 10px;
-      border-radius: var(--radius-sm); cursor: pointer;
-      font-size: 0.78rem; font-weight: 600; font-family: var(--font);
-      transition: var(--trans-fast); margin-right: 4px;
-    }
-    .btn-edit:hover { background: var(--blue); color: white; border-color: var(--blue); }
-
-    .btn-aprovar {
-      background: var(--green-dim); color: var(--green);
-      border: 1px solid rgba(34,197,94,.2); padding: 4px 10px;
-      border-radius: var(--radius-sm); cursor: pointer;
-      font-size: 0.78rem; font-weight: 600; font-family: var(--font);
-      transition: var(--trans-fast);
-    }
-    .btn-aprovar:hover { background: var(--green); color: white; border-color: var(--green); }
-
-    .btn-negar-sol {
-      background: var(--red-dim); color: var(--red);
-      border: 1px solid rgba(239,68,68,.2); padding: 4px 10px;
-      border-radius: var(--radius-sm); cursor: pointer;
-      font-size: 0.78rem; font-weight: 600; font-family: var(--font);
-      transition: var(--trans-fast);
-    }
-    .btn-negar-sol:hover { background: var(--red); color: white; border-color: var(--red); }
-
-    /* ── Modal ── */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
-      z-index: 1000; align-items: center; justify-content: center;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-content {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 2rem;
-      width: 100%; max-width: 520px; max-height: 90vh;
-      overflow-y: auto; box-shadow: var(--shadow-lg);
-    }
-    .modal-content h2 { margin-bottom: 1rem; color: var(--txt-primary); font-size: 1.05rem; font-weight: 600; }
-    .modal-content p { color: var(--txt-secondary); font-size: 0.9rem; }
-    .modal-content .input-group { margin-bottom: 1rem; }
-    .modal-content label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.8rem; color: var(--txt-secondary); }
-    .modal-content input, .modal-content textarea, .modal-content select {
-      width: 100%; padding: 0.65rem 0.9rem; background: var(--bg-input);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 0.9rem; color: var(--txt-primary); font-family: var(--font);
-      box-sizing: border-box; outline: none; transition: var(--trans-fast);
-    }
-    .modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus {
-      border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1);
-    }
-    .modal-content textarea { min-height: 80px; resize: vertical; }
-    .modal-buttons { display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap; }
-
-    /* ── li ── */
-    li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
-    li span { flex: 1; }
-    .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
-
-    /* ── Biblioteca ── */
-    .bib-filtro {
-      width: 100%; padding: 0.6rem 0.9rem; background: var(--bg-input);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 0.875rem; color: var(--txt-primary); font-family: var(--font);
-      margin-bottom: 4px; box-sizing: border-box; outline: none; transition: var(--trans-fast);
-    }
-    .bib-filtro::placeholder { color: var(--txt-muted); }
-    .bib-filtro:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
-    .bib-select {
-      width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--txt-primary);
-      font-family: var(--font); box-sizing: border-box; padding: 4px; min-height: 100px; outline: none;
-    }
-    .bib-select option { background: var(--bg-card); color: var(--txt-primary); }
-    .bib-select option:checked { background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%); color: white; }
-    .bib-select:focus { border-color: var(--border-focus); }
-
-    /* ── Tabela Empréstimos ── */
-    .tabela-bib { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.875rem; }
-    .tabela-bib thead tr { background: var(--bg-input); }
-    .tabela-bib th { padding: 10px 14px; text-align: left; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: var(--txt-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
-    .tabela-bib td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--txt-secondary); }
-    .tabela-bib td:first-child { color: var(--txt-primary); font-weight: 500; }
-    .tabela-bib tbody tr:last-child td { border-bottom: none; }
-    .tabela-bib tbody tr:hover td { background: rgba(58,130,246,.04); }
-
-    /* ── Botões ── */
-    .btn-devolver {
-      background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.25);
-      padding: 4px 12px; border-radius: var(--radius-sm); cursor: pointer;
-      font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); white-space: nowrap;
-    }
-    .btn-devolver:hover { background: var(--amber); color: #1a1000; border-color: var(--amber); }
-    .btn-reload {
-      background: rgba(255,255,255,.10); color: var(--txt-secondary); border: 1px solid rgba(255,255,255,.15);
-      padding: 5px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem; font-family: var(--font); transition: var(--trans-fast);
-    }
-    .btn-reload:hover { background: rgba(255,255,255,.16); color: var(--txt-primary); }
-
-    .bib-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-
-    /* ── Badges ── */
-    .badge-ativo { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-    .badge-devolvido { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-    .badge-pendente { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
-
-    #lista-historico-aluno li, #lista-historico-livro li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-
-    /* ── Banner de nível limitado ── */
-    #banner-nivel-limitado {
-      display: none; margin: 0.5rem 0.75rem;
-      background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
-      border-radius: var(--radius-sm); padding: 0.5rem 0.75rem;
-      font-size: 0.78rem; color: var(--amber); line-height: 1.4;
-    }
-    #user-nivel-info {
-      padding: 0.35rem 1rem; font-size: 0.78rem; color: var(--txt-muted);
-    }
-
-    /* ── Modal de exclusão com histórico ── */
-    .warning-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
-    .btn-danger {
-      background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.25);
-      padding: 0.65rem 1.2rem; border-radius: var(--radius-sm); cursor: pointer;
-      font-size: 0.88rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast);
-    }
-    .btn-danger:hover { background: var(--red); color: white; }
-
-    /* ── Campo quantidade ── */
-    #qtd-emprestimo {
-      width: 100%; padding: 0.65rem; background: var(--bg-input);
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      color: var(--txt-primary); font-family: var(--font); font-size: 0.9rem;
-      box-sizing: border-box; outline: none; transition: var(--trans-fast);
-    }
-    #qtd-emprestimo:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - GETECO</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <style>
+        .btn-edit {
+            background: var(--blue-dim);
+            color: var(--blue);
+            border: 1px solid rgba(58, 130, 246, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+            margin-right: 4px;
+        }
+        .btn-edit:hover {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
+        }
+        .btn-aprovar {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-aprovar:hover {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+        .btn-negar-sol {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-negar-sol:hover {
+            background: var(--red);
+            color: white;
+            border-color: var(--red);
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-content h2 {
+            margin-bottom: 1rem;
+            color: var(--txt-primary);
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .modal-content p {
+            color: var(--txt-secondary);
+            font-size: 0.9rem;
+        }
+        .modal-content .input-group {
+            margin-bottom: 1rem;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--txt-secondary);
+        }
+        .modal-content input,
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            color: var(--txt-primary);
+            font-family: var(--font);
+            box-sizing: border-box;
+            outline: none;
+            transition: var(--trans-fast);
+        }
+        .modal-content input:focus,
+        .modal-content textarea:focus,
+        .modal-content select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
+        }
+        .modal-content textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        li span {
+            flex: 1;
+        }
+        .li-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .bib-filtro {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--txt-primary);
+            font-family: var(--font);
+            margin-bottom: 4px;
+            box-sizing: border-box;
+            outline: none;
+            transition: var(--trans-fast);
+        }
+        .bib-filtro::placeholder {
+            color: var(--txt-muted);
+        }
+        .bib-filtro:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
+        }
+        .bib-select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--txt-primary);
+            font-family: var(--font);
+            box-sizing: border-box;
+            padding: 4px;
+            min-height: 100px;
+            outline: none;
+        }
+        .bib-select option {
+            background: var(--bg-card);
+            color: var(--txt-primary);
+        }
+        .bib-select option:checked {
+            background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%);
+            color: white;
+        }
+        .bib-select:focus {
+            border-color: var(--border-focus);
+        }
+        .tabela-bib {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .tabela-bib thead tr {
+            background: var(--bg-input);
+        }
+        .tabela-bib th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            color: var(--txt-muted);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .tabela-bib td {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            color: var(--txt-secondary);
+        }
+        .tabela-bib td:first-child {
+            color: var(--txt-primary);
+            font-weight: 500;
+        }
+        .tabela-bib tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .tabela-bib tbody tr:hover td {
+            background: rgba(58, 130, 246, .04);
+        }
+        .btn-devolver {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .25);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+            white-space: nowrap;
+        }
+        .btn-devolver:hover {
+            background: var(--amber);
+            color: #1a1000;
+            border-color: var(--amber);
+        }
+        .btn-reload {
+            background: rgba(255, 255, 255, .10);
+            color: var(--txt-secondary);
+            border: 1px solid rgba(255, 255, 255, .15);
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-reload:hover {
+            background: rgba(255, 255, 255, .16);
+            color: var(--txt-primary);
+        }
+        .bib-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .badge-ativo {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-devolvido {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-pendente {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        #lista-historico-aluno li,
+        #lista-historico-livro li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        #banner-nivel-limitado {
+            display: none;
+            margin: 0.5rem 0.75rem;
+            background: rgba(245, 158, 11, .1);
+            border: 1px solid rgba(245, 158, 11, .3);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.78rem;
+            color: var(--amber);
+            line-height: 1.4;
+        }
+        #user-nivel-info {
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            color: var(--txt-muted);
+        }
+        .warning-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .btn-danger {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .25);
+            padding: 0.65rem 1.2rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-danger:hover {
+            background: var(--red);
+            color: white;
+        }
+        #qtd-emprestimo {
+            width: 100%;
+            padding: 0.65rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--txt-primary);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: var(--trans-fast);
+        }
+        #qtd-emprestimo:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
+        }
+        .input-qtd-dev {
+            width: 50px;
+            padding: 4px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--txt-primary);
+            text-align: center;
+            font-family: var(--font);
+        }
+    </style>
 </head>
 <body class="dashboard-body">
 
-  <aside class="sidebar">
-    <div class="sidebar-header">
-        <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
-        <h2>GETECO Admin</h2>
-    </div>
-    <div id="user-nivel-info">Carregando...</div>
-    <div id="banner-nivel-limitado">⚠️ Nível limitado — suas ações criam solicitações que precisam de aprovação.</div>
-    <div class="sidebar-menu">
-        <h3>Aprovações Pendentes</h3>
-        <div id="pending-admins-container">
-            <div id="pending-admins-list"><p>A carregar...</p></div>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
+            <h2>GETECO Admin</h2>
         </div>
-    </div>
-    <a href="/logout" class="logout-btn">
-        <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg"><path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>
-        Sair
-    </a>
-  </aside>
-
-  <main class="main-content">
-    <header><h1>Painel de Gestão</h1></header>
-
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
-      <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
-      <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
-      <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
-      <button class="tab-btn" data-tab="logs">Logs</button>
-    </div>
-
-    <!-- ── ABA: CADASTRAR ── -->
-    <div id="cadastrar" class="tab-pane active">
-      <div class="grid-forms">
-          <div class="form-container" data-section="noticias">
-              <h3>Nova Notícia</h3>
-              <form>
-                  <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
-                  <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
-                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                  <button type="submit" class="btn-submit">Salvar Notícia</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="novidades">
-              <h3>Nova Novidade/Infraestrutura</h3>
-              <form>
-                  <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
-                  <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
-                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                  <button type="submit" class="btn-submit">Salvar Novidade</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="cargos">
-              <h3>Novo Cargo/Função</h3>
-              <form>
-                  <div class="input-group"><label>Nome do Cargo</label><input type="text" name="cargo" placeholder="Ex: Professor, Diretor" required></div>
-                  <div class="input-group"><label>Nível Hierárquico</label><input type="number" name="nivel" placeholder="1 = Mais alto" required></div>
-                  <button type="submit" class="btn-submit">Salvar Cargo</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="docente">
-              <h3>Novo Docente</h3>
-              <form>
-                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                  <div class="input-group"><label>Cargo/Função</label><input type="text" name="cargo" placeholder="Ex: Professor de Matemática"></div>
-                  <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
-                  <div class="input-group"><label>Foto</label><input type="file" name="foto" accept="image/*"></div>
-                  <button type="submit" class="btn-submit">Salvar Docente</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="cursos">
-              <h3>Novo Curso</h3>
-              <form>
-                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                  <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
-                  <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                  <button type="submit" class="btn-submit">Salvar Curso</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="contato">
-              <h3>Novo Contacto</h3>
-              <form>
-                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                  <div class="input-group"><label>Email</label><input type="email" name="email" required></div>
-                  <button type="submit" class="btn-submit">Salvar Contacto</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="alunosBib">
-              <h3>Novo Aluno (Biblioteca)</h3>
-              <form>
-                  <div class="input-group"><label>Matrícula</label><input type="text" name="matricula" required></div>
-                  <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                  <button type="submit" class="btn-submit">Salvar Aluno</button>
-              </form>
-          </div>
-          <div class="form-container" data-section="livros">
-              <h3>Novo Livro</h3>
-              <form>
-                  <div class="input-group"><label>Código</label><input type="text" name="codigo" required></div>
-                  <div class="input-group"><label>Título</label><input type="text" name="nome" required></div>
-                  <div class="input-group"><label>Autor</label><input type="text" name="autor" required></div>
-                  <div class="input-group">
-                    <label>Quantidade de Exemplares</label>
-                    <input type="number" name="quantidade" min="1" value="1" required>
-                  </div>
-                  <button type="submit" class="btn-submit">Salvar Livro</button>
-              </form>
-          </div>
-      </div>
-    </div>
-
-    <!-- ── ABA: GERIR ── -->
-    <div id="gerenciar" class="tab-pane"></div>
-
-    <!-- ── ABA: INFORMAÇÕES ── -->
-    <div id="informacoes" class="tab-pane">
-        <div class="grid-forms">
-            <div class="form-container" data-section="alunos">
-                <h3>Informações para Alunos</h3>
-                <form>
-                    <div class="input-group"><label>Semana de Provas</label><input type="text" name="semanaProvas"></div>
-                    <div class="input-group"><label>Gincana</label><input type="text" name="gincana"></div>
-                    <div class="input-group"><label>Feira de Ciências</label><input type="text" name="feiraCiencias"></div>
-                    <div class="input-group"><label>Semana Cultural</label><input type="text" name="semanaCultural"></div>
-                    <div class="input-group"><label>Férias</label><input type="text" name="ferias"></div>
-                    <button type="submit" class="btn-submit">Atualizar Alunos</button>
-                </form>
-            </div>
-            <div class="form-container" data-section="responsaveis">
-                <h3>Informações para Responsáveis</h3>
-                <form>
-                    <div class="input-group"><label>Reunião de Pais</label><input type="text" name="reuniaoPais"></div>
-                    <div class="input-group"><label>Entrega de Boletins</label><input type="text" name="entregaBoletins"></div>
-                    <button type="submit" class="btn-submit">Atualizar Responsáveis</button>
-                </form>
+        <div id="user-nivel-info">Carregando...</div>
+        <div id="banner-nivel-limitado">⚠️ Nível limitado — suas ações criam solicitações que precisam de aprovação.</div>
+        <div class="sidebar-menu">
+            <h3>Aprovações Pendentes</h3>
+            <div id="pending-admins-container">
+                <div id="pending-admins-list"><p>A carregar...</p></div>
             </div>
         </div>
-    </div>
+        <a href="/logout" class="logout-btn">
+            <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+            </svg>
+            Sair
+        </a>
+    </aside>
 
-    <!-- ── ABA: BIBLIOTECA ── -->
-    <div id="biblioteca" class="tab-pane">
-      <div class="grid-forms">
-        <div class="form-container">
-          <h3>Registrar Empréstimo</h3>
-          <div class="input-group">
-            <label>Aluno</label>
-            <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
-            <select id="sel-aluno-emp" class="bib-select" size="5"></select>
-          </div>
-          <div class="input-group">
-            <label>Livro disponível</label>
-            <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
-            <select id="sel-livro-emp" class="bib-select" size="5"></select>
-          </div>
-          <div class="input-group" id="grupo-qtd-emp" style="display:none;">
-            <label>Quantidade de exemplares</label>
-            <input type="number" id="qtd-emprestimo" min="1" value="1">
-            <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
-          </div>
-          <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
+    <main class="main-content">
+        <header><h1>Painel de Gestão</h1></header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
+            <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
+            <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
+            <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
+            <button class="tab-btn" data-tab="logs">Logs</button>
         </div>
 
-        <div class="form-container">
-          <h3>Histórico por Aluno</h3>
-          <div class="input-group">
-            <label>Selecionar aluno</label>
-            <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar aluno...">
-            <select id="sel-aluno-hist" class="bib-select" size="5"></select>
-          </div>
-          <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
-          <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
-        </div>
-
-        <div class="form-container">
-          <h3>Histórico por Livro</h3>
-          <div class="input-group">
-            <label>Selecionar livro</label>
-            <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
-            <select id="sel-livro-hist" class="bib-select" size="5"></select>
-          </div>
-          <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
-          <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
-        </div>
-      </div>
-
-      <div class="list-container" style="margin-top:1.5rem">
-        <div class="bib-header">
-          <h3>Empréstimos em Andamento</h3>
-          <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
-        </div>
-        <div id="tabela-emprestimos-container">
-          <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── ABA: LOGS ── -->
-    <div id="logs" class="tab-pane">
-      <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
-        <h3>⏳ Solicitações Pendentes de Aprovação</h3>
-        <ul id="solicitacoes-list" class="item-list"><li style="color:var(--txt-muted)">Carregando...</li></ul>
-      </div>
-      <div class="list-container">
-        <h3>Histórico de Atividades Recentes</h3>
-        <ul id="logs-list" class="item-list"></ul>
-      </div>
-    </div>
-  </main>
-
-  <!-- Modal: Confirmar Exclusão genérica -->
-  <div id="delete-modal" class="modal-overlay">
-      <div class="modal-content">
-          <h2>Confirmar Exclusão</h2>
-          <p>Tem a certeza? Esta ação não pode ser desfeita.</p>
-          <div class="modal-buttons">
-              <button id="btn-confirm-delete" class="btn-confirm">Sim, Excluir</button>
-              <button id="btn-cancel-delete" class="btn-cancel">Cancelar</button>
-          </div>
-      </div>
-  </div>
-
-  <!-- Modal: Exclusão de livro COM histórico -->
-  <div id="delete-history-modal" class="modal-overlay">
-      <div class="modal-content">
-          <span class="warning-icon">⚠️</span>
-          <h2>Livro Possui Histórico de Empréstimos</h2>
-          <p id="delete-history-msg" style="margin-bottom:1rem"></p>
-          <p style="font-size:0.82rem;color:var(--txt-muted)">
-            Se excluir <strong>sem</strong> o histórico, o servidor vai bloquear a exclusão pois há registros vinculados.
-            Você precisa excluir o histórico junto para poder remover este livro.
-          </p>
-          <div class="modal-buttons">
-              <button id="btn-delete-with-history" class="btn-danger">Excluir Livro e Histórico</button>
-              <button id="btn-cancel-delete-history" class="btn-cancel">Cancelar</button>
-          </div>
-      </div>
-  </div>
-
-  <!-- Modal: Edição -->
-  <div id="edit-modal" class="modal-overlay">
-      <div class="modal-content">
-          <h2>Editar Item</h2>
-          <div id="edit-fields"></div>
-          <div class="modal-buttons">
-              <button id="btn-confirm-edit" class="btn-confirm">Salvar Alterações</button>
-              <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
-          </div>
-      </div>
-  </div>
-
-  <!-- Modal: Aceitar administrador pendente (define nível) -->
-  <div id="accept-modal" class="modal-overlay">
-      <div class="modal-content">
-          <h2>Aceitar Administrador</h2>
-          <p id="accept-modal-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
-          <div class="input-group">
-              <label>Nível de Acesso</label>
-              <input type="number" id="nivel-aceitar" min="1" max="8" placeholder="Ex: 1 = Diretor, 8 = TI">
-              <small style="color:var(--txt-muted);font-size:0.78rem;margin-top:4px;display:block">
-                Níveis 1 (Diretor) e 8 (TI) têm acesso total e podem aprovar outros. Demais níveis criam solicitações.
-              </small>
-          </div>
-          <div class="modal-buttons">
-              <button id="btn-confirm-accept" class="btn-confirm">Aceitar</button>
-              <button id="btn-cancel-accept" class="btn-cancel">Cancelar</button>
-          </div>
-      </div>
-  </div>
-
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs            = document.querySelectorAll('.tab-btn');
-    const panes           = document.querySelectorAll('.tab-pane');
-    const deleteModal     = document.getElementById('delete-modal');
-    const deleteHistModal = document.getElementById('delete-history-modal');
-    const editModal       = document.getElementById('edit-modal');
-    const acceptModal     = document.getElementById('accept-modal');
-    const editFields      = document.getElementById('edit-fields');
-
-    let itemToDelete = null;
-    let itemToEdit   = null;
-    let pendingAcceptUid = null;
-
-    let userInfo = { email: '', nivel: null, isSuperAdmin: false };
-
-    async function carregarUserInfo() {
-      try {
-        userInfo = await apiRequest('me');
-        const badge  = document.getElementById('user-nivel-info');
-        const banner = document.getElementById('banner-nivel-limitado');
-        if (badge) {
-          const nivelLabel = userInfo.isSuperAdmin
-            ? '⭐ Super Admin (acesso total)'
-            : `Nível ${userInfo.nivel ?? '?'}`;
-          badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
-        }
-        if (banner && !userInfo.isSuperAdmin) {
-          banner.style.display = 'block';
-        }
-      } catch (e) {
-        console.warn('Não foi possível carregar informações do usuário:', e);
-      }
-    }
-
-    setInterval(() => { fetch('/api/ping').catch(() => {}); }, 10 * 60 * 1000);
-
-    function formatTs(ts) {
-      if (!ts) return '—';
-      const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-      const d  = ms !== null ? new Date(ms) : new Date(ts);
-      return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
-    }
-
-    async function apiRequest(endpoint, method = 'GET', body = null) {
-      const options = { method, headers: {} };
-      if (body) {
-        if (body instanceof FormData) {
-          options.body = body;
-        } else {
-          options.headers['Content-Type'] = 'application/json';
-          options.body = JSON.stringify(body);
-        }
-      }
-      const response = await fetch(`/api/${endpoint}`, options);
-      let data;
-      try { data = await response.json(); } catch { data = {}; }
-      if (!response.ok && response.status !== 202) {
-        throw new Error(JSON.stringify(data));
-      }
-      return data;
-    }
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        panes.forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
-        if (tab.dataset.tab === 'gerenciar') loadManagementContent();
-        if (tab.dataset.tab === 'logs')       loadLogsContent();
-        if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
-      });
-    });
-
-    const fieldsByCollection = {
-      novidades: [
-        { name: 'titulo',   label: 'Título',   type: 'text' },
-        { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-        { name: 'imagem',   label: 'Nova Imagem (opcional)', type: 'file' }
-      ],
-      cargos: [
-        { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
-        { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
-      ],
-      docente: [
-        { name: 'nome',    label: 'Nome', type: 'text' },
-        { name: 'cargo',   label: 'Cargo/Função', type: 'text' },
-        { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
-        { name: 'foto',    label: 'Nova Foto (opcional)', type: 'file' }
-      ],
-      cursos: [
-        { name: 'nome',      label: 'Nome', type: 'text' },
-        { name: 'descricao', label: 'Descrição', type: 'textarea' },
-        { name: 'imagem',    label: 'Nova Imagem (opcional)', type: 'file' }
-      ],
-      contato: [
-        { name: 'nome',  label: 'Nome', type: 'text' },
-        { name: 'email', label: 'Email', type: 'email' }
-      ],
-      noticias: [
-        { name: 'titulo',   label: 'Título', type: 'text' },
-        { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-        { name: 'imagem',   label: 'Nova Imagem (opcional)', type: 'file' }
-      ],
-      alunos: [
-        { name: 'semanaProvas',   label: 'Semana de Provas', type: 'text' },
-        { name: 'gincana',        label: 'Gincana', type: 'text' },
-        { name: 'feiraCiencias',  label: 'Feira de Ciências', type: 'text' },
-        { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
-        { name: 'ferias',         label: 'Férias', type: 'text' }
-      ],
-      responsaveis: [
-        { name: 'reuniaoPais',     label: 'Reunião de Pais', type: 'text' },
-        { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
-      ],
-      alunosBib: [
-        { name: 'matricula', label: 'Matrícula', type: 'text' },
-        { name: 'nome',      label: 'Nome', type: 'text' }
-      ],
-      livros: [
-        { name: 'codigo',     label: 'Código', type: 'text' },
-        { name: 'nome',       label: 'Título', type: 'text' },
-        { name: 'autor',      label: 'Autor', type: 'text' },
-        { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
-      ]
-    };
-
-    async function loadManagementContent() {
-      const container = document.getElementById('gerenciar');
-      container.innerHTML = '<div class="loader">A carregar...</div>';
-      const cols = [
-        { name: 'noticias',     title: 'Notícias' },
-        { name: 'novidades',    title: 'Novidades/Infraestrutura' },
-        { name: 'cursos',       title: 'Cursos' },
-        { name: 'docente',      title: 'Corpo Docente' },
-        { name: 'cargos',       title: 'Cargos e Funções' },
-        { name: 'contato',      title: 'Contactos' },
-        { name: 'alunos',       title: 'Calendário de Alunos', isDocUnico: true },
-        { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
-        { name: 'alunosBib',    title: 'Alunos (Biblioteca)' },
-        { name: 'livros',       title: 'Livros' }
-      ];
-      let html = '<div class="grid-lists">';
-      for (const col of cols) {
-        html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
-        try {
-          if (col.isDocUnico) {
-            const data = await apiRequest(col.name);
-            const fields = fieldsByCollection[col.name] || [];
-            const temDados = fields.some(f => data[f.name]);
-            if (temDados) {
-              fields.forEach(f => {
-                if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${data[f.name]}</span></li>`;
-              });
-            } else {
-              html += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
-            }
-            html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
-                       <span></span>
-                       <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
-                     </li>`;
-          } else {
-            const items = await apiRequest(col.name);
-            if (items.length > 0) {
-              items.forEach(item => {
-                const display = item.titulo || item.nome || item.cargo;
-                let sub = '';
-                if (item.matricula) {
-                  sub = ` <small>(Mat: ${item.matricula})</small>`;
-                } else if (item.autor) {
-                  const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
-                  const total = item.quantidade || 1;
-                  const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
-                  sub = ` <small>(${item.autor}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
-                } else if (item.materia) {
-                  sub = ` <small>(${item.materia})</small>`;
-                } else if (item.nivel !== undefined) {
-                  sub = ` <small>(Nível ${item.nivel})</small>`;
-                }
-                html += `<li data-id="${item.id}">
-                           <span>${display}${sub}</span>
-                           <div class="li-actions">
-                             <button class="btn-edit"   data-id="${item.id}" data-collection="${col.name}">Editar</button>
-                             <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
-                           </div>
-                         </li>`;
-              });
-            } else {
-              html += `<li class="empty">Nenhum item encontrado.</li>`;
-            }
-          }
-        } catch {
-          html += `<li class="error">Erro ao carregar.</li>`;
-        }
-        html += `</ul></div>`;
-      }
-      html += '</div>';
-      container.innerHTML = html;
-    }
-
-    document.getElementById('gerenciar').addEventListener('click', async (e) => {
-      const collection = e.target.dataset.collection;
-      if (e.target.classList.contains('btn-edit-docunico')) {
-        try {
-          const data = await apiRequest(collection);
-          const fields = fieldsByCollection[collection] || [];
-          editFields.innerHTML = fields.map(f =>
-            `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${data[f.name] || ''}"></div>`
-          ).join('');
-          itemToEdit = { collection, isDocUnico: true };
-          editModal.classList.add('active');
-        } catch {
-          alert('Erro ao carregar dados para edição.');
-        }
-        return;
-      }
-      const id = e.target.dataset.id;
-      if (!id) return;
-      if (e.target.classList.contains('btn-delete')) {
-        const element = e.target.closest('li');
-        if (collection === 'livros') {
-          e.target.disabled = true;
-          e.target.textContent = '...';
-          try {
-            const hist = await apiRequest(`emprestimos/livro/${id}`);
-            if (hist.length > 0) {
-              itemToDelete = { id, collection, element };
-              document.getElementById('delete-history-msg').innerHTML =
-                `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
-                 Para poder excluí-lo, o histórico precisa ser removido também.`;
-              deleteHistModal.classList.add('active');
-            } else {
-              itemToDelete = { id, collection, element };
-              deleteModal.classList.add('active');
-            }
-          } catch {
-            itemToDelete = { id, collection, element };
-            deleteModal.classList.add('active');
-          } finally {
-            e.target.disabled = false;
-            e.target.textContent = 'Excluir';
-          }
-          return;
-        }
-        itemToDelete = { id, collection, element };
-        deleteModal.classList.add('active');
-        return;
-      }
-      if (e.target.classList.contains('btn-edit')) {
-        try {
-          const item = await apiRequest(`${collection}/${id}`);
-          const fields = fieldsByCollection[collection] || [];
-          editFields.innerHTML = fields.map(f => {
-            if (f.type === 'textarea') {
-              return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${item[f.name] || ''}</textarea></div>`;
-            }
-            if (f.type === 'file') {
-              return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
-            }
-            return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${item[f.name] ?? ''}"></div>`;
-          }).join('');
-          itemToEdit = { id, collection, isDocUnico: false };
-          editModal.classList.add('active');
-        } catch {
-          alert('Erro ao carregar item para edição.');
-        }
-        return;
-      }
-    });
-
-    document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
-      if (!itemToEdit) return;
-      const { collection, id, isDocUnico } = itemToEdit;
-      const semArquivo = ['alunosBib', 'livros'];
-      const btn = document.getElementById('btn-confirm-edit');
-      btn.disabled = true;
-      try {
-        let result;
-        if (isDocUnico) {
-          const obj = {};
-          editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
-          result = await apiRequest(collection, 'POST', obj);
-        } else if (semArquivo.includes(collection)) {
-          const obj = {};
-          editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
-          result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
-        } else {
-          const fd = new FormData();
-          editFields.querySelectorAll('input, textarea').forEach(inp => {
-            if (inp.type === 'file') { if (inp.files[0]) fd.append(inp.name, inp.files[0]); }
-            else fd.append(inp.name, inp.value);
-          });
-          result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
-        }
-        editModal.classList.remove('active');
-        itemToEdit = null;
-        if (result?.pending) {
-          alert('⏳ Solicitação de edição enviada para aprovação pelos administradores.');
-        } else {
-          alert('✅ Alterações salvas com sucesso!');
-        }
-        loadManagementContent();
-      } catch (err) {
-        let msg = 'Erro ao salvar alterações.';
-        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-        alert(msg);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-      editModal.classList.remove('active');
-      itemToEdit = null;
-    });
-
-    document.getElementById('btn-cancel-delete').addEventListener('click', () => {
-      deleteModal.classList.remove('active');
-      itemToDelete = null;
-    });
-
-    document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
-      if (!itemToDelete) return;
-      const { id, collection, element } = itemToDelete;
-      const btn = document.getElementById('btn-confirm-delete');
-      btn.disabled = true;
-      try {
-        const result = await apiRequest(`${collection}/${id}`, 'DELETE');
-        if (result?.pending) {
-          alert('⏳ Solicitação de exclusão enviada para aprovação.');
-        } else {
-          element?.remove();
-        }
-      } catch (err) {
-        let msg = 'Erro ao excluir.';
-        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-        alert(msg);
-      } finally {
-        deleteModal.classList.remove('active');
-        itemToDelete = null;
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('btn-delete-with-history').addEventListener('click', async () => {
-      if (!itemToDelete) return;
-      const { id, collection, element } = itemToDelete;
-      const btn = document.getElementById('btn-delete-with-history');
-      btn.disabled = true;
-      try {
-        const result = await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
-        if (result?.pending) {
-          alert('⏳ Solicitação de exclusão (com histórico) enviada para aprovação.');
-        } else {
-          alert('✅ Livro e histórico excluídos com sucesso.');
-          element?.remove();
-          loadManagementContent();
-        }
-      } catch (err) {
-        let msg = 'Erro ao excluir.';
-        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-        alert(msg);
-      } finally {
-        deleteHistModal.classList.remove('active');
-        itemToDelete = null;
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('btn-cancel-delete-history').addEventListener('click', () => {
-      deleteHistModal.classList.remove('active');
-      itemToDelete = null;
-    });
-
-    document.querySelectorAll('form').forEach(form => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const container = form.closest('.form-container');
-        if (!container) return;
-        const section = container.dataset.section;
-        const isDocUnico = section === 'alunos' || section === 'responsaveis';
-        const semArquivo = ['alunosBib', 'livros'];
-        const useJson = isDocUnico || semArquivo.includes(section);
-        let body;
-        if (useJson) {
-          const obj = {};
-          new FormData(form).forEach((v, k) => { obj[k] = v; });
-          body = obj;
-        } else {
-          body = new FormData(form);
-        }
-        const btn = form.querySelector('button[type="submit"]');
-        const btnOrigText = btn ? btn.textContent : '';
-        if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-        try {
-          const result = await apiRequest(section, 'POST', body);
-          if (result?.pending) {
-            alert('⏳ Solicitação enviada para aprovação pelos administradores.');
-          } else {
-            alert('✅ Dados salvos com sucesso!');
-          }
-          if (!isDocUnico) form.reset();
-          if (semArquivo.includes(section) && bibliotecaCarregada) {
-            try { await recarregarDadosBiblioteca(); } catch {}
-          }
-        } catch (err) {
-          let msg = 'Erro ao salvar.';
-          try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-          alert(msg);
-        } finally {
-          if (btn) { btn.disabled = false; btn.textContent = btnOrigText; }
-        }
-      });
-    });
-
-    async function loadInitialData(section) {
-      try {
-        const data = await apiRequest(section);
-        const form = document.querySelector(`.form-container[data-section="${section}"] form`);
-        if (form && data) {
-          Object.keys(data).forEach(key => {
-            if (form.elements[key]) form.elements[key].value = data[key];
-          });
-        }
-      } catch {}
-    }
-
-    async function loadLogsContent() {
-      const logsList = document.getElementById('logs-list');
-      const solList  = document.getElementById('solicitacoes-list');
-      logsList.innerHTML = '<li>A carregar logs...</li>';
-      if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Carregando...</li>';
-      try {
-        const solic = await apiRequest('solicitacoes');
-        if (solList) {
-          if (!solic.length) {
-            solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
-          } else {
-            const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
-            solList.innerHTML = solic.map(s => {
-              const acaoBtns = userInfo.isSuperAdmin
-                ? `<div class="li-actions">
-                     <button class="btn-aprovar"   data-id="${s.id}">✓ Aprovar</button>
-                     <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
-                   </div>`
-                : `<span class="badge-pendente">Aguardando</span>`;
-              return `<li data-sol-id="${s.id}">
-                <div class="log-info">
-                  <strong>${s.requestedBy}</strong>
-                  <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
-                  em <em>${s.collection}</em>
-                  <br><small class="log-details">"${s.details || 'Sem detalhes'}"</small>
-                  <br><small style="color:var(--txt-muted)">${formatTs(s.requestedAt)}</small>
+        <!-- ── ABA: CADASTRAR ── -->
+        <div id="cadastrar" class="tab-pane active">
+            <div class="grid-forms">
+                <div class="form-container" data-section="noticias">
+                    <h3>Nova Notícia</h3>
+                    <form>
+                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Notícia</button>
+                    </form>
                 </div>
-                ${acaoBtns}
-              </li>`;
-            }).join('');
-            if (userInfo.isSuperAdmin) {
-              solList.querySelectorAll('.btn-aprovar').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                  if (!confirm('Aprovar esta solicitação e executar a ação imediatamente?')) return;
-                  btn.disabled = true; btn.textContent = '...';
-                  try {
-                    await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
-                    await loadLogsContent();
-                    alert('✅ Solicitação aprovada e ação executada!');
-                  } catch (err) {
-                    let msg = 'Erro ao aprovar.';
+                <div class="form-container" data-section="novidades">
+                    <h3>Nova Novidade/Infraestrutura</h3>
+                    <form>
+                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Novidade</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="cargos">
+                    <h3>Novo Cargo/Função</h3>
+                    <form>
+                        <div class="input-group"><label>Nome do Cargo</label><input type="text" name="cargo" placeholder="Ex: Professor, Diretor" required></div>
+                        <div class="input-group"><label>Nível Hierárquico</label><input type="number" name="nivel" placeholder="1 = Mais alto" required></div>
+                        <button type="submit" class="btn-submit">Salvar Cargo</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="docente">
+                    <h3>Novo Docente</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Cargo/Função</label><input type="text" name="cargo" placeholder="Ex: Professor de Matemática"></div>
+                        <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
+                        <div class="input-group"><label>Foto</label><input type="file" name="foto" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Docente</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="cursos">
+                    <h3>Novo Curso</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Curso</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="contato">
+                    <h3>Novo Contacto</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Email</label><input type="email" name="email" required></div>
+                        <button type="submit" class="btn-submit">Salvar Contacto</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="alunosBib">
+                    <h3>Novo Aluno (Biblioteca)</h3>
+                    <form>
+                        <div class="input-group"><label>Matrícula</label><input type="text" name="matricula" required></div>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <button type="submit" class="btn-submit">Salvar Aluno</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="livros">
+                    <h3>Novo Livro</h3>
+                    <form>
+                        <div class="input-group"><label>Código</label><input type="text" name="codigo" required></div>
+                        <div class="input-group"><label>Título</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Autor</label><input type="text" name="autor" required></div>
+                        <div class="input-group">
+                            <label>Quantidade de Exemplares</label>
+                            <input type="number" name="quantidade" min="1" value="1" required>
+                        </div>
+                        <button type="submit" class="btn-submit">Salvar Livro</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: GERIR ── -->
+        <div id="gerenciar" class="tab-pane"></div>
+
+        <!-- ── ABA: INFORMAÇÕES ── -->
+        <div id="informacoes" class="tab-pane">
+            <div class="grid-forms">
+                <div class="form-container" data-section="alunos">
+                    <h3>Informações para Alunos</h3>
+                    <form>
+                        <div class="input-group"><label>Semana de Provas</label><input type="text" name="semanaProvas"></div>
+                        <div class="input-group"><label>Gincana</label><input type="text" name="gincana"></div>
+                        <div class="input-group"><label>Feira de Ciências</label><input type="text" name="feiraCiencias"></div>
+                        <div class="input-group"><label>Semana Cultural</label><input type="text" name="semanaCultural"></div>
+                        <div class="input-group"><label>Férias</label><input type="text" name="ferias"></div>
+                        <button type="submit" class="btn-submit">Atualizar Alunos</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="responsaveis">
+                    <h3>Informações para Responsáveis</h3>
+                    <form>
+                        <div class="input-group"><label>Reunião de Pais</label><input type="text" name="reuniaoPais"></div>
+                        <div class="input-group"><label>Entrega de Boletins</label><input type="text" name="entregaBoletins"></div>
+                        <button type="submit" class="btn-submit">Atualizar Responsáveis</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: BIBLIOTECA ── -->
+        <div id="biblioteca" class="tab-pane">
+            <div class="grid-forms">
+                <div class="form-container">
+                    <h3>Registrar Empréstimo</h3>
+                    <div class="input-group">
+                        <label>Aluno</label>
+                        <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
+                        <select id="sel-aluno-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Livro disponível</label>
+                        <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
+                        <select id="sel-livro-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group" id="grupo-qtd-emp" style="display:none;">
+                        <label>Quantidade de exemplares</label>
+                        <input type="number" id="qtd-emprestimo" min="1" value="1">
+                        <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
+                    </div>
+                    <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Aluno</h3>
+                    <div class="input-group">
+                        <label>Selecionar aluno</label>
+                        <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar aluno...">
+                        <select id="sel-aluno-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Livro</h3>
+                    <div class="input-group">
+                        <label>Selecionar livro</label>
+                        <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
+                        <select id="sel-livro-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+            </div>
+            <div class="list-container" style="margin-top:1.5rem">
+                <div class="bib-header">
+                    <h3>Empréstimos em Andamento</h3>
+                    <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
+                </div>
+                <div id="tabela-emprestimos-container">
+                    <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: LOGS ── -->
+        <div id="logs" class="tab-pane">
+            <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
+                <h3>⏳ Solicitações Pendentes de Aprovação</h3>
+                <ul id="solicitacoes-list" class="item-list"><li style="color:var(--txt-muted)">Carregando...</li></ul>
+            </div>
+            <div class="list-container">
+                <h3>Histórico de Atividades Recentes</h3>
+                <ul id="logs-list" class="item-list"></ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Confirmar Exclusão genérica -->
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem a certeza? Esta ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button id="btn-confirm-delete" class="btn-confirm">Sim, Excluir</button>
+                <button id="btn-cancel-delete" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Exclusão de livro COM histórico -->
+    <div id="delete-history-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="warning-icon">⚠️</span>
+            <h2>Livro Possui Histórico de Empréstimos</h2>
+            <p id="delete-history-msg" style="margin-bottom:1rem"></p>
+            <p style="font-size:0.82rem;color:var(--txt-muted)">
+                Se excluir <strong>sem</strong> o histórico, o servidor vai bloquear a exclusão pois há registros vinculados.
+                Você precisa excluir o histórico junto para poder remover este livro.
+            </p>
+            <div class="modal-buttons">
+                <button id="btn-delete-with-history" class="btn-danger">Excluir Livro e Histórico</button>
+                <button id="btn-cancel-delete-history" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edição -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Editar Item</h2>
+            <div id="edit-fields"></div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-edit" class="btn-confirm">Salvar Alterações</button>
+                <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Aceitar administrador pendente (define nível) -->
+    <div id="accept-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Aceitar Administrador</h2>
+            <p id="accept-modal-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
+            <div class="input-group">
+                <label>Nível de Acesso</label>
+                <input type="number" id="nivel-aceitar" min="1" max="8" placeholder="Ex: 1 = Diretor, 8 = TI">
+                <small style="color:var(--txt-muted);font-size:0.78rem;margin-top:4px;display:block">
+                    Níveis 1 (Diretor) e 8 (TI) têm acesso total e podem aprovar outros. Demais níveis criam solicitações.
+                </small>
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-accept" class="btn-confirm">Aceitar</button>
+                <button id="btn-cancel-accept" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panes = document.querySelectorAll('.tab-pane');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteHistModal = document.getElementById('delete-history-modal');
+        const editModal = document.getElementById('edit-modal');
+        const acceptModal = document.getElementById('accept-modal');
+        const editFields = document.getElementById('edit-fields');
+
+        let itemToDelete = null;
+        let itemToEdit = null;
+        let pendingAcceptUid = null;
+
+        let userInfo = { email: '', nivel: null, isSuperAdmin: false };
+
+        async function carregarUserInfo() {
+            try {
+                userInfo = await apiRequest('me');
+                const badge = document.getElementById('user-nivel-info');
+                const banner = document.getElementById('banner-nivel-limitado');
+                if (badge) {
+                    const nivelLabel = userInfo.isSuperAdmin
+                        ? '⭐ Super Admin (acesso total)'
+                        : `Nível ${userInfo.nivel ?? '?'}`;
+                    badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
+                }
+                if (banner && !userInfo.isSuperAdmin) {
+                    banner.style.display = 'block';
+                }
+            } catch (e) {
+                console.warn('Não foi possível carregar informações do usuário:', e);
+            }
+        }
+
+        setInterval(() => {
+            fetch('/api/ping').catch(() => {});
+        }, 10 * 60 * 1000);
+
+        function formatTs(ts) {
+            if (!ts) return '—';
+            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+            const d = ms !== null ? new Date(ms) : new Date(ts);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
+        }
+
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: {} };
+            if (body) {
+                if (body instanceof FormData) {
+                    options.body = body;
+                } else {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+            }
+            const response = await fetch(`/api/${endpoint}`, options);
+            let data;
+            try { data = await response.json(); } catch { data = {}; }
+            if (!response.ok && response.status !== 202) {
+                throw new Error(JSON.stringify(data));
+            }
+            return data;
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'gerenciar') loadManagementContent();
+                if (tab.dataset.tab === 'logs') loadLogsContent();
+                if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+            });
+        });
+
+        const fieldsByCollection = {
+            novidades: [
+                { name: 'titulo', label: 'Título', type: 'text' },
+                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            cargos: [
+                { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
+                { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
+            ],
+            docente: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'cargo', label: 'Cargo/Função', type: 'text' },
+                { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
+                { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
+            ],
+            cursos: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'descricao', label: 'Descrição', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            contato: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'email', label: 'Email', type: 'email' }
+            ],
+            noticias: [
+                { name: 'titulo', label: 'Título', type: 'text' },
+                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            alunos: [
+                { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
+                { name: 'gincana', label: 'Gincana', type: 'text' },
+                { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
+                { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
+                { name: 'ferias', label: 'Férias', type: 'text' }
+            ],
+            responsaveis: [
+                { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
+                { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
+            ],
+            alunosBib: [
+                { name: 'matricula', label: 'Matrícula', type: 'text' },
+                { name: 'nome', label: 'Nome', type: 'text' }
+            ],
+            livros: [
+                { name: 'codigo', label: 'Código', type: 'text' },
+                { name: 'nome', label: 'Título', type: 'text' },
+                { name: 'autor', label: 'Autor', type: 'text' },
+                { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
+            ]
+        };
+
+        async function loadManagementContent() {
+            const container = document.getElementById('gerenciar');
+            container.innerHTML = '<div class="loader">A carregar...</div>';
+
+            const cols = [
+                { name: 'noticias', title: 'Notícias' },
+                { name: 'novidades', title: 'Novidades/Infraestrutura' },
+                { name: 'cursos', title: 'Cursos' },
+                { name: 'docente', title: 'Corpo Docente' },
+                { name: 'cargos', title: 'Cargos e Funções' },
+                { name: 'contato', title: 'Contactos' },
+                { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
+                { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
+                { name: 'alunosBib', title: 'Alunos (Biblioteca)' },
+                { name: 'livros', title: 'Livros' }
+            ];
+
+            let html = '<div class="grid-lists">';
+            for (const col of cols) {
+                html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
+                try {
+                    if (col.isDocUnico) {
+                        const data = await apiRequest(col.name);
+                        const fields = fieldsByCollection[col.name] || [];
+                        const temDados = fields.some(f => data[f.name]);
+                        if (temDados) {
+                            fields.forEach(f => {
+                                if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${data[f.name]}</span></li>`;
+                            });
+                        } else {
+                            html += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
+                        }
+                        html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
+                                   <span></span>
+                                   <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
+                                 </li>`;
+                    } else {
+                        const items = await apiRequest(col.name);
+                        if (items.length > 0) {
+                            items.forEach(item => {
+                                const display = item.titulo || item.nome || item.cargo;
+                                let sub = '';
+                                if (item.matricula) {
+                                    sub = ` <small>(Mat: ${item.matricula})</small>`;
+                                } else if (item.autor) {
+                                    const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
+                                    const total = item.quantidade || 1;
+                                    const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
+                                    sub = ` <small>(${item.autor}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
+                                } else if (item.materia) {
+                                    sub = ` <small>(${item.materia})</small>`;
+                                } else if (item.nivel !== undefined) {
+                                    sub = ` <small>(Nível ${item.nivel})</small>`;
+                                }
+                                html += `<li data-id="${item.id}">
+                                           <span>${display}${sub}</span>
+                                           <div class="li-actions">
+                                               <button class="btn-edit" data-id="${item.id}" data-collection="${col.name}">Editar</button>
+                                               <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
+                                           </div>
+                                         </li>`;
+                            });
+                        } else {
+                            html += `<li class="empty">Nenhum item encontrado.</li>`;
+                        }
+                    }
+                } catch {
+                    html += `<li class="error">Erro ao carregar.</li>`;
+                }
+                html += `</ul></div>`;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        document.getElementById('gerenciar').addEventListener('click', async (e) => {
+            const collection = e.target.dataset.collection;
+
+            if (e.target.classList.contains('btn-edit-docunico')) {
+                try {
+                    const data = await apiRequest(collection);
+                    const fields = fieldsByCollection[collection] || [];
+                    editFields.innerHTML = fields.map(f =>
+                        `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${data[f.name] || ''}"></div>`
+                    ).join('');
+                    itemToEdit = { collection, isDocUnico: true };
+                    editModal.classList.add('active');
+                } catch {
+                    alert('Erro ao carregar dados para edição.');
+                }
+                return;
+            }
+
+            const id = e.target.dataset.id;
+            if (!id) return;
+
+            if (e.target.classList.contains('btn-delete')) {
+                const element = e.target.closest('li');
+                if (collection === 'livros') {
+                    e.target.disabled = true;
+                    e.target.textContent = '...';
+                    try {
+                        const hist = await apiRequest(`emprestimos/livro/${id}`);
+                        if (hist.length > 0) {
+                            itemToDelete = { id, collection, element };
+                            document.getElementById('delete-history-msg').innerHTML =
+                                `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
+                                 Para poder excluí-lo, o histórico precisa ser removido também.`;
+                            deleteHistModal.classList.add('active');
+                        } else {
+                            itemToDelete = { id, collection, element };
+                            deleteModal.classList.add('active');
+                        }
+                    } catch {
+                        itemToDelete = { id, collection, element };
+                        deleteModal.classList.add('active');
+                    } finally {
+                        e.target.disabled = false;
+                        e.target.textContent = 'Excluir';
+                    }
+                    return;
+                }
+                itemToDelete = { id, collection, element };
+                deleteModal.classList.add('active');
+                return;
+            }
+
+            if (e.target.classList.contains('btn-edit')) {
+                try {
+                    const item = await apiRequest(`${collection}/${id}`);
+                    const fields = fieldsByCollection[collection] || [];
+                    editFields.innerHTML = fields.map(f => {
+                        if (f.type === 'textarea') {
+                            return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${item[f.name] || ''}</textarea></div>`;
+                        }
+                        if (f.type === 'file') {
+                            return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
+                        }
+                        return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${item[f.name] ?? ''}"></div>`;
+                    }).join('');
+                    itemToEdit = { id, collection, isDocUnico: false };
+                    editModal.classList.add('active');
+                } catch {
+                    alert('Erro ao carregar item para edição.');
+                }
+                return;
+            }
+        });
+
+        document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
+            if (!itemToEdit) return;
+            const { collection, id, isDocUnico } = itemToEdit;
+            const semArquivo = ['alunosBib', 'livros'];
+            const btn = document.getElementById('btn-confirm-edit');
+            btn.disabled = true;
+            try {
+                let result;
+                if (isDocUnico) {
+                    const obj = {};
+                    editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
+                    result = await apiRequest(collection, 'POST', obj);
+                } else if (semArquivo.includes(collection)) {
+                    const obj = {};
+                    editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
+                    result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
+                } else {
+                    const fd = new FormData();
+                    editFields.querySelectorAll('input, textarea').forEach(inp => {
+                        if (inp.type === 'file') {
+                            if (inp.files[0]) fd.append(inp.name, inp.files[0]);
+                        } else {
+                            fd.append(inp.name, inp.value);
+                        }
+                    });
+                    result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
+                }
+                editModal.classList.remove('active');
+                itemToEdit = null;
+                if (result?.pending) {
+                    alert('⏳ Solicitação de edição enviada para aprovação pelos administradores.');
+                } else {
+                    alert('✅ Alterações salvas com sucesso!');
+                }
+                loadManagementContent();
+            } catch (err) {
+                let msg = 'Erro ao salvar alterações.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                alert(msg);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+            editModal.classList.remove('active');
+            itemToEdit = null;
+        });
+
+        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+            deleteModal.classList.remove('active');
+            itemToDelete = null;
+        });
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            if (!itemToDelete) return;
+            const { id, collection, element } = itemToDelete;
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.disabled = true;
+            try {
+                const result = await apiRequest(`${collection}/${id}`, 'DELETE');
+                if (result?.pending) {
+                    alert('⏳ Solicitação de exclusão enviada para aprovação.');
+                } else {
+                    element?.remove();
+                }
+            } catch (err) {
+                let msg = 'Erro ao excluir.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                alert(msg);
+            } finally {
+                deleteModal.classList.remove('active');
+                itemToDelete = null;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-delete-with-history').addEventListener('click', async () => {
+            if (!itemToDelete) return;
+            const { id, collection, element } = itemToDelete;
+            const btn = document.getElementById('btn-delete-with-history');
+            btn.disabled = true;
+            try {
+                const result = await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
+                if (result?.pending) {
+                    alert('⏳ Solicitação de exclusão (com histórico) enviada para aprovação.');
+                } else {
+                    alert('✅ Livro e histórico excluídos com sucesso.');
+                    element?.remove();
+                    loadManagementContent();
+                }
+            } catch (err) {
+                let msg = 'Erro ao excluir.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                alert(msg);
+            } finally {
+                deleteHistModal.classList.remove('active');
+                itemToDelete = null;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-delete-history').addEventListener('click', () => {
+            deleteHistModal.classList.remove('active');
+            itemToDelete = null;
+        });
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const container = form.closest('.form-container');
+                if (!container) return;
+                const section = container.dataset.section;
+
+                const isDocUnico = section === 'alunos' || section === 'responsaveis';
+                const semArquivo = ['alunosBib', 'livros'];
+                const useJson = isDocUnico || semArquivo.includes(section);
+
+                let body;
+                if (useJson) {
+                    const obj = {};
+                    new FormData(form).forEach((v, k) => { obj[k] = v; });
+                    body = obj;
+                } else {
+                    body = new FormData(form);
+                }
+
+                const btn = form.querySelector('button[type="submit"]');
+                const btnOrigText = btn ? btn.textContent : '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Salvando...';
+                }
+
+                try {
+                    const result = await apiRequest(section, 'POST', body);
+                    if (result?.pending) {
+                        alert('⏳ Solicitação enviada para aprovação pelos administradores.');
+                    } else {
+                        alert('✅ Dados salvos com sucesso!');
+                    }
+                    if (!isDocUnico) form.reset();
+                    if (semArquivo.includes(section) && bibliotecaCarregada) {
+                        try { await recarregarDadosBiblioteca(); } catch {}
+                    }
+                } catch (err) {
+                    let msg = 'Erro ao salvar.';
                     try { msg = JSON.parse(err.message)?.error || msg; } catch {}
                     alert(msg);
-                    btn.disabled = false; btn.textContent = '✓ Aprovar';
-                  }
-                });
-              });
-              solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                  if (!confirm('Negar esta solicitação? A ação não será executada.')) return;
-                  btn.disabled = true; btn.textContent = '...';
-                  try {
-                    await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
-                    await loadLogsContent();
-                  } catch {
-                    alert('Erro ao negar solicitação.');
-                    btn.disabled = false; btn.textContent = '✗ Negar';
-                  }
-                });
-              });
+                } finally {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = btnOrigText;
+                    }
+                }
+            });
+        });
+
+        async function loadInitialData(section) {
+            try {
+                const data = await apiRequest(section);
+                const form = document.querySelector(`.form-container[data-section="${section}"] form`);
+                if (form && data) {
+                    Object.keys(data).forEach(key => {
+                        if (form.elements[key]) form.elements[key].value = data[key];
+                    });
+                }
+            } catch {}
+        }
+
+        async function loadLogsContent() {
+            const logsList = document.getElementById('logs-list');
+            const solList = document.getElementById('solicitacoes-list');
+            logsList.innerHTML = '<li>A carregar logs...</li>';
+            if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Carregando...</li>';
+
+            try {
+                const solic = await apiRequest('solicitacoes');
+                if (solList) {
+                    if (!solic.length) {
+                        solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
+                    } else {
+                        const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
+                        solList.innerHTML = solic.map(s => {
+                            const acaoBtns = userInfo.isSuperAdmin
+                                ? `<div class="li-actions">
+                                     <button class="btn-aprovar" data-id="${s.id}">✓ Aprovar</button>
+                                     <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
+                                   </div>`
+                                : `<span class="badge-pendente">Aguardando</span>`;
+                            return `<li data-sol-id="${s.id}">
+                                      <div class="log-info">
+                                          <strong>${s.requestedBy}</strong>
+                                          <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
+                                          em <em>${s.collection}</em>
+                                          <br><small class="log-details">"${s.details || 'Sem detalhes'}"</small>
+                                          <br><small style="color:var(--txt-muted)">${formatTs(s.requestedAt)}</small>
+                                      </div>
+                                      ${acaoBtns}
+                                    </li>`;
+                        }).join('');
+
+                        if (userInfo.isSuperAdmin) {
+                            solList.querySelectorAll('.btn-aprovar').forEach(btn => {
+                                btn.addEventListener('click', async () => {
+                                    if (!confirm('Aprovar esta solicitação e executar a ação imediatamente?')) return;
+                                    btn.disabled = true;
+                                    btn.textContent = '...';
+                                    try {
+                                        await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
+                                        await loadLogsContent();
+                                        alert('✅ Solicitação aprovada e ação executada!');
+                                    } catch (err) {
+                                        let msg = 'Erro ao aprovar.';
+                                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                                        alert(msg);
+                                        btn.disabled = false;
+                                        btn.textContent = '✓ Aprovar';
+                                    }
+                                });
+                            });
+
+                            solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
+                                btn.addEventListener('click', async () => {
+                                    if (!confirm('Negar esta solicitação? A ação não será executada.')) return;
+                                    btn.disabled = true;
+                                    btn.textContent = '...';
+                                    try {
+                                        await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
+                                        await loadLogsContent();
+                                    } catch {
+                                        alert('Erro ao negar solicitação.');
+                                        btn.disabled = false;
+                                        btn.textContent = '✗ Negar';
+                                    }
+                                });
+                            });
+                        }
+                    }
+                }
+            } catch {
+                if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Erro ao carregar solicitações.</li>';
             }
-          }
+
+            try {
+                const logs = await apiRequest('logs');
+                logsList.innerHTML = logs.length
+                    ? logs.map(log =>
+                        `<li>
+                            <div class="log-info">
+                                <strong>${log.adminEmail}</strong>
+                                <span class="log-action"> ${log.action}</span> em <em>${log.collection}</em>
+                                <br><small class="log-details">"${log.details || 'Sem detalhes'}"</small>
+                            </div>
+                            <span class="log-date">${formatTs(log.timestamp)}</span>
+                          </li>`
+                    ).join('')
+                    : '<li>Nenhum registo de atividade encontrado.</li>';
+            } catch {
+                logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
+            }
         }
-      } catch {
-        if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Erro ao carregar solicitações.</li>';
-      }
-      try {
-        const logs = await apiRequest('logs');
-        logsList.innerHTML = logs.length
-          ? logs.map(log =>
-              `<li>
-                <div class="log-info">
-                  <strong>${log.adminEmail}</strong>
-                  <span class="log-action"> ${log.action}</span> em <em>${log.collection}</em>
-                  <br><small class="log-details">"${log.details || 'Sem detalhes'}"</small>
-                </div>
-                <span class="log-date">${formatTs(log.timestamp)}</span>
-              </li>`
-            ).join('')
-          : '<li>Nenhum registo de atividade encontrado.</li>';
-      } catch {
-        logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
-      }
-    }
 
-    async function loadPendingAdmins() {
-      try {
-        const admins = await apiRequest('pendentes');
-        document.getElementById('pending-admins-list').innerHTML = admins.length === 0
-          ? '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>'
-          : admins.map(a => {
-              const actionBtns = userInfo.isSuperAdmin
-                ? `<button class="btn-approve" data-uid="${a.uid}" data-email="${a.username}">✓</button>
-                   <button class="btn-deny"    data-uid="${a.uid}" data-email="${a.username}">✗</button>`
-                : `<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>`;
-              return `<div class="pending-admin">
-                 <p><strong>${a.username}</strong></p>
-                 <div class="admin-actions">${actionBtns}</div>
-               </div>`;
-            }).join('');
-      } catch (err) { console.error('Erro ao carregar admins pendentes:', err); }
-    }
+        async function loadPendingAdmins() {
+            try {
+                const admins = await apiRequest('pendentes');
+                document.getElementById('pending-admins-list').innerHTML = admins.length === 0
+                    ? '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>'
+                    : admins.map(a => {
+                        const actionBtns = userInfo.isSuperAdmin
+                            ? `<button class="btn-approve" data-uid="${a.uid}" data-email="${a.username}">✓</button>
+                               <button class="btn-deny" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
+                            : `<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>`;
+                        return `<div class="pending-admin">
+                                   <p><strong>${a.username}</strong></p>
+                                   <div class="admin-actions">${actionBtns}</div>
+                                 </div>`;
+                    }).join('');
+            } catch (err) {
+                console.error('Erro ao carregar admins pendentes:', err);
+            }
+        }
 
-    document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
-      const uid   = e.target.dataset.uid;
-      const email = e.target.dataset.email;
-      if (!uid) return;
-      if (e.target.classList.contains('btn-approve')) {
-        pendingAcceptUid = uid;
-        document.getElementById('accept-modal-email').textContent = email || uid;
-        document.getElementById('nivel-aceitar').value = '';
-        acceptModal.classList.add('active');
-        return;
-      }
-      if (e.target.classList.contains('btn-deny')) {
-        if (!confirm(`Negar acesso de ${email || uid}?`)) return;
-        try {
-          await apiRequest('pendentes/negar', 'POST', { uid });
-          loadPendingAdmins();
-        } catch { alert('Não foi possível negar o administrador.'); }
-      }
+        document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
+            const uid = e.target.dataset.uid;
+            const email = e.target.dataset.email;
+            if (!uid) return;
+
+            if (e.target.classList.contains('btn-approve')) {
+                pendingAcceptUid = uid;
+                document.getElementById('accept-modal-email').textContent = email || uid;
+                document.getElementById('nivel-aceitar').value = '';
+                acceptModal.classList.add('active');
+                return;
+            }
+
+            if (e.target.classList.contains('btn-deny')) {
+                if (!confirm(`Negar acesso de ${email || uid}?`)) return;
+                try {
+                    await apiRequest('pendentes/negar', 'POST', { uid });
+                    loadPendingAdmins();
+                } catch {
+                    alert('Não foi possível negar o administrador.');
+                }
+            }
+        });
+
+        document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
+            const nivel = parseInt(document.getElementById('nivel-aceitar').value, 10);
+            if (isNaN(nivel) || nivel < 1 || nivel > 8) {
+                alert('Informe um nível válido entre 1 (Diretor) e 8 (TI).');
+                return;
+            }
+            if (!pendingAcceptUid) return;
+            const btn = document.getElementById('btn-confirm-accept');
+            btn.disabled = true;
+            try {
+                await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
+                acceptModal.classList.remove('active');
+                pendingAcceptUid = null;
+                loadPendingAdmins();
+                alert('✅ Administrador aceito com sucesso!');
+            } catch (err) {
+                let msg = 'Não foi possível aceitar o administrador.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                alert(msg);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-accept').addEventListener('click', () => {
+            acceptModal.classList.remove('active');
+            pendingAcceptUid = null;
+        });
+
+        // ═══════════════════════════ BIBLIOTECA ═══════════════════════════
+        let todosAlunos = [];
+        let todosLivros = [];
+        let bibliotecaCarregada = false;
+        let filtrosInicializados = false;
+
+        function formatarData(ts) {
+            if (!ts) return '—';
+            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+            const d = ms !== null ? new Date(ms) : new Date(ts);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
+        }
+
+        function popularSelect(id, items, labelFn) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            if (!items.length) {
+                sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+                return;
+            }
+            sel.innerHTML = items.map(i => `<option value="${i.id}">${labelFn(i)}</option>`).join('');
+        }
+
+        async function recarregarDadosBiblioteca() {
+            [todosAlunos, todosLivros] = await Promise.all([
+                apiRequest('alunosBib'),
+                apiRequest('livros')
+            ]);
+            atualizarSelects();
+        }
+
+        function atualizarSelects() {
+            const livrosDisp = todosLivros.filter(l => {
+                const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
+                return disp > 0;
+            });
+            const labelLivroDisp = l => {
+                const disp = l.quantidadeDisponivel ?? 1;
+                const total = l.quantidade || 1;
+                return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
+            };
+            popularSelect('sel-aluno-emp', todosAlunos, a => `${a.nome} — ${a.matricula}`);
+            popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
+            popularSelect('sel-aluno-hist', todosAlunos, a => `${a.nome} — ${a.matricula}`);
+            popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
+        }
+
+        function inicializarFiltros() {
+            if (filtrosInicializados) return;
+            filtrosInicializados = true;
+
+            document.getElementById('filtro-aluno-emp').addEventListener('input', e => {
+                const q = e.target.value.toLowerCase();
+                const list = q
+                    ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q))
+                    : todosAlunos;
+                popularSelect('sel-aluno-emp', list, a => `${a.nome} — ${a.matricula}`);
+            });
+
+            document.getElementById('filtro-livro-emp').addEventListener('input', e => {
+                const q = e.target.value.toLowerCase();
+                const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
+                const list = q
+                    ? disp.filter(l =>
+                        l.nome.toLowerCase().includes(q) ||
+                        (l.autor || '').toLowerCase().includes(q) ||
+                        (l.codigo || '').toLowerCase().includes(q)
+                    )
+                    : disp;
+                const labelLivroDisp = l => {
+                    const d = l.quantidadeDisponivel ?? 1;
+                    const t = l.quantidade || 1;
+                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
+                };
+                popularSelect('sel-livro-emp', list, labelLivroDisp);
+            });
+
+            document.getElementById('filtro-aluno-hist').addEventListener('input', e => {
+                const q = e.target.value.toLowerCase();
+                const list = q
+                    ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q))
+                    : todosAlunos;
+                popularSelect('sel-aluno-hist', list, a => `${a.nome} — ${a.matricula}`);
+            });
+
+            document.getElementById('filtro-livro-hist').addEventListener('input', e => {
+                const q = e.target.value.toLowerCase();
+                const list = q
+                    ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q))
+                    : todosLivros;
+                popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
+            });
+
+            // Mostrar campo de quantidade quando livro é selecionado
+            document.getElementById('sel-livro-emp').addEventListener('change', () => {
+                const livroId = document.getElementById('sel-livro-emp').value;
+                const grupoQtd = document.getElementById('grupo-qtd-emp');
+                const inputQtd = document.getElementById('qtd-emprestimo');
+                const aviso = document.getElementById('qtd-max-aviso');
+
+                if (!livroId) {
+                    grupoQtd.style.display = 'none';
+                    return;
+                }
+
+                const livro = todosLivros.find(l => l.id === livroId);
+                if (livro) {
+                    const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+                    grupoQtd.style.display = 'block';
+                    inputQtd.max = disp;
+                    inputQtd.value = 1;
+                    aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
+                }
+            });
+
+            // Registrar empréstimo
+            document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
+                const selAluno = document.getElementById('sel-aluno-emp');
+                const selLivro = document.getElementById('sel-livro-emp');
+                const qtdInput = document.getElementById('qtd-emprestimo');
+
+                if (!selAluno.value || !selLivro.value) {
+                    alert('Selecione um aluno e um livro.');
+                    return;
+                }
+
+                const aluno = todosAlunos.find(a => a.id === selAluno.value);
+                const livro = todosLivros.find(l => l.id === selLivro.value);
+                const quantidade = parseInt(qtdInput?.value || 1, 10);
+                const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+
+                if (quantidade < 1) { alert('Quantidade inválida.'); return; }
+                if (quantidade > disponiveis) {
+                    alert(`Só existem ${disponiveis} exemplar(es) disponível(is).`);
+                    return;
+                }
+
+                const btn = document.getElementById('btn-registrar-emprestimo');
+                btn.disabled = true;
+                btn.textContent = 'Registrando...';
+
+                try {
+                    const result = await apiRequest('emprestimos', 'POST', {
+                        alunoId: aluno.id,
+                        livroId: livro.id,
+                        quantidade
+                    });
+                    if (result?.pending) {
+                        alert('⏳ Solicitação de empréstimo enviada para aprovação.');
+                    } else {
+                        alert(`✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
+                    }
+                    document.getElementById('filtro-aluno-emp').value = '';
+                    document.getElementById('filtro-livro-emp').value = '';
+                    document.getElementById('grupo-qtd-emp').style.display = 'none';
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar empréstimo.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    alert(msg);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Registrar Empréstimo';
+                }
+            });
+
+            // ═══ DEVOLUÇÃO PARCIAL ═══
+            document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
+                if (!e.target.classList.contains('btn-devolver')) return;
+
+                const empId = e.target.dataset.id;
+                const total = parseInt(e.target.dataset.total, 10) || 1;
+                const qtdInput = document.getElementById(`qtd-dev-${empId}`);
+                const qtd = parseInt(qtdInput?.value, 10) || total;
+
+                if (qtd < 1 || qtd > total) {
+                    alert(`Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
+                    return;
+                }
+
+                const mensagem = qtd < total
+                    ? `Devolver ${qtd} de ${total} exemplar(es)? O restante continuará emprestado.`
+                    : `Devolver todos os ${total} exemplar(es)?`;
+
+                if (!confirm(mensagem)) return;
+
+                e.target.disabled = true;
+                try {
+                    await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar devolução.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    alert(msg);
+                    e.target.disabled = false;
+                }
+            });
+
+            document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-aluno-hist');
+                const lista = document.getElementById('lista-historico-aluno');
+                if (!sel.value) { alert('Selecione um aluno.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${e.livroNome} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-ver-livro').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-livro-hist');
+                const lista = document.getElementById('lista-historico-livro');
+                if (!sel.value) { alert('Selecione um livro.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${e.alunoNome} (${e.alunoMatricula}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
+                await recarregarDadosBiblioteca();
+                await carregarEmprestimosAtivos();
+            });
+        }
+
+        async function carregarEmprestimosAtivos() {
+            const container = document.getElementById('tabela-emprestimos-container');
+            container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
+            try {
+                const lista = await apiRequest('emprestimos?ativos=true');
+                if (!lista.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <table class="tabela-bib">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Livro</th>
+                                <th>Código</th>
+                                <th>Qtd.</th>
+                                <th>Data</th>
+                                <th>Devolver</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lista.map(e => `
+                                <tr>
+                                    <td>${e.alunoNome} <small style="color:var(--txt-muted)">(${e.alunoMatricula})</small></td>
+                                    <td>${e.livroNome}</td>
+                                    <td><small>${e.livroCodigo || '—'}</small></td>
+                                    <td>${e.quantidade || 1}</td>
+                                    <td>${formatarData(e.dataEmprestimo)}</td>
+                                    <td style="display:flex; gap:4px; align-items:center;">
+                                        <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
+                                        <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } catch {
+                container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+            }
+        }
+
+        async function carregarBiblioteca() {
+            try {
+                await recarregarDadosBiblioteca();
+                inicializarFiltros();
+                await carregarEmprestimosAtivos();
+                bibliotecaCarregada = true;
+            } catch (err) {
+                console.error('Erro ao carregar biblioteca:', err);
+            }
+        }
+
+        async function init() {
+            await carregarUserInfo();
+            loadInitialData('alunos');
+            loadInitialData('responsaveis');
+            loadPendingAdmins();
+        }
+        init();
     });
-
-    document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
-      const nivel = parseInt(document.getElementById('nivel-aceitar').value, 10);
-      if (isNaN(nivel) || nivel < 1 || nivel > 8) {
-        alert('Informe um nível válido entre 1 (Diretor) e 8 (TI).');
-        return;
-      }
-      if (!pendingAcceptUid) return;
-      const btn = document.getElementById('btn-confirm-accept');
-      btn.disabled = true;
-      try {
-        await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
-        acceptModal.classList.remove('active');
-        pendingAcceptUid = null;
-        loadPendingAdmins();
-        alert('✅ Administrador aceito com sucesso!');
-      } catch (err) {
-        let msg = 'Não foi possível aceitar o administrador.';
-        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-        alert(msg);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('btn-cancel-accept').addEventListener('click', () => {
-      acceptModal.classList.remove('active');
-      pendingAcceptUid = null;
-    });
-
-    // ══════════════════════════════════════════════════════
-    // BIBLIOTECA
-    // ══════════════════════════════════════════════════════
-    let todosAlunos = [];
-    let todosLivros = [];
-    let bibliotecaCarregada = false;
-    let filtrosInicializados = false;
-
-    function formatarData(ts) {
-      if (!ts) return '—';
-      const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-      const d = ms !== null ? new Date(ms) : new Date(ts);
-      return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
-    }
-
-    function popularSelect(id, items, labelFn) {
-      const sel = document.getElementById(id);
-      if (!sel) return;
-      if (!items.length) {
-        sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
-        return;
-      }
-      sel.innerHTML = items.map(i => `<option value="${i.id}">${labelFn(i)}</option>`).join('');
-    }
-
-    async function recarregarDadosBiblioteca() {
-      [todosAlunos, todosLivros] = await Promise.all([
-        apiRequest('alunosBib'),
-        apiRequest('livros')
-      ]);
-      atualizarSelects();
-    }
-
-    function atualizarSelects() {
-      const livrosDisp = todosLivros.filter(l => {
-        const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
-        return disp > 0;
-      });
-      const labelLivroDisp = l => {
-        const disp = l.quantidadeDisponivel ?? 1;
-        const total = l.quantidade || 1;
-        return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
-      };
-      popularSelect('sel-aluno-emp',  todosAlunos, a => `${a.nome} — ${a.matricula}`);
-      popularSelect('sel-livro-emp',  livrosDisp, labelLivroDisp);
-      popularSelect('sel-aluno-hist', todosAlunos, a => `${a.nome} — ${a.matricula}`);
-      popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
-    }
-
-    function inicializarFiltros() {
-      if (filtrosInicializados) return;
-      filtrosInicializados = true;
-
-      document.getElementById('filtro-aluno-emp').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        const list = q ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula||'').toLowerCase().includes(q)) : todosAlunos;
-        popularSelect('sel-aluno-emp', list, a => `${a.nome} — ${a.matricula}`);
-      });
-
-      document.getElementById('filtro-livro-emp').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
-        const list = q ? disp.filter(l =>
-          l.nome.toLowerCase().includes(q) || (l.autor||'').toLowerCase().includes(q) || (l.codigo||'').toLowerCase().includes(q)
-        ) : disp;
-        const labelLivroDisp = l => {
-          const d = l.quantidadeDisponivel ?? 1;
-          const t = l.quantidade || 1;
-          return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
-        };
-        popularSelect('sel-livro-emp', list, labelLivroDisp);
-      });
-
-      document.getElementById('filtro-aluno-hist').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        const list = q ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula||'').toLowerCase().includes(q)) : todosAlunos;
-        popularSelect('sel-aluno-hist', list, a => `${a.nome} — ${a.matricula}`);
-      });
-
-      document.getElementById('filtro-livro-hist').addEventListener('input', e => {
-        const q = e.target.value.toLowerCase();
-        const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo||'').toLowerCase().includes(q)) : todosLivros;
-        popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
-      });
-
-      // ═══ Mostrar campo de quantidade quando livro é selecionado ═══
-      document.getElementById('sel-livro-emp').addEventListener('change', () => {
-        const livroId = document.getElementById('sel-livro-emp').value;
-        const grupoQtd = document.getElementById('grupo-qtd-emp');
-        const inputQtd = document.getElementById('qtd-emprestimo');
-        const aviso = document.getElementById('qtd-max-aviso');
-        if (!livroId) { grupoQtd.style.display = 'none'; return; }
-        const livro = todosLivros.find(l => l.id === livroId);
-        if (livro) {
-          const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-          grupoQtd.style.display = 'block';
-          inputQtd.max = disp;
-          inputQtd.value = 1;
-          aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
-        }
-      });
-
-      // ═══ Registrar empréstimo com quantidade ═══
-      document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
-        const selAluno = document.getElementById('sel-aluno-emp');
-        const selLivro = document.getElementById('sel-livro-emp');
-        const qtdInput = document.getElementById('qtd-emprestimo');
-        if (!selAluno.value || !selLivro.value) { alert('Selecione um aluno e um livro.'); return; }
-        const aluno = todosAlunos.find(a => a.id === selAluno.value);
-        const livro = todosLivros.find(l => l.id === selLivro.value);
-        const quantidade = parseInt(qtdInput?.value || 1, 10);
-        const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-        if (quantidade < 1) { alert('Quantidade inválida.'); return; }
-        if (quantidade > disponiveis) { alert(`Só existem ${disponiveis} exemplar(es) disponível(is).`); return; }
-        const btn = document.getElementById('btn-registrar-emprestimo');
-        btn.disabled = true; btn.textContent = 'Registrando...';
-        try {
-          const result = await apiRequest('emprestimos', 'POST', { alunoId: aluno.id, livroId: livro.id, quantidade });
-          if (result?.pending) { alert('⏳ Solicitação de empréstimo enviada para aprovação.'); }
-          else { alert(`✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`); }
-          document.getElementById('filtro-aluno-emp').value = '';
-          document.getElementById('filtro-livro-emp').value = '';
-          document.getElementById('grupo-qtd-emp').style.display = 'none';
-          await recarregarDadosBiblioteca();
-          await carregarEmprestimosAtivos();
-        } catch (err) {
-          let msg = 'Erro ao registrar empréstimo.';
-          try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-          alert(msg);
-        } finally { btn.disabled = false; btn.textContent = 'Registrar Empréstimo'; }
-      });
-
-      document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
-        if (!e.target.classList.contains('btn-devolver')) return;
-        if (!confirm('Confirmar devolução?')) return;
-        e.target.disabled = true;
-        try {
-          await apiRequest(`emprestimos/${e.target.dataset.id}/devolver`, 'PUT');
-          await recarregarDadosBiblioteca();
-          await carregarEmprestimosAtivos();
-        } catch (err) {
-          let msg = 'Erro ao registrar devolução.';
-          try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-          alert(msg);
-          e.target.disabled = false;
-        }
-      });
-
-      document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
-        const sel = document.getElementById('sel-aluno-hist');
-        const lista = document.getElementById('lista-historico-aluno');
-        if (!sel.value) { alert('Selecione um aluno.'); return; }
-        lista.innerHTML = '<li>Carregando...</li>';
-        try {
-          const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
-          lista.innerHTML = emp.length
-            ? emp.map(e => {
-                const badge = e.devolvido ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>` : `<span class="badge-ativo">📚 Em andamento</span>`;
-                return `<li><span>${e.livroNome} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-              }).join('')
-            : '<li>Nenhum empréstimo encontrado.</li>';
-        } catch { lista.innerHTML = '<li>Erro ao buscar.</li>'; }
-      });
-
-      document.getElementById('btn-ver-livro').addEventListener('click', async () => {
-        const sel = document.getElementById('sel-livro-hist');
-        const lista = document.getElementById('lista-historico-livro');
-        if (!sel.value) { alert('Selecione um livro.'); return; }
-        lista.innerHTML = '<li>Carregando...</li>';
-        try {
-          const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
-          lista.innerHTML = emp.length
-            ? emp.map(e => {
-                const badge = e.devolvido ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>` : `<span class="badge-ativo">📚 Em andamento</span>`;
-                return `<li><span>${e.alunoNome} (${e.alunoMatricula}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-              }).join('')
-            : '<li>Nenhum empréstimo encontrado.</li>';
-        } catch { lista.innerHTML = '<li>Erro ao buscar.</li>'; }
-      });
-
-      document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
-        await recarregarDadosBiblioteca();
-        await carregarEmprestimosAtivos();
-      });
-    }
-
-    async function carregarEmprestimosAtivos() {
-      const container = document.getElementById('tabela-emprestimos-container');
-      container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
-      try {
-        const lista = await apiRequest('emprestimos?ativos=true');
-        if (!lista.length) {
-          container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
-          return;
-        }
-        container.innerHTML = `
-          <table class="tabela-bib">
-            <thead><tr><th>Aluno</th><th>Livro</th><th>Código</th><th>Qtd.</th><th>Data</th><th>Ação</th></tr></thead>
-            <tbody>
-              ${lista.map(e => `
-                <tr>
-                  <td>${e.alunoNome} <small style="color:var(--txt-muted)">(${e.alunoMatricula})</small></td>
-                  <td>${e.livroNome}</td>
-                  <td><small>${e.livroCodigo || '—'}</small></td>
-                  <td>${e.quantidade || 1}</td>
-                  <td>${formatarData(e.dataEmprestimo)}</td>
-                  <td><button class="btn-devolver" data-id="${e.id}">Devolver</button></td>
-                </tr>`).join('')}
-            </tbody>
-          </table>`;
-      } catch {
-        container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
-      }
-    }
-
-    async function carregarBiblioteca() {
-      try {
-        await recarregarDadosBiblioteca();
-        inicializarFiltros();
-        await carregarEmprestimosAtivos();
-        bibliotecaCarregada = true;
-      } catch (err) { console.error('Erro ao carregar biblioteca:', err); }
-    }
-
-    async function init() {
-      await carregarUserInfo();
-      loadInitialData('alunos');
-      loadInitialData('responsaveis');
-      loadPendingAdmins();
-    }
-    init();
-  });
-  </script>
+    </script>
 </body>
 </html>

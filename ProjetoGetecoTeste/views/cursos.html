@@ -6,6 +6,25 @@
   <title>GETECO - Cursos</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" type="image/png" href="/images/logo.png">
+  <style>
+    /* Estilo para a imagem dentro do popup */
+    .popup-imagem {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .popup-imagem-placeholder {
+      width: 100%;
+      max-height: 150px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      background: var(--bg-input, #f0f0f0);
+      padding: 1rem;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -51,6 +70,9 @@
       <button class="popup-close" id="popup-close" aria-label="Fechar">&times;</button>
       <div class="popup-body">
         <span class="popup-badge">Curso</span>
+        <!-- ═══ IMAGEM DO CURSO ═══ -->
+        <img id="popup-imagem" src="" alt="" class="popup-imagem" style="display:none;">
+        <!-- ════════════════════ -->
         <h2 id="popup-titulo"></h2>
         <p id="popup-conteudo"></p>
       </div>
@@ -61,10 +83,21 @@
     const overlay = document.getElementById('popup-overlay');
     const pTitulo = document.getElementById('popup-titulo');
     const pConteudo = document.getElementById('popup-conteudo');
+    const pImagem = document.getElementById('popup-imagem');
 
-    function abrirPopup(nome, descricao) {
+    function abrirPopup(nome, descricao, imagem) {
       pTitulo.textContent = nome;
       pConteudo.textContent = descricao || 'Sem descrição disponível.';
+      
+      // Mostrar a imagem se existir
+      if (imagem) {
+        pImagem.src = imagem;
+        pImagem.alt = nome || 'Curso';
+        pImagem.style.display = 'block';
+      } else {
+        pImagem.style.display = 'none';
+      }
+      
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
@@ -84,13 +117,20 @@
       .then(data => {
         const container = document.getElementById('cursos-content');
         if (!Array.isArray(data) || data.length === 0) {
-          container.innerHTML = '<p>Nenhum curso cadastrado.</p>'; return;
+          container.innerHTML = '<p>Nenhum curso cadastrado.</p>';
+          return;
         }
         container.innerHTML = '';
+
         // Escapa HTML para prevenir XSS
         function escapeHtml(str) {
           if (!str) return '';
-          return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
         }
 
         data.forEach(curso => {
@@ -100,18 +140,31 @@
           card.setAttribute('role', 'button');
           card.setAttribute('tabindex', '0');
           card.setAttribute('aria-label', `Ver detalhes: ${escapeHtml(curso.nome)}`);
+
           card.innerHTML = `
-            ${imgSrc ? `<div class="news-card-img"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(curso.nome)}"></div>` : `<div class="news-card-img news-card-img--placeholder curso-placeholder"><img src="/images/logo.png" alt="${escapeHtml(curso.nome)}" class="curso-logo-thumb"></div>`}
+            ${imgSrc 
+              ? `<div class="news-card-img"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(curso.nome)}"></div>` 
+              : `<div class="news-card-img news-card-img--placeholder curso-placeholder">
+                   <img src="/images/logo.png" alt="${escapeHtml(curso.nome)}" class="curso-logo-thumb">
+                 </div>`
+            }
             <div class="news-card-body">
               <span class="news-card-badge">Curso</span>
               <h3 class="news-card-title">${escapeHtml(curso.nome) || 'Curso'}</h3>
               <p class="news-card-excerpt">${escapeHtml(curso.descricao) || 'Clique para ver os detalhes deste curso.'}</p>
               <span class="news-card-cta">Ver detalhes →</span>
             </div>`;
-          card.addEventListener('click', () => abrirPopup(curso.nome, curso.descricao));
+
+          // ═══ Passa a imagem para o popup ═══
+          card.addEventListener('click', () => abrirPopup(curso.nome, curso.descricao, imgSrc));
           card.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirPopup(curso.nome, curso.descricao); }
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              abrirPopup(curso.nome, curso.descricao, imgSrc);
+            }
           });
+          // ═══════════════════════════════
+
           container.appendChild(card);
         });
       })

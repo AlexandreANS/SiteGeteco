@@ -12,7 +12,7 @@ const cloudinary = require("cloudinary").v2;
 // --- INICIALIZAÇÃO DO FIREBASE ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount)
 });
 const db = admin.firestore();
 const auth = admin.auth();
@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 3000;
 // --- CLOUDINARY ---
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
@@ -57,7 +57,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(cors({
-    origin: ['http://localhost:5000', 'http://localhost:3000', 'https://sitegeteco.onrender.com', 'https://escola-geteco.onrender.com'],
+    origin: [
+        'http://localhost:5000',
+        'http://localhost:3000',
+        'https://sitegeteco.onrender.com',
+        'https://escola-geteco.onrender.com'
+    ],
     credentials: true
 }));
 
@@ -271,7 +276,14 @@ collections.forEach(col => {
             const details = data.titulo || data.nome || data.cargo || req.params.id;
 
             if (!isSuperAdmin(req.user)) {
-                await criarSolicitacao({ user: req.user, collection: col, method: 'PUT', itemId: req.params.id, data, details });
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'PUT',
+                    itemId: req.params.id,
+                    data,
+                    details
+                });
                 return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
             }
 
@@ -293,7 +305,14 @@ collections.forEach(col => {
     app.delete(`/api/${col}/:id`, requireAdmin, async (req, res) => {
         try {
             if (!isSuperAdmin(req.user)) {
-                await criarSolicitacao({ user: req.user, collection: col, method: 'DELETE', itemId: req.params.id, data: null, details: req.params.id });
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'DELETE',
+                    itemId: req.params.id,
+                    data: null,
+                    details: req.params.id
+                });
                 return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
             }
 
@@ -346,7 +365,13 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
         if (req.file) data.foto = await uploadImagem(req.file);
 
         if (!isSuperAdmin(req.user)) {
-            await criarSolicitacao({ user: req.user, collection: 'docente', method: 'POST', data, details: data.nome });
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'POST',
+                data,
+                details: data.nome
+            });
             return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
         }
 
@@ -377,7 +402,14 @@ app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res
         if (req.file) data.foto = await uploadImagem(req.file);
 
         if (!isSuperAdmin(req.user)) {
-            await criarSolicitacao({ user: req.user, collection: 'docente', method: 'PUT', itemId: req.params.id, data, details: data.nome || req.params.id });
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'PUT',
+                itemId: req.params.id,
+                data,
+                details: data.nome || req.params.id
+            });
             return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
         }
 
@@ -399,7 +431,14 @@ app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res
 app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
-            await criarSolicitacao({ user: req.user, collection: 'docente', method: 'DELETE', itemId: req.params.id, data: null, details: req.params.id });
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'DELETE',
+                itemId: req.params.id,
+                data: null,
+                details: req.params.id
+            });
             return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
         }
 
@@ -422,10 +461,17 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
             res.status(500).json({ error: 'Erro ao buscar dados.' });
         }
     });
+
     app.post(`/api/${col}`, requireAdmin, async (req, res) => {
         try {
             if (!isSuperAdmin(req.user)) {
-                await criarSolicitacao({ user: req.user, collection: col, method: 'POST', data: req.body, details: `Atualização de ${col}` });
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'POST',
+                    data: req.body,
+                    details: `Atualização de ${col}`
+                });
                 return res.status(202).json({ pending: true, message: 'Solicitação enviada para aprovação.' });
             }
             await db.collection(col).doc('main').set(req.body, { merge: true });
@@ -442,7 +488,10 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 app.get('/api/pendentes', requireAdmin, async (req, res) => {
     try {
         const list = await auth.listUsers(100);
-        res.json(list.users.filter(u => u.customClaims?.status === 'pending').map(u => ({ uid: u.uid, username: u.email })));
+        res.json(list.users
+            .filter(u => u.customClaims?.status === 'pending')
+            .map(u => ({ uid: u.uid, username: u.email }))
+        );
     } catch (e) {
         res.status(500).json({ error: 'Erro ao listar pendentes.' });
     }
@@ -489,7 +538,10 @@ app.post('/api/pendentes/negar', requireSuperAdmin, async (req, res) => {
 
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
-        const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(50).get();
+        const snap = await db.collection('logs')
+            .orderBy('timestamp', 'desc')
+            .limit(50)
+            .get();
         res.json(snap.docs.map(d => d.data()));
     } catch (e) {
         res.status(500).json({ error: 'Erro ao buscar logs.' });
@@ -500,12 +552,16 @@ app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
         let snap;
         if (isSuperAdmin(req.user)) {
-            snap = await db.collection('solicitacoes').where('status', '==', 'pending').orderBy('requestedAt', 'desc').get();
+            snap = await db.collection('solicitacoes')
+                .where('status', '==', 'pending')
+                .orderBy('requestedAt', 'desc')
+                .get();
         } else {
             snap = await db.collection('solicitacoes')
                 .where('requestedBy', '==', req.user.email)
                 .where('status', '==', 'pending')
-                .orderBy('requestedAt', 'desc').get();
+                .orderBy('requestedAt', 'desc')
+                .get();
         }
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
@@ -518,7 +574,9 @@ async function executarAcao(sol) {
 
     if (method === 'DELETE' && collection === 'livros') {
         if (data?.deleteHistory) {
-            const hist = await db.collection('emprestimos').where('livroId', '==', itemId).get();
+            const hist = await db.collection('emprestimos')
+                .where('livroId', '==', itemId)
+                .get();
             if (!hist.empty) {
                 const batch = db.batch();
                 hist.docs.forEach(d => batch.delete(d.ref));
@@ -559,7 +617,11 @@ app.post('/api/solicitacoes/:id/aprovar', requireSuperAdmin, async (req, res) =>
 
         await executarAcao(sol);
 
-        await solRef.update({ status: 'approved', resolvedBy: req.user.email, resolvedAt: new Date() });
+        await solRef.update({
+            status: 'approved',
+            resolvedBy: req.user.email,
+            resolvedAt: new Date()
+        });
         db.collection('logs').add({
             adminEmail: req.user.email,
             action: 'aprovou solicitação',
@@ -581,7 +643,11 @@ app.post('/api/solicitacoes/:id/negar', requireSuperAdmin, async (req, res) => {
         if (!solSnap.exists) return res.status(404).json({ error: 'Solicitação não encontrada.' });
         if (solSnap.data().status !== 'pending') return res.status(400).json({ error: 'Solicitação já resolvida.' });
 
-        await solRef.update({ status: 'denied', resolvedBy: req.user.email, resolvedAt: new Date() });
+        await solRef.update({
+            status: 'denied',
+            resolvedBy: req.user.email,
+            resolvedAt: new Date()
+        });
         db.collection('logs').add({
             adminEmail: req.user.email,
             action: 'negou solicitação',
@@ -621,16 +687,36 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
     try {
         const { matricula, nome } = req.body;
         if (!matricula || !nome) return res.status(400).json({ error: 'Matrícula e nome são obrigatórios.' });
-        const existente = await db.collection('alunosBib').where('matricula', '==', matricula).limit(1).get();
+
+        const existente = await db.collection('alunosBib')
+            .where('matricula', '==', matricula)
+            .limit(1)
+            .get();
         if (!existente.empty) return res.status(400).json({ error: 'Já existe um aluno com essa matrícula.' });
 
         if (!isSuperAdmin(req.user)) {
-            await criarSolicitacao({ user: req.user, collection: 'alunosBib', method: 'POST', data: { matricula, nome }, details: `${nome} (${matricula})` });
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'POST',
+                data: { matricula, nome },
+                details: `${nome} (${matricula})`
+            });
             return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
         }
 
-        const ref = await db.collection('alunosBib').add({ matricula, nome, criadoEm: new Date() });
-        db.collection('logs').add({ adminEmail: req.user.email, action: 'criou', collection: 'alunosBib', details: `${nome} (${matricula})`, timestamp: new Date() });
+        const ref = await db.collection('alunosBib').add({
+            matricula,
+            nome,
+            criadoEm: new Date()
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'alunosBib',
+            details: `${nome} (${matricula})`,
+            timestamp: new Date()
+        });
         res.json({ success: true, id: ref.id });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao cadastrar aluno.' });
@@ -641,21 +727,39 @@ app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     try {
         const { matricula, nome } = req.body;
         if (!matricula || !nome) return res.status(400).json({ error: 'Matrícula e nome são obrigatórios.' });
-        const existente = await db.collection('alunosBib').where('matricula', '==', matricula).limit(1).get();
+
+        const existente = await db.collection('alunosBib')
+            .where('matricula', '==', matricula)
+            .limit(1)
+            .get();
         if (!existente.empty && existente.docs[0].id !== req.params.id) {
             return res.status(400).json({ error: 'Já existe outro aluno com essa matrícula.' });
         }
 
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
-                user: req.user, collection: 'alunosBib', method: 'PUT', itemId: req.params.id,
-                data: { matricula, nome }, details: `${nome} (${matricula})`
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'PUT',
+                itemId: req.params.id,
+                data: { matricula, nome },
+                details: `${nome} (${matricula})`
             });
             return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
         }
 
-        await db.collection('alunosBib').doc(req.params.id).update({ matricula, nome, atualizadoEm: new Date() });
-        db.collection('logs').add({ adminEmail: req.user.email, action: 'editou', collection: 'alunosBib', details: `${nome} (${matricula})`, timestamp: new Date() });
+        await db.collection('alunosBib').doc(req.params.id).update({
+            matricula,
+            nome,
+            atualizadoEm: new Date()
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'editou',
+            collection: 'alunosBib',
+            details: `${nome} (${matricula})`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao editar aluno.' });
@@ -664,16 +768,34 @@ app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     try {
-        const empAtivos = await db.collection('emprestimos').where('alunoId', '==', req.params.id).where('devolvido', '==', false).get();
-        if (!empAtivos.empty) return res.status(400).json({ error: 'Não é possível excluir um aluno com empréstimos em andamento.' });
+        const empAtivos = await db.collection('emprestimos')
+            .where('alunoId', '==', req.params.id)
+            .where('devolvido', '==', false)
+            .get();
+        if (!empAtivos.empty) {
+            return res.status(400).json({ error: 'Não é possível excluir um aluno com empréstimos em andamento.' });
+        }
 
         if (!isSuperAdmin(req.user)) {
-            await criarSolicitacao({ user: req.user, collection: 'alunosBib', method: 'DELETE', itemId: req.params.id, data: null, details: req.params.id });
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'DELETE',
+                itemId: req.params.id,
+                data: null,
+                details: req.params.id
+            });
             return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
         }
 
         await db.collection('alunosBib').doc(req.params.id).delete();
-        db.collection('logs').add({ adminEmail: req.user?.email || 'admin', action: 'excluiu', collection: 'alunosBib', details: req.params.id, timestamp: new Date() });
+        db.collection('logs').add({
+            adminEmail: req.user?.email || 'admin',
+            action: 'excluiu',
+            collection: 'alunosBib',
+            details: req.params.id,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao excluir aluno.' });
@@ -705,16 +827,24 @@ app.get('/api/livros/:id', async (req, res) => {
 app.post('/api/livros', requireAdmin, async (req, res) => {
     try {
         const { codigo, nome, autor, quantidade } = req.body;
-        if (!codigo || !nome || !autor) return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        if (!codigo || !nome || !autor) {
+            return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        }
+
         const qtd = parseInt(quantidade, 10) || 1;
         if (qtd < 1) return res.status(400).json({ error: 'Quantidade deve ser pelo menos 1.' });
 
-        const existente = await db.collection('livros').where('codigo', '==', codigo).limit(1).get();
+        const existente = await db.collection('livros')
+            .where('codigo', '==', codigo)
+            .limit(1)
+            .get();
         if (!existente.empty) return res.status(400).json({ error: 'Já existe um livro com esse código.' });
 
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
-                user: req.user, collection: 'livros', method: 'POST',
+                user: req.user,
+                collection: 'livros',
+                method: 'POST',
                 data: { codigo, nome, autor, quantidade: qtd },
                 details: `${nome} — ${autor} (${qtd}x)`
             });
@@ -722,13 +852,21 @@ app.post('/api/livros', requireAdmin, async (req, res) => {
         }
 
         const ref = await db.collection('livros').add({
-            codigo, nome, autor,
+            codigo,
+            nome,
+            autor,
             quantidade: qtd,
             quantidadeDisponivel: qtd,
             emprestado: false,
             criadoEm: new Date()
         });
-        db.collection('logs').add({ adminEmail: req.user.email, action: 'criou', collection: 'livros', details: `${nome} — ${autor} (${qtd}x)`, timestamp: new Date() });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'livros',
+            details: `${nome} — ${autor} (${qtd}x)`,
+            timestamp: new Date()
+        });
         res.json({ success: true, id: ref.id });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao cadastrar livro.' });
@@ -738,16 +876,24 @@ app.post('/api/livros', requireAdmin, async (req, res) => {
 app.put('/api/livros/:id', requireAdmin, async (req, res) => {
     try {
         const { codigo, nome, autor, quantidade } = req.body;
-        if (!codigo || !nome || !autor) return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        if (!codigo || !nome || !autor) {
+            return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        }
 
-        const existente = await db.collection('livros').where('codigo', '==', codigo).limit(1).get();
+        const existente = await db.collection('livros')
+            .where('codigo', '==', codigo)
+            .limit(1)
+            .get();
         if (!existente.empty && existente.docs[0].id !== req.params.id) {
             return res.status(400).json({ error: 'Já existe outro livro com esse código.' });
         }
 
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
-                user: req.user, collection: 'livros', method: 'PUT', itemId: req.params.id,
+                user: req.user,
+                collection: 'livros',
+                method: 'PUT',
+                itemId: req.params.id,
                 data: { codigo, nome, autor, quantidade: parseInt(quantidade, 10) || undefined },
                 details: `${nome} — ${autor}`
             });
@@ -761,13 +907,21 @@ app.put('/api/livros/:id', requireAdmin, async (req, res) => {
         const novaDisp = Math.max(0, novaQtd - emprestados);
 
         await db.collection('livros').doc(req.params.id).update({
-            codigo, nome, autor,
+            codigo,
+            nome,
+            autor,
             quantidade: novaQtd,
             quantidadeDisponivel: novaDisp,
             emprestado: novaDisp <= 0,
             atualizadoEm: new Date()
         });
-        db.collection('logs').add({ adminEmail: req.user.email, action: 'editou', collection: 'livros', details: `${nome} — ${autor}`, timestamp: new Date() });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'editou',
+            collection: 'livros',
+            details: `${nome} — ${autor}`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao editar livro.' });
@@ -783,10 +937,15 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
         const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
         const quantidade = livro.quantidade || 1;
         if (disponiveis < quantidade) {
-            return res.status(400).json({ error: `Não é possível excluir: ${quantidade - disponiveis} cópia(s) deste livro estão emprestadas no momento.` });
+            return res.status(400).json({
+                error: `Não é possível excluir: ${quantidade - disponiveis} cópia(s) deste livro estão emprestadas no momento.`
+            });
         }
 
-        const historico = await db.collection('emprestimos').where('livroId', '==', req.params.id).limit(1).get();
+        const historico = await db.collection('emprestimos')
+            .where('livroId', '==', req.params.id)
+            .limit(1)
+            .get();
         const temHistorico = !historico.empty;
         const deleteHistory = req.query.deleteHistory === 'true';
 
@@ -800,7 +959,9 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
 
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
-                user: req.user, collection: 'livros', method: 'DELETE',
+                user: req.user,
+                collection: 'livros',
+                method: 'DELETE',
                 itemId: req.params.id,
                 data: { deleteHistory },
                 details: `${livro.nome} — ${livro.autor}${deleteHistory ? ' (com histórico)' : ''}`
@@ -809,7 +970,9 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
         }
 
         if (deleteHistory && temHistorico) {
-            const hist = await db.collection('emprestimos').where('livroId', '==', req.params.id).get();
+            const hist = await db.collection('emprestimos')
+                .where('livroId', '==', req.params.id)
+                .get();
             const batch = db.batch();
             hist.docs.forEach(d => batch.delete(d.ref));
             await batch.commit();
@@ -830,7 +993,7 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — EMPRÉSTIMOS (com quantidade)
+// BIBLIOTECA — EMPRÉSTIMOS (com quantidade e devolução parcial)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
@@ -845,7 +1008,9 @@ app.get('/api/emprestimos', requireAdmin, async (req, res) => {
 
 app.get('/api/emprestimos/aluno/:id', requireAdmin, async (req, res) => {
     try {
-        const snap = await db.collection('emprestimos').where('alunoId', '==', req.params.id).get();
+        const snap = await db.collection('emprestimos')
+            .where('alunoId', '==', req.params.id)
+            .get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
         res.status(500).json({ error: 'Erro ao buscar empréstimos do aluno.' });
@@ -854,7 +1019,9 @@ app.get('/api/emprestimos/aluno/:id', requireAdmin, async (req, res) => {
 
 app.get('/api/emprestimos/livro/:id', requireAdmin, async (req, res) => {
     try {
-        const snap = await db.collection('emprestimos').where('livroId', '==', req.params.id).get();
+        const snap = await db.collection('emprestimos')
+            .where('livroId', '==', req.params.id)
+            .get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
         res.status(500).json({ error: 'Erro ao buscar empréstimos do livro.' });
@@ -864,7 +1031,9 @@ app.get('/api/emprestimos/livro/:id', requireAdmin, async (req, res) => {
 app.post('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
         const { alunoId, livroId, quantidade } = req.body;
-        if (!alunoId || !livroId) return res.status(400).json({ error: 'Aluno e livro são obrigatórios.' });
+        if (!alunoId || !livroId) {
+            return res.status(400).json({ error: 'Aluno e livro são obrigatórios.' });
+        }
 
         const qtd = parseInt(quantidade, 10) || 1;
         if (qtd < 1) return res.status(400).json({ error: 'Quantidade inválida.' });
@@ -874,7 +1043,10 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
         let logNomeAluno = '', logNomeLivro = '';
 
         await db.runTransaction(async t => {
-            const [alunoSnap, livroSnap] = await Promise.all([t.get(alunoRef), t.get(livroRef)]);
+            const [alunoSnap, livroSnap] = await Promise.all([
+                t.get(alunoRef),
+                t.get(livroRef)
+            ]);
 
             if (!alunoSnap.exists) throw Object.assign(new Error('Aluno não encontrado.'), { code: 404 });
             if (!livroSnap.exists) throw Object.assign(new Error('Livro não encontrado.'), { code: 404 });
@@ -882,8 +1054,15 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
             const livro = livroSnap.data();
             const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
 
-            if (disponiveis <= 0) throw Object.assign(new Error('Não há cópias disponíveis para empréstimo.'), { code: 400 });
-            if (qtd > disponiveis) throw Object.assign(new Error(`Só existem ${disponiveis} exemplar(es) disponível(is).`), { code: 400 });
+            if (disponiveis <= 0) {
+                throw Object.assign(new Error('Não há cópias disponíveis para empréstimo.'), { code: 400 });
+            }
+            if (qtd > disponiveis) {
+                throw Object.assign(
+                    new Error(`Só existem ${disponiveis} exemplar(es) disponível(is).`),
+                    { code: 400 }
+                );
+            }
 
             const aluno = alunoSnap.data();
             logNomeAluno = aluno.nome;
@@ -925,27 +1104,52 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
     }
 });
 
+// ═══ DEVOLUÇÃO PARCIAL ═══
 app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
     try {
         const empRef = db.collection('emprestimos').doc(req.params.id);
+        const { quantidade } = req.body;
         let logDetalhes = '';
 
         await db.runTransaction(async t => {
             const empSnap = await t.get(empRef);
-            if (!empSnap.exists) throw Object.assign(new Error('Empréstimo não encontrado.'), { code: 404 });
+            if (!empSnap.exists) {
+                throw Object.assign(new Error('Empréstimo não encontrado.'), { code: 404 });
+            }
 
-            const { livroId, alunoNome, livroNome, devolvido, quantidade } = empSnap.data();
-            if (devolvido) throw Object.assign(new Error('Este livro já foi devolvido.'), { code: 400 });
+            const emprestimo = empSnap.data();
+            const { livroId, alunoNome, livroNome, devolvido, quantidade: qtdEmprestada } = emprestimo;
 
-            const qtd = quantidade || 1;
-            logDetalhes = `${alunoNome} → ${qtd}x ${livroNome}`;
+            if (devolvido) {
+                throw Object.assign(new Error('Este livro já foi devolvido.'), { code: 400 });
+            }
+
+            const totalEmprestado = qtdEmprestada || 1;
+            const qtdDevolver = parseInt(quantidade, 10) || totalEmprestado;
+
+            if (qtdDevolver < 1 || qtdDevolver > totalEmprestado) {
+                throw Object.assign(
+                    new Error(`Quantidade inválida. O empréstimo tem ${totalEmprestado} exemplar(es).`),
+                    { code: 400 }
+                );
+            }
 
             const livroRef = db.collection('livros').doc(livroId);
             const livroSnap = await t.get(livroRef);
             const livro = livroSnap.data() || {};
-            const novaDisp = (livro.quantidadeDisponivel ?? 0) + qtd;
+            const novaDisp = (livro.quantidadeDisponivel ?? 0) + qtdDevolver;
 
-            t.update(empRef, { devolvido: true, dataDevolucao: new Date() });
+            if (qtdDevolver < totalEmprestado) {
+                // Devolução parcial
+                const novaQtd = totalEmprestado - qtdDevolver;
+                t.update(empRef, { quantidade: novaQtd });
+                logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (parcial, resta ${novaQtd})`;
+            } else {
+                // Devolução total
+                t.update(empRef, { devolvido: true, dataDevolucao: new Date() });
+                logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (total)`;
+            }
+
             t.update(livroRef, {
                 quantidadeDisponivel: novaDisp,
                 emprestado: false
