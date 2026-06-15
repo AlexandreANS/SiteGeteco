@@ -389,7 +389,7 @@ app.post('/api/pendentes/negar', requireSuperAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'Erro ao negar.' }); }
 });
 
-// ═══════ ROTA DE MIGRAÇÃO – ELEVAR TODOS OS ADMINS EXISTENTES ═══════
+/*// ═══════ ROTA DE MIGRAÇÃO – ELEVAR TODOS OS ADMINS EXISTENTES ═══════
 app.post('/api/elevar-todos-admins', requireAdmin, async (req, res) => {
     try {
         const list = await auth.listUsers(1000);
@@ -423,7 +423,7 @@ app.post('/api/elevar-todos-admins', requireAdmin, async (req, res) => {
         console.error('Erro ao elevar admins:', e);
         res.status(500).json({ error: 'Erro ao atualizar administradores.' });
     }
-});
+});*/
 
 // logs e solicitações
 app.get('/api/logs', requireAdmin, async (req, res) => {
@@ -844,7 +844,7 @@ app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
 // ══════════════════════════════════════════════════════════════════
 // ROTA DE MIGRAÇÃO – LIVROS ANTIGOS
 // ══════════════════════════════════════════════════════════════════
-app.post('/api/migrar-livros-quantidade', requireSuperAdmin, async (req, res) => {
+/*app.post('/api/migrar-livros-quantidade', requireSuperAdmin, async (req, res) => {
     try {
         const livrosSnap = await db.collection('livros').get();
         let atualizados = 0;
@@ -868,7 +868,7 @@ app.post('/api/migrar-livros-quantidade', requireSuperAdmin, async (req, res) =>
         console.error('Erro na migração de livros:', e);
         res.status(500).json({ error: 'Erro ao migrar livros.' });
     }
-});
+});*/
 
 // ══════════════════════════════════════════════════════════════════
 // START
