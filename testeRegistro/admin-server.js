@@ -92,7 +92,14 @@ async function requireSuperAdmin(req, res, next) {
 }
 
 // --- KEEP-ALIVE
-app.get('/api/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/api/ping', async (req, res) => {
+    try {
+        await db.collection('logs').limit(1).get(); // aquece o Firestore
+        res.json({ ok: true, ts: Date.now() });
+    } catch (e) {
+        res.status(500).json({ ok: false });
+    }
+});
 
 // Retorna informações do usuário logado
 app.get('/api/me', requireAdmin, (req, res) => {
@@ -880,7 +887,7 @@ app.listen(PORT, () => {
         .then(() => console.log('✅ Conexão Firestore aquecida.'))
         .catch(err => console.error('⚠️ Warm-up Firestore falhou:', err.message));
 
-    const PING_INTERVAL = 10 * 60 * 1000;
+    const PING_INTERVAL = 5 * 60 * 1000;
     setInterval(() => {
         const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
         const url = `${baseUrl}/api/ping`;
