@@ -1427,38 +1427,53 @@
                 }
             });
 
-            // ═══ DEVOLUÇÃO PARCIAL ═══
-            document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
-                if (!e.target.classList.contains('btn-devolver')) return;
+            // ═══ DEVOLUÇÃO (PARCIAL OU TOTAL) ═══
+document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
+    // Verifica se o clique foi no botão "Devolver"
+    const btnDevolver = e.target.closest('.btn-devolver');
+    if (!btnDevolver) return;
 
-                const empId = e.target.dataset.id;
-                const total = parseInt(e.target.dataset.total, 10) || 1;
-                const qtdInput = document.getElementById(`qtd-dev-${empId}`);
-                const qtd = parseInt(qtdInput?.value, 10) || total;
+    const empId = btnDevolver.dataset.id;
+    const total = parseInt(btnDevolver.dataset.total, 10) || 1;
+    const qtdInput = document.getElementById(`qtd-dev-${empId}`);
+    
+    if (!qtdInput) {
+        alert('Erro: campo de quantidade não encontrado.');
+        return;
+    }
+    
+    const qtd = parseInt(qtdInput.value, 10);
+    
+    if (isNaN(qtd) || qtd < 1 || qtd > total) {
+        alert(`Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
+        return;
+    }
 
-                if (qtd < 1 || qtd > total) {
-                    alert(`Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
-                    return;
-                }
+    const mensagem = qtd < total
+        ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
+        : `Devolver todos os ${total} exemplar(es)?`;
 
-                const mensagem = qtd < total
-                    ? `Devolver ${qtd} de ${total} exemplar(es)? O restante continuará emprestado.`
-                    : `Devolver todos os ${total} exemplar(es)?`;
+    if (!confirm(mensagem)) return;
 
-                if (!confirm(mensagem)) return;
-
-                e.target.disabled = true;
-                try {
-                    await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
-                    await recarregarDadosBiblioteca();
-                    await carregarEmprestimosAtivos();
-                } catch (err) {
-                    let msg = 'Erro ao registrar devolução.';
-                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                    alert(msg);
-                    e.target.disabled = false;
-                }
-            });
+    btnDevolver.disabled = true;
+    btnDevolver.textContent = '...';
+    
+    try {
+        const result = await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
+        console.log('Resultado da devolução:', result);
+        await recarregarDadosBiblioteca();
+        await carregarEmprestimosAtivos();
+    } catch (err) {
+        let msg = 'Erro ao registrar devolução.';
+        try {
+            const errObj = JSON.parse(err.message);
+            msg = errObj.error || errObj.message || msg;
+        } catch {}
+        alert(msg);
+        btnDevolver.disabled = false;
+        btnDevolver.textContent = 'Devolver';
+    }
+});
 
             document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
                 const sel = document.getElementById('sel-aluno-hist');
