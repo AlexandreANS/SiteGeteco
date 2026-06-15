@@ -137,13 +137,15 @@
       font-size: 0.88rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast);
     }
     .btn-danger:hover { background: var(--red); color: white; }
-    
-    /* ── Campo quantidade empréstimo ── */
+
+    /* ── Campo quantidade ── */
     #qtd-emprestimo {
       width: 100%; padding: 0.65rem; background: var(--bg-input);
       border: 1px solid var(--border); border-radius: var(--radius-sm);
-      color: var(--txt-primary);
+      color: var(--txt-primary); font-family: var(--font); font-size: 0.9rem;
+      box-sizing: border-box; outline: none; transition: var(--trans-fast);
     }
+    #qtd-emprestimo:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
   </style>
 </head>
 <body class="dashboard-body">
@@ -301,13 +303,11 @@
             <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
             <select id="sel-livro-emp" class="bib-select" size="5"></select>
           </div>
-          <!-- ═══ NOVO: Campo de quantidade ═══ -->
           <div class="input-group" id="grupo-qtd-emp" style="display:none;">
             <label>Quantidade de exemplares</label>
             <input type="number" id="qtd-emprestimo" min="1" value="1">
             <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
           </div>
-          <!-- ════════════════════════════ -->
           <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
         </div>
 
@@ -453,9 +453,7 @@
       }
     }
 
-    setInterval(() => {
-      fetch('/api/ping').catch(() => {});
-    }, 10 * 60 * 1000);
+    setInterval(() => { fetch('/api/ping').catch(() => {}); }, 10 * 60 * 1000);
 
     function formatTs(ts) {
       if (!ts) return '—';
@@ -502,48 +500,48 @@
         { name: 'imagem',   label: 'Nova Imagem (opcional)', type: 'file' }
       ],
       cargos: [
-        { name: 'cargo', label: 'Nome do Cargo',      type: 'text' },
-        { name: 'nivel', label: 'Nível Hierárquico',  type: 'number' }
+        { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
+        { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
       ],
       docente: [
-        { name: 'nome',    label: 'Nome',               type: 'text' },
-        { name: 'cargo',   label: 'Cargo/Função',       type: 'text' },
+        { name: 'nome',    label: 'Nome', type: 'text' },
+        { name: 'cargo',   label: 'Cargo/Função', type: 'text' },
         { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
         { name: 'foto',    label: 'Nova Foto (opcional)', type: 'file' }
       ],
       cursos: [
-        { name: 'nome',      label: 'Nome',       type: 'text' },
-        { name: 'descricao', label: 'Descrição',  type: 'textarea' },
+        { name: 'nome',      label: 'Nome', type: 'text' },
+        { name: 'descricao', label: 'Descrição', type: 'textarea' },
         { name: 'imagem',    label: 'Nova Imagem (opcional)', type: 'file' }
       ],
       contato: [
-        { name: 'nome',  label: 'Nome',  type: 'text' },
+        { name: 'nome',  label: 'Nome', type: 'text' },
         { name: 'email', label: 'Email', type: 'email' }
       ],
       noticias: [
-        { name: 'titulo',   label: 'Título',   type: 'text' },
+        { name: 'titulo',   label: 'Título', type: 'text' },
         { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
         { name: 'imagem',   label: 'Nova Imagem (opcional)', type: 'file' }
       ],
       alunos: [
-        { name: 'semanaProvas',   label: 'Semana de Provas',  type: 'text' },
-        { name: 'gincana',        label: 'Gincana',           type: 'text' },
+        { name: 'semanaProvas',   label: 'Semana de Provas', type: 'text' },
+        { name: 'gincana',        label: 'Gincana', type: 'text' },
         { name: 'feiraCiencias',  label: 'Feira de Ciências', type: 'text' },
-        { name: 'semanaCultural', label: 'Semana Cultural',   type: 'text' },
-        { name: 'ferias',         label: 'Férias',            type: 'text' }
+        { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
+        { name: 'ferias',         label: 'Férias', type: 'text' }
       ],
       responsaveis: [
-        { name: 'reuniaoPais',     label: 'Reunião de Pais',     type: 'text' },
+        { name: 'reuniaoPais',     label: 'Reunião de Pais', type: 'text' },
         { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
       ],
       alunosBib: [
         { name: 'matricula', label: 'Matrícula', type: 'text' },
-        { name: 'nome',      label: 'Nome',      type: 'text' }
+        { name: 'nome',      label: 'Nome', type: 'text' }
       ],
       livros: [
-        { name: 'codigo',     label: 'Código',           type: 'text' },
-        { name: 'nome',       label: 'Título',           type: 'text' },
-        { name: 'autor',      label: 'Autor',            type: 'text' },
+        { name: 'codigo',     label: 'Código', type: 'text' },
+        { name: 'nome',       label: 'Título', type: 'text' },
+        { name: 'autor',      label: 'Autor', type: 'text' },
         { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
       ]
     };
@@ -558,7 +556,7 @@
         { name: 'docente',      title: 'Corpo Docente' },
         { name: 'cargos',       title: 'Cargos e Funções' },
         { name: 'contato',      title: 'Contactos' },
-        { name: 'alunos',       title: 'Calendário de Alunos',       isDocUnico: true },
+        { name: 'alunos',       title: 'Calendário de Alunos', isDocUnico: true },
         { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
         { name: 'alunosBib',    title: 'Alunos (Biblioteca)' },
         { name: 'livros',       title: 'Livros' }
@@ -568,7 +566,7 @@
         html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
         try {
           if (col.isDocUnico) {
-            const data   = await apiRequest(col.name);
+            const data = await apiRequest(col.name);
             const fields = fieldsByCollection[col.name] || [];
             const temDados = fields.some(f => data[f.name]);
             if (temDados) {
@@ -591,9 +589,9 @@
                 if (item.matricula) {
                   sub = ` <small>(Mat: ${item.matricula})</small>`;
                 } else if (item.autor) {
-                  const disp  = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
+                  const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
                   const total = item.quantidade || 1;
-                  const cor   = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
+                  const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
                   sub = ` <small>(${item.autor}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
                 } else if (item.materia) {
                   sub = ` <small>(${item.materia})</small>`;
@@ -625,7 +623,7 @@
       const collection = e.target.dataset.collection;
       if (e.target.classList.contains('btn-edit-docunico')) {
         try {
-          const data   = await apiRequest(collection);
+          const data = await apiRequest(collection);
           const fields = fieldsByCollection[collection] || [];
           editFields.innerHTML = fields.map(f =>
             `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${data[f.name] || ''}"></div>`
@@ -671,7 +669,7 @@
       }
       if (e.target.classList.contains('btn-edit')) {
         try {
-          const item   = await apiRequest(`${collection}/${id}`);
+          const item = await apiRequest(`${collection}/${id}`);
           const fields = fieldsByCollection[collection] || [];
           editFields.innerHTML = fields.map(f => {
             if (f.type === 'textarea') {
@@ -803,7 +801,7 @@
         const section = container.dataset.section;
         const isDocUnico = section === 'alunos' || section === 'responsaveis';
         const semArquivo = ['alunosBib', 'livros'];
-        const useJson    = isDocUnico || semArquivo.includes(section);
+        const useJson = isDocUnico || semArquivo.includes(section);
         let body;
         if (useJson) {
           const obj = {};
@@ -855,59 +853,60 @@
       if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Carregando...</li>';
       try {
         const solic = await apiRequest('solicitacoes');
-        if (!solList) {} 
-        else if (!solic.length) {
-          solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
-        } else {
-          const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
-          solList.innerHTML = solic.map(s => {
-            const acaoBtns = userInfo.isSuperAdmin
-              ? `<div class="li-actions">
-                   <button class="btn-aprovar"   data-id="${s.id}">✓ Aprovar</button>
-                   <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
-                 </div>`
-              : `<span class="badge-pendente">Aguardando</span>`;
-            return `<li data-sol-id="${s.id}">
-              <div class="log-info">
-                <strong>${s.requestedBy}</strong>
-                <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
-                em <em>${s.collection}</em>
-                <br><small class="log-details">"${s.details || 'Sem detalhes'}"</small>
-                <br><small style="color:var(--txt-muted)">${formatTs(s.requestedAt)}</small>
-              </div>
-              ${acaoBtns}
-            </li>`;
-          }).join('');
-          if (userInfo.isSuperAdmin) {
-            solList.querySelectorAll('.btn-aprovar').forEach(btn => {
-              btn.addEventListener('click', async () => {
-                if (!confirm('Aprovar esta solicitação e executar a ação imediatamente?')) return;
-                btn.disabled = true; btn.textContent = '...';
-                try {
-                  await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
-                  await loadLogsContent();
-                  alert('✅ Solicitação aprovada e ação executada!');
-                } catch (err) {
-                  let msg = 'Erro ao aprovar.';
-                  try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                  alert(msg);
-                  btn.disabled = false; btn.textContent = '✓ Aprovar';
-                }
+        if (solList) {
+          if (!solic.length) {
+            solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
+          } else {
+            const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
+            solList.innerHTML = solic.map(s => {
+              const acaoBtns = userInfo.isSuperAdmin
+                ? `<div class="li-actions">
+                     <button class="btn-aprovar"   data-id="${s.id}">✓ Aprovar</button>
+                     <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
+                   </div>`
+                : `<span class="badge-pendente">Aguardando</span>`;
+              return `<li data-sol-id="${s.id}">
+                <div class="log-info">
+                  <strong>${s.requestedBy}</strong>
+                  <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
+                  em <em>${s.collection}</em>
+                  <br><small class="log-details">"${s.details || 'Sem detalhes'}"</small>
+                  <br><small style="color:var(--txt-muted)">${formatTs(s.requestedAt)}</small>
+                </div>
+                ${acaoBtns}
+              </li>`;
+            }).join('');
+            if (userInfo.isSuperAdmin) {
+              solList.querySelectorAll('.btn-aprovar').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                  if (!confirm('Aprovar esta solicitação e executar a ação imediatamente?')) return;
+                  btn.disabled = true; btn.textContent = '...';
+                  try {
+                    await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
+                    await loadLogsContent();
+                    alert('✅ Solicitação aprovada e ação executada!');
+                  } catch (err) {
+                    let msg = 'Erro ao aprovar.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    alert(msg);
+                    btn.disabled = false; btn.textContent = '✓ Aprovar';
+                  }
+                });
               });
-            });
-            solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
-              btn.addEventListener('click', async () => {
-                if (!confirm('Negar esta solicitação? A ação não será executada.')) return;
-                btn.disabled = true; btn.textContent = '...';
-                try {
-                  await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
-                  await loadLogsContent();
-                } catch {
-                  alert('Erro ao negar solicitação.');
-                  btn.disabled = false; btn.textContent = '✗ Negar';
-                }
+              solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                  if (!confirm('Negar esta solicitação? A ação não será executada.')) return;
+                  btn.disabled = true; btn.textContent = '...';
+                  try {
+                    await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
+                    await loadLogsContent();
+                  } catch {
+                    alert('Erro ao negar solicitação.');
+                    btn.disabled = false; btn.textContent = '✗ Negar';
+                  }
+                });
               });
-            });
+            }
           }
         }
       } catch {
@@ -1004,13 +1003,13 @@
     // ══════════════════════════════════════════════════════
     let todosAlunos = [];
     let todosLivros = [];
-    let bibliotecaCarregada  = false;
+    let bibliotecaCarregada = false;
     let filtrosInicializados = false;
 
     function formatarData(ts) {
       if (!ts) return '—';
       const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-      const d  = ms !== null ? new Date(ms) : new Date(ts);
+      const d = ms !== null ? new Date(ms) : new Date(ts);
       return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
     }
 
@@ -1038,12 +1037,12 @@
         return disp > 0;
       });
       const labelLivroDisp = l => {
-        const disp  = l.quantidadeDisponivel ?? 1;
+        const disp = l.quantidadeDisponivel ?? 1;
         const total = l.quantidade || 1;
         return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
       };
       popularSelect('sel-aluno-emp',  todosAlunos, a => `${a.nome} — ${a.matricula}`);
-      popularSelect('sel-livro-emp',  livrosDisp,  labelLivroDisp);
+      popularSelect('sel-livro-emp',  livrosDisp, labelLivroDisp);
       popularSelect('sel-aluno-hist', todosAlunos, a => `${a.nome} — ${a.matricula}`);
       popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
     }
@@ -1053,13 +1052,13 @@
       filtrosInicializados = true;
 
       document.getElementById('filtro-aluno-emp').addEventListener('input', e => {
-        const q    = e.target.value.toLowerCase();
+        const q = e.target.value.toLowerCase();
         const list = q ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula||'').toLowerCase().includes(q)) : todosAlunos;
         popularSelect('sel-aluno-emp', list, a => `${a.nome} — ${a.matricula}`);
       });
 
       document.getElementById('filtro-livro-emp').addEventListener('input', e => {
-        const q    = e.target.value.toLowerCase();
+        const q = e.target.value.toLowerCase();
         const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
         const list = q ? disp.filter(l =>
           l.nome.toLowerCase().includes(q) || (l.autor||'').toLowerCase().includes(q) || (l.codigo||'').toLowerCase().includes(q)
@@ -1073,29 +1072,24 @@
       });
 
       document.getElementById('filtro-aluno-hist').addEventListener('input', e => {
-        const q    = e.target.value.toLowerCase();
+        const q = e.target.value.toLowerCase();
         const list = q ? todosAlunos.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula||'').toLowerCase().includes(q)) : todosAlunos;
         popularSelect('sel-aluno-hist', list, a => `${a.nome} — ${a.matricula}`);
       });
 
       document.getElementById('filtro-livro-hist').addEventListener('input', e => {
-        const q    = e.target.value.toLowerCase();
+        const q = e.target.value.toLowerCase();
         const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo||'').toLowerCase().includes(q)) : todosLivros;
         popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
       });
 
-      // ═══ Mostrar/esconder campo de quantidade ═══
+      // ═══ Mostrar campo de quantidade quando livro é selecionado ═══
       document.getElementById('sel-livro-emp').addEventListener('change', () => {
         const livroId = document.getElementById('sel-livro-emp').value;
         const grupoQtd = document.getElementById('grupo-qtd-emp');
         const inputQtd = document.getElementById('qtd-emprestimo');
         const aviso = document.getElementById('qtd-max-aviso');
-        
-        if (!livroId) {
-          grupoQtd.style.display = 'none';
-          return;
-        }
-        
+        if (!livroId) { grupoQtd.style.display = 'none'; return; }
         const livro = todosLivros.find(l => l.id === livroId);
         if (livro) {
           const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
@@ -1111,38 +1105,19 @@
         const selAluno = document.getElementById('sel-aluno-emp');
         const selLivro = document.getElementById('sel-livro-emp');
         const qtdInput = document.getElementById('qtd-emprestimo');
-        
-        if (!selAluno.value || !selLivro.value) { 
-          alert('Selecione um aluno e um livro.'); 
-          return; 
-        }
-
+        if (!selAluno.value || !selLivro.value) { alert('Selecione um aluno e um livro.'); return; }
         const aluno = todosAlunos.find(a => a.id === selAluno.value);
         const livro = todosLivros.find(l => l.id === selLivro.value);
         const quantidade = parseInt(qtdInput?.value || 1, 10);
         const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-
         if (quantidade < 1) { alert('Quantidade inválida.'); return; }
-        if (quantidade > disponiveis) { 
-          alert(`Só existem ${disponiveis} exemplar(es) disponível(is).`); 
-          return; 
-        }
-
+        if (quantidade > disponiveis) { alert(`Só existem ${disponiveis} exemplar(es) disponível(is).`); return; }
         const btn = document.getElementById('btn-registrar-emprestimo');
-        btn.disabled = true;
-        btn.textContent = 'Registrando...';
-        
+        btn.disabled = true; btn.textContent = 'Registrando...';
         try {
-          const result = await apiRequest('emprestimos', 'POST', { 
-            alunoId: aluno.id, 
-            livroId: livro.id,
-            quantidade 
-          });
-          if (result?.pending) {
-            alert('⏳ Solicitação de empréstimo enviada para aprovação.');
-          } else {
-            alert(`✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
-          }
+          const result = await apiRequest('emprestimos', 'POST', { alunoId: aluno.id, livroId: livro.id, quantidade });
+          if (result?.pending) { alert('⏳ Solicitação de empréstimo enviada para aprovação.'); }
+          else { alert(`✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`); }
           document.getElementById('filtro-aluno-emp').value = '';
           document.getElementById('filtro-livro-emp').value = '';
           document.getElementById('grupo-qtd-emp').style.display = 'none';
@@ -1152,10 +1127,7 @@
           let msg = 'Erro ao registrar empréstimo.';
           try { msg = JSON.parse(err.message)?.error || msg; } catch {}
           alert(msg);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Registrar Empréstimo';
-        }
+        } finally { btn.disabled = false; btn.textContent = 'Registrar Empréstimo'; }
       });
 
       document.getElementById('tabela-emprestimos-container').addEventListener('click', async e => {
@@ -1175,7 +1147,7 @@
       });
 
       document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
-        const sel   = document.getElementById('sel-aluno-hist');
+        const sel = document.getElementById('sel-aluno-hist');
         const lista = document.getElementById('lista-historico-aluno');
         if (!sel.value) { alert('Selecione um aluno.'); return; }
         lista.innerHTML = '<li>Carregando...</li>';
@@ -1183,9 +1155,7 @@
           const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
           lista.innerHTML = emp.length
             ? emp.map(e => {
-                const badge = e.devolvido
-                  ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                  : `<span class="badge-ativo">📚 Em andamento</span>`;
+                const badge = e.devolvido ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>` : `<span class="badge-ativo">📚 Em andamento</span>`;
                 return `<li><span>${e.livroNome} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
               }).join('')
             : '<li>Nenhum empréstimo encontrado.</li>';
@@ -1193,7 +1163,7 @@
       });
 
       document.getElementById('btn-ver-livro').addEventListener('click', async () => {
-        const sel   = document.getElementById('sel-livro-hist');
+        const sel = document.getElementById('sel-livro-hist');
         const lista = document.getElementById('lista-historico-livro');
         if (!sel.value) { alert('Selecione um livro.'); return; }
         lista.innerHTML = '<li>Carregando...</li>';
@@ -1201,9 +1171,7 @@
           const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
           lista.innerHTML = emp.length
             ? emp.map(e => {
-                const badge = e.devolvido
-                  ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                  : `<span class="badge-ativo">📚 Em andamento</span>`;
+                const badge = e.devolvido ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>` : `<span class="badge-ativo">📚 Em andamento</span>`;
                 return `<li><span>${e.alunoNome} (${e.alunoMatricula}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
               }).join('')
             : '<li>Nenhum empréstimo encontrado.</li>';
@@ -1251,9 +1219,7 @@
         inicializarFiltros();
         await carregarEmprestimosAtivos();
         bibliotecaCarregada = true;
-      } catch (err) {
-        console.error('Erro ao carregar biblioteca:', err);
-      }
+      } catch (err) { console.error('Erro ao carregar biblioteca:', err); }
     }
 
     async function init() {
@@ -1263,7 +1229,6 @@
       loadPendingAdmins();
     }
     init();
-
   });
   </script>
 </body>
