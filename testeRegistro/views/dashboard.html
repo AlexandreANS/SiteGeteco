@@ -7,98 +7,95 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/logo.png">
     <style>
-        /* ===== ESTILOS EXCLUSIVOS PARA OS NOVOS COMPONENTES ===== */
-        /* (todos os estilos de layout, cores e fontes já estão no style.css) */
-
-        /* Botões de ação */
+        /* ===== ESTILOS BASE (VISUAL ORIGINAL) ===== */
         .btn-edit {
-            background: var(--blue-dim, rgba(37, 99, 235, 0.1));
-            color: var(--blue, #2563eb);
-            border: 1px solid rgba(37, 99, 235, 0.2);
+            background: var(--blue-dim);
+            color: var(--blue);
+            border: 1px solid rgba(58, 130, 246, .2);
             padding: 4px 10px;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.78rem;
             font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
+            font-family: var(--font);
+            transition: var(--trans-fast);
             margin-right: 4px;
         }
         .btn-edit:hover {
-            background: var(--blue, #2563eb);
+            background: var(--blue);
             color: white;
-            border-color: var(--blue, #2563eb);
+            border-color: var(--blue);
         }
         .btn-delete {
-            background: var(--red-dim, rgba(220, 38, 38, 0.1));
-            color: var(--red, #dc2626);
-            border: 1px solid rgba(220, 38, 38, 0.2);
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .2);
             padding: 4px 10px;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.78rem;
             font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
+            font-family: var(--font);
+            transition: var(--trans-fast);
+            margin-right: 4px;
         }
         .btn-delete:hover {
-            background: var(--red, #dc2626);
+            background: var(--red);
             color: white;
-            border-color: var(--red, #dc2626);
+            border-color: var(--red);
+        }
+        .btn-aprovar {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-aprovar:hover {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+        .btn-negar-sol {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--trans-fast);
+        }
+        .btn-negar-sol:hover {
+            background: var(--red);
+            color: white;
+            border-color: var(--red);
         }
         .btn-rollback {
-            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
-            color: var(--amber, #d97706);
-            border: 1px solid rgba(217, 119, 6, 0.25);
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .25);
             padding: 2px 10px;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
+            font-family: var(--font);
+            transition: var(--trans-fast);
         }
         .btn-rollback:hover {
-            background: var(--amber, #d97706);
+            background: var(--amber);
             color: #1a1000;
-            border-color: var(--amber, #d97706);
-        }
-        .btn-aprovar {
-            background: var(--green-dim, rgba(22, 163, 74, 0.1));
-            color: var(--green, #16a34a);
-            border: 1px solid rgba(22, 163, 74, 0.2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm, 6px);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
-        }
-        .btn-aprovar:hover {
-            background: var(--green, #16a34a);
-            color: white;
-            border-color: var(--green, #16a34a);
-        }
-        .btn-negar-sol {
-            background: var(--red-dim, rgba(220, 38, 38, 0.1));
-            color: var(--red, #dc2626);
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm, 6px);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
-        }
-        .btn-negar-sol:hover {
-            background: var(--red, #dc2626);
-            color: white;
-            border-color: var(--red, #dc2626);
+            border-color: var(--amber);
         }
 
-        /* Modais */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -113,24 +110,24 @@
             display: flex;
         }
         .modal-content {
-            background: var(--bg-card, #ffffff);
-            border: 1px solid var(--border, #e5e7eb);
-            border-radius: var(--radius, 12px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 2rem;
             width: 100%;
             max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.08));
+            box-shadow: var(--shadow-lg);
         }
         .modal-content h2 {
             margin-bottom: 1rem;
-            color: var(--txt-primary, #111827);
+            color: var(--txt-primary);
             font-size: 1.05rem;
             font-weight: 600;
         }
         .modal-content p {
-            color: var(--txt-secondary, #4b5563);
+            color: var(--txt-secondary);
             font-size: 0.9rem;
         }
         .modal-content .input-group {
@@ -141,28 +138,28 @@
             margin-bottom: 4px;
             font-weight: 600;
             font-size: 0.8rem;
-            color: var(--txt-secondary, #4b5563);
+            color: var(--txt-secondary);
         }
         .modal-content input,
         .modal-content textarea,
         .modal-content select {
             width: 100%;
             padding: 0.65rem 0.9rem;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.9rem;
-            color: var(--txt-primary, #111827);
-            font-family: var(--font, inherit);
+            color: var(--txt-primary);
+            font-family: var(--font);
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            transition: var(--trans-fast);
         }
         .modal-content input:focus,
         .modal-content textarea:focus,
         .modal-content select:focus {
-            border-color: var(--border-focus, #3b82f6);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
         }
         .modal-content textarea {
             min-height: 80px;
@@ -175,53 +172,53 @@
             flex-wrap: wrap;
         }
         .btn-confirm {
-            background: var(--blue, #2563eb);
+            background: var(--blue);
             color: white;
             border: none;
             padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            font-family: var(--font, inherit);
+            font-family: var(--font);
             transition: background 0.15s ease;
             flex: 1;
             min-width: 80px;
         }
         .btn-confirm:hover {
-            background: var(--blue-dark, #1d4ed8);
+            background: var(--blue-dark);
         }
         .btn-cancel {
-            background: var(--bg-input, #f9fafb);
-            color: var(--txt-secondary, #4b5563);
-            border: 1px solid var(--border, #d1d5db);
+            background: var(--bg-input);
+            color: var(--txt-secondary);
+            border: 1px solid var(--border);
             padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            font-family: var(--font, inherit);
+            font-family: var(--font);
             transition: all 0.15s ease;
             flex: 1;
             min-width: 80px;
         }
         .btn-cancel:hover {
-            background: var(--border, #e5e7eb);
+            background: var(--border);
         }
         .btn-danger {
-            background: var(--red-dim, rgba(220, 38, 38, 0.1));
-            color: var(--red, #dc2626);
-            border: 1px solid rgba(220, 38, 38, 0.25);
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .25);
             padding: 0.65rem 1.2rem;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.88rem;
             font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: all 0.15s ease;
+            font-family: var(--font);
+            transition: var(--trans-fast);
         }
         .btn-danger:hover {
-            background: var(--red, #dc2626);
+            background: var(--red);
             color: white;
         }
         .warning-icon {
@@ -230,129 +227,85 @@
             display: block;
         }
 
-        /* Badges */
-        .badge-ativo {
-            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
-            color: var(--amber, #d97706);
-            border: 1px solid rgba(217, 119, 6, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
         }
-        .badge-devolvido {
-            background: var(--green-dim, rgba(22, 163, 74, 0.1));
-            color: var(--green, #16a34a);
-            border: 1px solid rgba(22, 163, 74, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
+        li span {
+            flex: 1;
         }
-        .badge-pendente {
-            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
-            color: var(--amber, #d97706);
-            border: 1px solid rgba(217, 119, 6, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
+        .li-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
         }
 
-        /* Biblioteca - filtros e selects */
         .bib-filtro {
             width: 100%;
             padding: 0.6rem 0.9rem;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.875rem;
-            color: var(--txt-primary, #111827);
-            font-family: var(--font, inherit);
+            color: var(--txt-primary);
+            font-family: var(--font);
             margin-bottom: 4px;
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            transition: var(--trans-fast);
         }
         .bib-filtro::placeholder {
-            color: var(--txt-muted, #9ca3af);
+            color: var(--txt-muted);
         }
         .bib-filtro:focus {
-            border-color: var(--border-focus, #3b82f6);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
         }
         .bib-select {
             width: 100%;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.875rem;
-            color: var(--txt-primary, #111827);
-            font-family: var(--font, inherit);
+            color: var(--txt-primary);
+            font-family: var(--font);
             box-sizing: border-box;
             padding: 4px;
             min-height: 100px;
             outline: none;
         }
         .bib-select option {
-            background: var(--bg-card, #ffffff);
-            color: var(--txt-primary, #111827);
+            background: var(--bg-card);
+            color: var(--txt-primary);
         }
         .bib-select option:checked {
-            background: var(--blue, #2563eb) linear-gradient(0deg, var(--blue, #2563eb) 0%, var(--blue, #2563eb) 100%);
+            background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%);
             color: white;
         }
         .bib-select:focus {
-            border-color: var(--border-focus, #3b82f6);
+            border-color: var(--border-focus);
         }
         .filtro-tipo-select {
             width: 100%;
             padding: 0.6rem 0.9rem;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.875rem;
-            color: var(--txt-primary, #111827);
-            font-family: var(--font, inherit);
+            color: var(--txt-primary);
+            font-family: var(--font);
             outline: none;
-            transition: border-color 0.15s ease;
+            transition: var(--trans-fast);
         }
         .filtro-tipo-select:focus {
-            border-color: var(--border-focus, #3b82f6);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        #qtd-emprestimo {
-            width: 100%;
-            padding: 0.65rem;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
-            color: var(--txt-primary, #111827);
-            font-family: var(--font, inherit);
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        #qtd-emprestimo:focus {
-            border-color: var(--border-focus, #3b82f6);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .input-qtd-dev {
-            width: 50px;
-            padding: 4px;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
-            color: var(--txt-primary, #111827);
-            text-align: center;
-            font-family: var(--font, inherit);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
         }
 
-        /* Tabela de empréstimos */
         .tabela-bib {
             width: 100%;
             border-collapse: collapse;
@@ -360,7 +313,7 @@
             font-size: 0.875rem;
         }
         .tabela-bib thead tr {
-            background: var(--bg-input, #f9fafb);
+            background: var(--bg-input);
         }
         .tabela-bib th {
             padding: 10px 14px;
@@ -369,58 +322,58 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.9px;
-            color: var(--txt-muted, #9ca3af);
-            border-bottom: 1px solid var(--border, #e5e7eb);
+            color: var(--txt-muted);
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
         .tabela-bib td {
             padding: 11px 14px;
-            border-bottom: 1px solid var(--border, #e5e7eb);
+            border-bottom: 1px solid var(--border);
             vertical-align: middle;
-            color: var(--txt-secondary, #4b5563);
+            color: var(--txt-secondary);
         }
         .tabela-bib td:first-child {
-            color: var(--txt-primary, #111827);
+            color: var(--txt-primary);
             font-weight: 500;
         }
         .tabela-bib tbody tr:last-child td {
             border-bottom: none;
         }
         .tabela-bib tbody tr:hover td {
-            background: rgba(37, 99, 235, 0.04);
+            background: rgba(58, 130, 246, .04);
         }
         .btn-devolver {
-            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
-            color: var(--amber, #d97706);
-            border: 1px solid rgba(217, 119, 6, 0.25);
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .25);
             padding: 4px 12px;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.78rem;
             font-weight: 600;
-            font-family: var(--font, inherit);
-            transition: var(--trans-fast, 0.15s ease);
+            font-family: var(--font);
+            transition: var(--trans-fast);
             white-space: nowrap;
         }
         .btn-devolver:hover {
-            background: var(--amber, #d97706);
+            background: var(--amber);
             color: #1a1000;
-            border-color: var(--amber, #d97706);
+            border-color: var(--amber);
         }
         .btn-reload {
-            background: rgba(255, 255, 255, 0.10);
-            color: var(--txt-secondary, #4b5563);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, .10);
+            color: var(--txt-secondary);
+            border: 1px solid rgba(255, 255, 255, .15);
             padding: 5px 12px;
-            border-radius: var(--radius-sm, 6px);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.82rem;
-            font-family: var(--font, inherit);
-            transition: background 0.15s ease;
+            font-family: var(--font);
+            transition: var(--trans-fast);
         }
         .btn-reload:hover {
-            background: rgba(255, 255, 255, 0.16);
-            color: var(--txt-primary, #111827);
+            background: rgba(255, 255, 255, .16);
+            color: var(--txt-primary);
         }
         .bib-header {
             display: flex;
@@ -429,7 +382,94 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Logs */
+        .badge-ativo {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-devolvido {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-pendente {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid rgba(245, 158, 11, .2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        #lista-historico-aluno li,
+        #lista-historico-livro li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        #banner-nivel-limitado {
+            display: none;
+            margin: 0.5rem 0.75rem;
+            background: rgba(245, 158, 11, .1);
+            border: 1px solid rgba(245, 158, 11, .3);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.78rem;
+            color: var(--amber);
+            line-height: 1.4;
+        }
+        #user-nivel-info {
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            color: var(--txt-muted);
+        }
+
+        #qtd-emprestimo {
+            width: 100%;
+            padding: 0.65rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--txt-primary);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: var(--trans-fast);
+        }
+        #qtd-emprestimo:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
+        }
+        .input-qtd-dev {
+            width: 50px;
+            padding: 4px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--txt-primary);
+            text-align: center;
+            font-family: var(--font);
+        }
+
+        /* Estilos para logs com rollback */
         .log-info {
             flex: 1;
         }
@@ -441,32 +481,7 @@
         }
         .log-meta {
             font-size: 0.7rem;
-            color: var(--txt-muted, #9ca3af);
-        }
-
-        /* Listas de itens (gerir) */
-        .item-list li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid var(--border, #e5e7eb);
-        }
-        .item-list li span {
-            flex: 1;
-        }
-        .li-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        /* Mensagem de carregamento */
-        .loader {
-            text-align: center;
-            color: var(--txt-muted, #9ca3af);
-            padding: 2rem 0;
+            color: var(--txt-muted);
         }
     </style>
 </head>
@@ -478,8 +493,12 @@
             <h2>GETECO Admin</h2>
         </div>
         <div id="user-nivel-info">Carregando...</div>
+        <div id="banner-nivel-limitado">⚠️ Nível limitado — suas ações criam solicitações que precisam de aprovação.</div>
         <div class="sidebar-menu">
-            <h3>Navegação</h3>
+            <h3>Aprovações Pendentes</h3>
+            <div id="pending-admins-container">
+                <div id="pending-admins-list"><p>A carregar...</p></div>
+            </div>
         </div>
         <a href="/logout" class="logout-btn">
             <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg">
@@ -500,7 +519,7 @@
             <button class="tab-btn" data-tab="logs">Logs</button>
         </div>
 
-        <!-- ABA: CADASTRAR -->
+        <!-- ── ABA: CADASTRAR ── -->
         <div id="cadastrar" class="tab-pane active">
             <div class="grid-forms">
                 <div class="form-container" data-section="noticias">
@@ -591,10 +610,10 @@
             </div>
         </div>
 
-        <!-- ABA: GERIR -->
+        <!-- ── ABA: GERIR ── -->
         <div id="gerenciar" class="tab-pane"></div>
 
-        <!-- ABA: INFORMAÇÕES -->
+        <!-- ── ABA: INFORMAÇÕES ── -->
         <div id="informacoes" class="tab-pane">
             <div class="grid-forms">
                 <div class="form-container" data-section="alunos">
@@ -619,7 +638,7 @@
             </div>
         </div>
 
-        <!-- ABA: BIBLIOTECA -->
+        <!-- ── ABA: BIBLIOTECA ── -->
         <div id="biblioteca" class="tab-pane">
             <div class="grid-forms">
                 <div class="form-container">
@@ -684,13 +703,17 @@
                     <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
                 </div>
                 <div id="tabela-emprestimos-container">
-                    <p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>
+                    <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
                 </div>
             </div>
         </div>
 
-        <!-- ABA: LOGS -->
+        <!-- ── ABA: LOGS ── -->
         <div id="logs" class="tab-pane">
+            <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
+                <h3>⏳ Solicitações Pendentes de Aprovação</h3>
+                <ul id="solicitacoes-list" class="item-list"><li style="color:var(--txt-muted)">Carregando...</li></ul>
+            </div>
             <div class="list-container">
                 <h3>Histórico de Atividades</h3>
                 <ul id="logs-list" class="item-list"></ul>
@@ -698,7 +721,7 @@
         </div>
     </main>
 
-    <!-- MODAIS -->
+    <!-- Modal: Mensagem -->
     <div id="message-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="msg-modal-title">Mensagem</h2>
@@ -709,6 +732,7 @@
         </div>
     </div>
 
+    <!-- Modal: Confirmação -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="confirm-modal-title">Confirmar</h2>
@@ -720,6 +744,7 @@
         </div>
     </div>
 
+    <!-- Modal: Confirmar Exclusão genérica -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
@@ -731,6 +756,7 @@
         </div>
     </div>
 
+    <!-- Modal: Exclusão de livro COM histórico -->
     <div id="delete-history-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="warning-icon">⚠️</span>
@@ -747,6 +773,7 @@
         </div>
     </div>
 
+    <!-- Modal: Edição -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Item</h2>
@@ -758,6 +785,7 @@
         </div>
     </div>
 
+    <!-- Modal: Aceitar administrador pendente (define nível) -->
     <div id="accept-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Aceitar Administrador</h2>
@@ -777,911 +805,1050 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // ============================================================
-            // 1. UTILITÁRIOS DE MODAIS
-            // ============================================================
-            function showMessage(title, text, callback) {
-                document.getElementById('msg-modal-title').textContent = title;
-                document.getElementById('msg-modal-text').textContent = text;
-                const modal = document.getElementById('message-modal');
-                modal.classList.add('active');
-                const btn = document.getElementById('msg-modal-btn');
-                btn.onclick = () => {
-                    modal.classList.remove('active');
-                    if (callback) callback();
-                };
-            }
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panes = document.querySelectorAll('.tab-pane');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteHistModal = document.getElementById('delete-history-modal');
+        const editModal = document.getElementById('edit-modal');
+        const acceptModal = document.getElementById('accept-modal');
+        const editFields = document.getElementById('edit-fields');
 
-            function showConfirm(title, text, onYes, onNo) {
-                document.getElementById('confirm-modal-title').textContent = title;
-                document.getElementById('confirm-modal-text').textContent = text;
-                const modal = document.getElementById('confirm-modal');
-                modal.classList.add('active');
-                document.getElementById('confirm-modal-yes').onclick = () => {
-                    modal.classList.remove('active');
-                    if (onYes) onYes();
-                };
-                document.getElementById('confirm-modal-no').onclick = () => {
-                    modal.classList.remove('active');
-                    if (onNo) onNo();
-                };
-            }
+        let itemToDelete = null;
+        let itemToEdit = null;
+        let pendingAcceptUid = null;
 
-            window.alert = function(msg) {
-                showMessage('Aviso', msg);
+        let userInfo = { email: '', nivel: null, isSuperAdmin: false };
+
+        // ═══════════════ UTILITÁRIOS DE MODAIS ═══════════════
+        function showMessage(title, text, callback) {
+            document.getElementById('msg-modal-title').textContent = title;
+            document.getElementById('msg-modal-text').textContent = text;
+            const modal = document.getElementById('message-modal');
+            modal.classList.add('active');
+            const btn = document.getElementById('msg-modal-btn');
+            btn.onclick = () => {
+                modal.classList.remove('active');
+                if (callback) callback();
             };
-            window.confirm = function(msg) {
-                return new Promise((resolve) => {
-                    showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
-                });
+        }
+
+        function showConfirm(title, text, onYes, onNo) {
+            document.getElementById('confirm-modal-title').textContent = title;
+            document.getElementById('confirm-modal-text').textContent = text;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('active');
+            document.getElementById('confirm-modal-yes').onclick = () => {
+                modal.classList.remove('active');
+                if (onYes) onYes();
             };
+            document.getElementById('confirm-modal-no').onclick = () => {
+                modal.classList.remove('active');
+                if (onNo) onNo();
+            };
+        }
 
-            // ============================================================
-            // 2. ESTADO GLOBAL E FUNÇÕES AUXILIARES
-            // ============================================================
-            let userInfo = { email: '', nivel: null, isSuperAdmin: false };
-            const SUPER_NIVEIS = [1, 8];
-
-            async function apiRequest(endpoint, method = 'GET', body = null) {
-                const options = { method, headers: {} };
-                if (body) {
-                    if (body instanceof FormData) {
-                        options.body = body;
-                    } else {
-                        options.headers['Content-Type'] = 'application/json';
-                        options.body = JSON.stringify(body);
-                    }
-                }
-                const response = await fetch(`/api/${endpoint}`, options);
-                let data;
-                try { data = await response.json(); } catch { data = {}; }
-                if (!response.ok && response.status !== 202) {
-                    throw new Error(JSON.stringify(data));
-                }
-                return data;
-            }
-
-            function formatTs(ts) {
-                if (!ts) return '—';
-                const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-                const d = ms !== null ? new Date(ms) : new Date(ts);
-                return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
-            }
-
-            function escapeHtml(str) {
-                if (!str) return '';
-                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-            }
-
-            // ============================================================
-            // 3. CARREGAR INFO DO USUÁRIO
-            // ============================================================
-            async function carregarUserInfo() {
-                try {
-                    userInfo = await apiRequest('me');
-                    const badge = document.getElementById('user-nivel-info');
-                    if (badge) {
-                        const nivelLabel = userInfo.isSuperAdmin ? 'Administrador (Nível ' + userInfo.nivel + ')' : 'Nível ' + userInfo.nivel;
-                        badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
-                    }
-                } catch (e) {
-                    console.warn('Não foi possível carregar informações do usuário:', e);
-                }
-            }
-
-            // ============================================================
-            // 4. TABS
-            // ============================================================
-            const tabs = document.querySelectorAll('.tab-btn');
-            const panes = document.querySelectorAll('.tab-pane');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    panes.forEach(p => p.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab).classList.add('active');
-                    if (tab.dataset.tab === 'gerenciar') loadManagementContent();
-                    if (tab.dataset.tab === 'logs') loadLogsContent();
-                    if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
-                });
+        // Sobrescreve alert e confirm nativos para usar modais
+        window.alert = function(msg) { showMessage('Aviso', msg); };
+        window.confirm = function(msg) {
+            return new Promise((resolve) => {
+                showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
             });
+        };
 
-            // ============================================================
-            // 5. FIELDS POR COLEÇÃO (edição)
-            // ============================================================
-            const fieldsByCollection = {
-                novidades: [
-                    { name: 'titulo', label: 'Título', type: 'text' },
-                    { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-                ],
-                cargos: [
-                    { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
-                    { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
-                ],
-                docente: [
-                    { name: 'nome', label: 'Nome', type: 'text' },
-                    { name: 'cargo', label: 'Cargo/Função', type: 'text' },
-                    { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
-                    { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
-                ],
-                cursos: [
-                    { name: 'nome', label: 'Nome', type: 'text' },
-                    { name: 'descricao', label: 'Descrição', type: 'textarea' },
-                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-                ],
-                contato: [
-                    { name: 'nome', label: 'Nome', type: 'text' },
-                    { name: 'email', label: 'Email', type: 'email' }
-                ],
-                noticias: [
-                    { name: 'titulo', label: 'Título', type: 'text' },
-                    { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-                ],
-                alunos: [
-                    { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
-                    { name: 'gincana', label: 'Gincana', type: 'text' },
-                    { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
-                    { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
-                    { name: 'ferias', label: 'Férias', type: 'text' }
-                ],
-                responsaveis: [
-                    { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
-                    { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
-                ],
-                alunosBib: [
-                    { name: 'matricula', label: 'Matrícula', type: 'text' },
-                    { name: 'nome', label: 'Nome', type: 'text' },
-                    { name: 'tipo', label: 'Tipo', type: 'select', options: ['aluno', 'professor'] }
-                ],
-                livros: [
-                    { name: 'codigo', label: 'Código', type: 'text' },
-                    { name: 'nome', label: 'Título', type: 'text' },
-                    { name: 'autor', label: 'Autor', type: 'text' },
-                    { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
-                ]
-            };
+        async function carregarUserInfo() {
+            try {
+                userInfo = await apiRequest('me');
+                const badge = document.getElementById('user-nivel-info');
+                const banner = document.getElementById('banner-nivel-limitado');
+                if (badge) {
+                    const nivelLabel = userInfo.isSuperAdmin
+                        ? '⭐ Super Admin (acesso total)'
+                        : `Nível ${userInfo.nivel ?? '?'}`;
+                    badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
+                }
+                if (banner && !userInfo.isSuperAdmin) {
+                    banner.style.display = 'block';
+                }
+            } catch (e) {
+                console.warn('Não foi possível carregar informações do usuário:', e);
+            }
+        }
 
-            // ============================================================
-            // 6. CARREGAR CARGOS (para select de docente)
-            // ============================================================
-            async function carregarCargosSelect() {
+        setInterval(() => {
+            fetch('/api/ping').catch(() => {});
+        }, 10 * 60 * 1000);
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function formatTs(ts) {
+            if (!ts) return '—';
+            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+            const d = ms !== null ? new Date(ms) : new Date(ts);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
+        }
+
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: {} };
+            if (body) {
+                if (body instanceof FormData) {
+                    options.body = body;
+                } else {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+            }
+            const response = await fetch(`/api/${endpoint}`, options);
+            let data;
+            try { data = await response.json(); } catch { data = {}; }
+            if (!response.ok && response.status !== 202) {
+                throw new Error(JSON.stringify(data));
+            }
+            return data;
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'gerenciar') loadManagementContent();
+                if (tab.dataset.tab === 'logs') loadLogsContent();
+                if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+            });
+        });
+
+        const fieldsByCollection = {
+            novidades: [
+                { name: 'titulo', label: 'Título', type: 'text' },
+                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            cargos: [
+                { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
+                { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
+            ],
+            docente: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'cargo', label: 'Cargo/Função', type: 'text' },
+                { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
+                { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
+            ],
+            cursos: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'descricao', label: 'Descrição', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            contato: [
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'email', label: 'Email', type: 'email' }
+            ],
+            noticias: [
+                { name: 'titulo', label: 'Título', type: 'text' },
+                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+            ],
+            alunos: [
+                { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
+                { name: 'gincana', label: 'Gincana', type: 'text' },
+                { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
+                { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
+                { name: 'ferias', label: 'Férias', type: 'text' }
+            ],
+            responsaveis: [
+                { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
+                { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
+            ],
+            alunosBib: [
+                { name: 'matricula', label: 'Matrícula', type: 'text' },
+                { name: 'nome', label: 'Nome', type: 'text' },
+                { name: 'tipo', label: 'Tipo', type: 'select', options: ['aluno', 'professor'] }
+            ],
+            livros: [
+                { name: 'codigo', label: 'Código', type: 'text' },
+                { name: 'nome', label: 'Título', type: 'text' },
+                { name: 'autor', label: 'Autor', type: 'text' },
+                { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
+            ]
+        };
+
+        async function carregarCargosSelect() {
+            try {
+                const cargos = await apiRequest('cargos');
+                const select = document.getElementById('docente-cargo-select');
+                if (!select) return;
+                select.innerHTML = '<option value="">Selecione um cargo</option>';
+                cargos.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.cargo;
+                    opt.textContent = c.cargo + (c.nivel ? ` (Nível ${c.nivel})` : '');
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Erro ao carregar cargos:', e);
+                const select = document.getElementById('docente-cargo-select');
+                if (select) select.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function loadManagementContent() {
+            const container = document.getElementById('gerenciar');
+            container.innerHTML = '<div class="loader">A carregar...</div>';
+
+            const cols = [
+                { name: 'noticias', title: 'Notícias' },
+                { name: 'novidades', title: 'Novidades/Infraestrutura' },
+                { name: 'cursos', title: 'Cursos' },
+                { name: 'docente', title: 'Corpo Docente' },
+                { name: 'cargos', title: 'Cargos e Funções' },
+                { name: 'contato', title: 'Contactos' },
+                { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
+                { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
+                { name: 'alunosBib', title: 'Cadastros (Biblioteca)' },
+                { name: 'livros', title: 'Livros' }
+            ];
+
+            let html = '<div class="grid-lists">';
+            for (const col of cols) {
+                html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
                 try {
-                    const cargos = await apiRequest('cargos');
-                    const select = document.getElementById('docente-cargo-select');
-                    select.innerHTML = '<option value="">Selecione um cargo</option>';
-                    cargos.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.cargo;
-                        opt.textContent = c.cargo + (c.nivel ? ` (Nível ${c.nivel})` : '');
-                        select.appendChild(opt);
-                    });
-                } catch (e) {
-                    console.error('Erro ao carregar cargos:', e);
-                    document.getElementById('docente-cargo-select').innerHTML = '<option value="">Erro ao carregar</option>';
-                }
-            }
-
-            // ============================================================
-            // 7. GERIR CONTEÚDO
-            // ============================================================
-            async function loadManagementContent() {
-                const container = document.getElementById('gerenciar');
-                container.innerHTML = '<div class="loader">A carregar...</div>';
-
-                const cols = [
-                    { name: 'noticias', title: 'Notícias' },
-                    { name: 'novidades', title: 'Novidades/Infraestrutura' },
-                    { name: 'cursos', title: 'Cursos' },
-                    { name: 'docente', title: 'Corpo Docente' },
-                    { name: 'cargos', title: 'Cargos e Funções' },
-                    { name: 'contato', title: 'Contactos' },
-                    { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
-                    { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
-                    { name: 'alunosBib', title: 'Cadastros (Biblioteca)' },
-                    { name: 'livros', title: 'Livros' }
-                ];
-
-                let html = '<div class="grid-lists">';
-                for (const col of cols) {
-                    html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
-                    try {
-                        if (col.isDocUnico) {
-                            const data = await apiRequest(col.name);
-                            const fields = fieldsByCollection[col.name] || [];
-                            const temDados = fields.some(f => data[f.name]);
-                            if (temDados) {
-                                fields.forEach(f => {
-                                    if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${data[f.name]}</span></li>`;
-                                });
-                            } else {
-                                html += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
-                            }
-                            html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
-                                       <span></span>
-                                       <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
-                                     </li>`;
+                    if (col.isDocUnico) {
+                        const data = await apiRequest(col.name);
+                        const fields = fieldsByCollection[col.name] || [];
+                        const temDados = fields.some(f => data[f.name]);
+                        if (temDados) {
+                            fields.forEach(f => {
+                                if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${escapeHtml(data[f.name])}</span></li>`;
+                            });
                         } else {
-                            const items = await apiRequest(col.name);
-                            if (items.length > 0) {
-                                items.forEach(item => {
-                                    let display = item.titulo || item.nome || item.cargo || 'Sem nome';
-                                    let sub = '';
-                                    if (item.matricula) {
-                                        sub = ` <small>(${item.matricula})</small>`;
-                                        if (item.tipo) sub += ` <small>(${item.tipo})</small>`;
-                                    } else if (item.autor) {
-                                        const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
-                                        const total = item.quantidade || 1;
-                                        const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
-                                        sub = ` <small>(${item.autor}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
-                                    } else if (item.materia) {
-                                        sub = ` <small>(${item.materia})</small>`;
-                                    } else if (item.nivel !== undefined) {
-                                        sub = ` <small>(Nível ${item.nivel})</small>`;
-                                    }
-                                    html += `<li data-id="${item.id}">
-                                               <span>${escapeHtml(display)}${sub}</span>
-                                               <div class="li-actions">
-                                                   <button class="btn-edit" data-id="${item.id}" data-collection="${col.name}">Editar</button>
-                                                   <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
-                                               </div>
-                                             </li>`;
-                                });
-                            } else {
-                                html += `<li class="empty">Nenhum item encontrado.</li>`;
-                            }
+                            html += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
                         }
-                    } catch {
-                        html += `<li class="error">Erro ao carregar.</li>`;
+                        html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
+                                   <span></span>
+                                   <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
+                                 </li>`;
+                    } else {
+                        const items = await apiRequest(col.name);
+                        if (items.length > 0) {
+                            items.forEach(item => {
+                                const display = item.titulo || item.nome || item.cargo;
+                                let sub = '';
+                                if (item.matricula) {
+                                    sub = ` <small>(Mat: ${escapeHtml(item.matricula)})</small>`;
+                                    if (item.tipo) sub += ` <small>(${escapeHtml(item.tipo)})</small>`;
+                                } else if (item.autor) {
+                                    const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
+                                    const total = item.quantidade || 1;
+                                    const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
+                                    sub = ` <small>(${escapeHtml(item.autor)}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
+                                } else if (item.materia) {
+                                    sub = ` <small>(${escapeHtml(item.materia)})</small>`;
+                                } else if (item.nivel !== undefined) {
+                                    sub = ` <small>(Nível ${item.nivel})</small>`;
+                                }
+                                html += `<li data-id="${item.id}">
+                                           <span>${escapeHtml(display)}${sub}</span>
+                                           <div class="li-actions">
+                                               <button class="btn-edit" data-id="${item.id}" data-collection="${col.name}">Editar</button>
+                                               <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
+                                           </div>
+                                         </li>`;
+                            });
+                        } else {
+                            html += `<li class="empty">Nenhum item encontrado.</li>`;
+                        }
                     }
-                    html += `</ul></div>`;
+                } catch {
+                    html += `<li class="error">Erro ao carregar.</li>`;
                 }
-                html += '</div>';
-                container.innerHTML = html;
+                html += `</ul></div>`;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        document.getElementById('gerenciar').addEventListener('click', async (e) => {
+            const collection = e.target.dataset.collection;
+
+            if (e.target.classList.contains('btn-edit-docunico')) {
+                try {
+                    const data = await apiRequest(collection);
+                    const fields = fieldsByCollection[collection] || [];
+                    editFields.innerHTML = fields.map(f =>
+                        `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${escapeHtml(data[f.name] || '')}"></div>`
+                    ).join('');
+                    itemToEdit = { collection, isDocUnico: true };
+                    editModal.classList.add('active');
+                } catch {
+                    showMessage('Erro', 'Erro ao carregar dados para edição.');
+                }
+                return;
             }
 
-            // ============================================================
-            // 8. EVENTOS DE GERIR (edições/exclusões)
-            // ============================================================
-            let itemToDelete = null;
-            let itemToEdit = null;
-            const editModal = document.getElementById('edit-modal');
-            const deleteModal = document.getElementById('delete-modal');
-            const deleteHistModal = document.getElementById('delete-history-modal');
-            const editFields = document.getElementById('edit-fields');
+            const id = e.target.dataset.id;
+            if (!id) return;
 
-            document.getElementById('gerenciar').addEventListener('click', async (e) => {
-                const collection = e.target.dataset.collection;
-
-                if (e.target.classList.contains('btn-edit-docunico')) {
+            if (e.target.classList.contains('btn-delete')) {
+                const element = e.target.closest('li');
+                if (collection === 'livros') {
+                    e.target.disabled = true;
+                    e.target.textContent = '...';
                     try {
-                        const data = await apiRequest(collection);
-                        const fields = fieldsByCollection[collection] || [];
-                        editFields.innerHTML = fields.map(f =>
-                            `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${data[f.name] || ''}"></div>`
-                        ).join('');
-                        itemToEdit = { collection, isDocUnico: true };
-                        editModal.classList.add('active');
-                    } catch {
-                        showMessage('Erro', 'Erro ao carregar dados para edição.');
-                    }
-                    return;
-                }
-
-                const id = e.target.dataset.id;
-                if (!id) return;
-
-                if (e.target.classList.contains('btn-delete')) {
-                    const element = e.target.closest('li');
-                    if (collection === 'livros') {
-                        e.target.disabled = true;
-                        e.target.textContent = '...';
-                        try {
-                            const hist = await apiRequest(`emprestimos/livro/${id}`);
-                            if (hist.length > 0) {
-                                itemToDelete = { id, collection, element };
-                                document.getElementById('delete-history-msg').innerHTML =
-                                    `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
-                                     Para poder excluí-lo, o histórico precisa ser removido também.`;
-                                deleteHistModal.classList.add('active');
-                            } else {
-                                itemToDelete = { id, collection, element };
-                                deleteModal.classList.add('active');
-                            }
-                        } catch {
+                        const hist = await apiRequest(`emprestimos/livro/${id}`);
+                        if (hist.length > 0) {
+                            itemToDelete = { id, collection, element };
+                            document.getElementById('delete-history-msg').innerHTML =
+                                `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
+                                 Para poder excluí-lo, o histórico precisa ser removido também.`;
+                            deleteHistModal.classList.add('active');
+                        } else {
                             itemToDelete = { id, collection, element };
                             deleteModal.classList.add('active');
-                        } finally {
-                            e.target.disabled = false;
-                            e.target.textContent = 'Excluir';
                         }
-                        return;
-                    }
-                    itemToDelete = { id, collection, element };
-                    deleteModal.classList.add('active');
-                    return;
-                }
-
-                if (e.target.classList.contains('btn-edit')) {
-                    try {
-                        const item = await apiRequest(`${collection}/${id}`);
-                        const fields = fieldsByCollection[collection] || [];
-                        editFields.innerHTML = fields.map(f => {
-                            if (f.type === 'textarea') {
-                                return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${item[f.name] || ''}</textarea></div>`;
-                            }
-                            if (f.type === 'file') {
-                                return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
-                            }
-                            if (f.type === 'select') {
-                                const options = f.options.map(opt => 
-                                    `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
-                                ).join('');
-                                return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
-                            }
-                            return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${item[f.name] ?? ''}"></div>`;
-                        }).join('');
-                        itemToEdit = { id, collection, isDocUnico: false };
-                        editModal.classList.add('active');
                     } catch {
-                        showMessage('Erro', 'Erro ao carregar item para edição.');
+                        itemToDelete = { id, collection, element };
+                        deleteModal.classList.add('active');
+                    } finally {
+                        e.target.disabled = false;
+                        e.target.textContent = 'Excluir';
                     }
                     return;
                 }
-            });
+                itemToDelete = { id, collection, element };
+                deleteModal.classList.add('active');
+                return;
+            }
 
-            // Confirmar Edição
-            document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
-                if (!itemToEdit) return;
-                const { collection, id, isDocUnico } = itemToEdit;
-                const semArquivo = ['alunosBib', 'livros'];
-                const btn = document.getElementById('btn-confirm-edit');
-                btn.disabled = true;
+            if (e.target.classList.contains('btn-edit')) {
                 try {
-                    let result;
-                    if (isDocUnico) {
-                        const obj = {};
-                        editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
-                        result = await apiRequest(collection, 'POST', obj);
-                    } else if (semArquivo.includes(collection)) {
-                        const obj = {};
-                        editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
-                        result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
-                    } else {
-                        const fd = new FormData();
-                        editFields.querySelectorAll('input, textarea, select').forEach(inp => {
-                            if (inp.type === 'file') {
-                                if (inp.files[0]) fd.append(inp.name, inp.files[0]);
-                            } else {
-                                fd.append(inp.name, inp.value);
-                            }
-                        });
-                        result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
-                    }
-                    editModal.classList.remove('active');
-                    itemToEdit = null;
-                    showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
-                    loadManagementContent();
-                } catch (err) {
-                    let msg = 'Erro ao salvar alterações.';
-                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                    showMessage('Erro', msg);
-                } finally {
-                    btn.disabled = false;
+                    const item = await apiRequest(`${collection}/${id}`);
+                    const fields = fieldsByCollection[collection] || [];
+                    editFields.innerHTML = fields.map(f => {
+                        if (f.type === 'textarea') {
+                            return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${escapeHtml(item[f.name] || '')}</textarea></div>`;
+                        }
+                        if (f.type === 'file') {
+                            return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
+                        }
+                        if (f.type === 'select') {
+                            const options = f.options.map(opt => 
+                                `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
+                            ).join('');
+                            return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
+                        }
+                        return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${escapeHtml(item[f.name] ?? '')}"></div>`;
+                    }).join('');
+                    itemToEdit = { id, collection, isDocUnico: false };
+                    editModal.classList.add('active');
+                } catch {
+                    showMessage('Erro', 'Erro ao carregar item para edição.');
                 }
-            });
+                return;
+            }
+        });
 
-            document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+        document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
+            if (!itemToEdit) return;
+            const { collection, id, isDocUnico } = itemToEdit;
+            const semArquivo = ['alunosBib', 'livros'];
+            const btn = document.getElementById('btn-confirm-edit');
+            btn.disabled = true;
+            try {
+                let result;
+                if (isDocUnico) {
+                    const obj = {};
+                    editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
+                    result = await apiRequest(collection, 'POST', obj);
+                } else if (semArquivo.includes(collection)) {
+                    const obj = {};
+                    editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
+                    result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
+                } else {
+                    const fd = new FormData();
+                    editFields.querySelectorAll('input, textarea, select').forEach(inp => {
+                        if (inp.type === 'file') {
+                            if (inp.files[0]) fd.append(inp.name, inp.files[0]);
+                        } else {
+                            fd.append(inp.name, inp.value);
+                        }
+                    });
+                    result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
+                }
                 editModal.classList.remove('active');
                 itemToEdit = null;
-            });
+                if (result?.pending) {
+                    showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação pelos administradores.');
+                } else {
+                    showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
+                }
+                loadManagementContent();
+            } catch (err) {
+                let msg = 'Erro ao salvar alterações.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                showMessage('Erro', msg);
+            } finally {
+                btn.disabled = false;
+            }
+        });
 
-            // Confirmar Exclusão
-            document.getElementById('btn-cancel-delete').addEventListener('click', () => {
-                deleteModal.classList.remove('active');
-                itemToDelete = null;
-            });
+        document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+            editModal.classList.remove('active');
+            itemToEdit = null;
+        });
 
-            document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
-                if (!itemToDelete) return;
-                const { id, collection, element } = itemToDelete;
-                const btn = document.getElementById('btn-confirm-delete');
-                btn.disabled = true;
-                try {
-                    await apiRequest(`${collection}/${id}`, 'DELETE');
+        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+            deleteModal.classList.remove('active');
+            itemToDelete = null;
+        });
+
+        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+            if (!itemToDelete) return;
+            const { id, collection, element } = itemToDelete;
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.disabled = true;
+            try {
+                const result = await apiRequest(`${collection}/${id}`, 'DELETE');
+                if (result?.pending) {
+                    showMessage('Aviso', '⏳ Solicitação de exclusão enviada para aprovação.');
+                } else {
                     element?.remove();
                     showMessage('Sucesso', 'Item excluído com sucesso.');
-                    loadManagementContent();
-                } catch (err) {
-                    let msg = 'Erro ao excluir.';
-                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                    showMessage('Erro', msg);
-                } finally {
-                    deleteModal.classList.remove('active');
-                    itemToDelete = null;
-                    btn.disabled = false;
                 }
-            });
+            } catch (err) {
+                let msg = 'Erro ao excluir.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                showMessage('Erro', msg);
+            } finally {
+                deleteModal.classList.remove('active');
+                itemToDelete = null;
+                btn.disabled = false;
+            }
+        });
 
-            document.getElementById('btn-delete-with-history').addEventListener('click', async () => {
-                if (!itemToDelete) return;
-                const { id, collection, element } = itemToDelete;
-                const btn = document.getElementById('btn-delete-with-history');
-                btn.disabled = true;
-                try {
-                    await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
+        document.getElementById('btn-delete-with-history').addEventListener('click', async () => {
+            if (!itemToDelete) return;
+            const { id, collection, element } = itemToDelete;
+            const btn = document.getElementById('btn-delete-with-history');
+            btn.disabled = true;
+            try {
+                const result = await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
+                if (result?.pending) {
+                    showMessage('Aviso', '⏳ Solicitação de exclusão (com histórico) enviada para aprovação.');
+                } else {
                     showMessage('Sucesso', '✅ Livro e histórico excluídos com sucesso.');
                     element?.remove();
                     loadManagementContent();
+                }
+            } catch (err) {
+                let msg = 'Erro ao excluir.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                showMessage('Erro', msg);
+            } finally {
+                deleteHistModal.classList.remove('active');
+                itemToDelete = null;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-delete-history').addEventListener('click', () => {
+            deleteHistModal.classList.remove('active');
+            itemToDelete = null;
+        });
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const container = form.closest('.form-container');
+                if (!container) return;
+                const section = container.dataset.section;
+
+                const isDocUnico = section === 'alunos' || section === 'responsaveis';
+                const semArquivo = ['alunosBib', 'livros'];
+                const useJson = isDocUnico || semArquivo.includes(section);
+
+                let body;
+                if (useJson) {
+                    const obj = {};
+                    new FormData(form).forEach((v, k) => { obj[k] = v; });
+                    body = obj;
+                } else {
+                    body = new FormData(form);
+                }
+
+                const btn = form.querySelector('button[type="submit"]');
+                const btnOrigText = btn ? btn.textContent : '';
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Salvando...';
+                }
+
+                try {
+                    const result = await apiRequest(section, 'POST', body);
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação enviada para aprovação pelos administradores.');
+                    } else {
+                        showMessage('Sucesso', '✅ Dados salvos com sucesso!');
+                    }
+                    if (!isDocUnico) form.reset();
+                    if (semArquivo.includes(section) && bibliotecaCarregada) {
+                        try { await recarregarDadosBiblioteca(); } catch {}
+                    }
                 } catch (err) {
-                    let msg = 'Erro ao excluir.';
+                    let msg = 'Erro ao salvar.';
                     try { msg = JSON.parse(err.message)?.error || msg; } catch {}
                     showMessage('Erro', msg);
                 } finally {
-                    deleteHistModal.classList.remove('active');
-                    itemToDelete = null;
-                    btn.disabled = false;
-                }
-            });
-
-            document.getElementById('btn-cancel-delete-history').addEventListener('click', () => {
-                deleteHistModal.classList.remove('active');
-                itemToDelete = null;
-            });
-
-            // ============================================================
-            // 9. SUBMISSÃO DE FORMULÁRIOS (cadastrar)
-            // ============================================================
-            document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const container = form.closest('.form-container');
-                    if (!container) return;
-                    const section = container.dataset.section;
-
-                    const isDocUnico = section === 'alunos' || section === 'responsaveis';
-                    const semArquivo = ['alunosBib', 'livros'];
-                    const useJson = isDocUnico || semArquivo.includes(section);
-
-                    let body;
-                    if (useJson) {
-                        const obj = {};
-                        new FormData(form).forEach((v, k) => { obj[k] = v; });
-                        body = obj;
-                    } else {
-                        body = new FormData(form);
-                    }
-
-                    const btn = form.querySelector('button[type="submit"]');
-                    const btnOrigText = btn ? btn.textContent : '';
                     if (btn) {
-                        btn.disabled = true;
-                        btn.textContent = 'Salvando...';
+                        btn.disabled = false;
+                        btn.textContent = btnOrigText;
                     }
-
-                    try {
-                        const result = await apiRequest(section, 'POST', body);
-                        showMessage('Sucesso', '✅ Dados salvos com sucesso!');
-                        if (!isDocUnico) form.reset();
-                        if (semArquivo.includes(section) && bibliotecaCarregada) {
-                            try { await recarregarDadosBiblioteca(); } catch {}
-                        }
-                        if (section === 'docente') carregarCargosSelect();
-                        loadManagementContent();
-                    } catch (err) {
-                        let msg = 'Erro ao salvar.';
-                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                        showMessage('Erro', msg);
-                    } finally {
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.textContent = btnOrigText;
-                        }
-                    }
-                });
-            });
-
-            // ============================================================
-            // 10. LOAD INITIAL DATA (informações fixas)
-            // ============================================================
-            async function loadInitialData(section) {
-                try {
-                    const data = await apiRequest(section);
-                    const form = document.querySelector(`.form-container[data-section="${section}"] form`);
-                    if (form && data) {
-                        Object.keys(data).forEach(key => {
-                            if (form.elements[key]) form.elements[key].value = data[key];
-                        });
-                    }
-                } catch {}
-            }
-
-            // ============================================================
-            // 11. LOGS (com rollback)
-            // ============================================================
-            async function loadLogsContent() {
-                const logsList = document.getElementById('logs-list');
-                logsList.innerHTML = '<li>A carregar logs...</li>';
-
-                try {
-                    const logs = await apiRequest('logs');
-                    if (!logs.length) {
-                        logsList.innerHTML = '<li>Nenhum registo de atividade encontrado.</li>';
-                        return;
-                    }
-
-                    logsList.innerHTML = logs.map(log => {
-                        let rollbackBtn = '';
-                        if (userInfo.isSuperAdmin && log.rollbackPossible) {
-                            rollbackBtn = `<button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>`;
-                        }
-                        const details = log.details || 'Sem detalhes';
-                        return `<li>
-                                    <div class="log-info">
-                                        <strong>${escapeHtml(log.adminEmail)}</strong>
-                                        <span class="log-action"> ${escapeHtml(log.action)}</span> em <em>${escapeHtml(log.collection)}</em>
-                                        <br><span class="log-detail">${escapeHtml(details)}</span>
-                                        <br><span class="log-meta">${formatTs(log.timestamp)}</span>
-                                    </div>
-                                    ${rollbackBtn}
-                                </li>`;
-                    }).join('');
-
-                    document.querySelectorAll('.btn-rollback').forEach(btn => {
-                        btn.addEventListener('click', async () => {
-                            const logId = btn.dataset.logid;
-                            showConfirm('Reverter ação', 'Tem certeza que deseja reverter esta ação?', async () => {
-                                try {
-                                    await apiRequest(`logs/${logId}/rollback`, 'POST');
-                                    showMessage('Sucesso', '✅ Ação revertida com sucesso.');
-                                    loadLogsContent();
-                                    loadManagementContent();
-                                } catch (err) {
-                                    let msg = 'Erro ao reverter.';
-                                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                                    showMessage('Erro', msg);
-                                }
-                            });
-                        });
-                    });
-                } catch {
-                    logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
                 }
+            });
+        });
+
+        async function loadInitialData(section) {
+            try {
+                const data = await apiRequest(section);
+                const form = document.querySelector(`.form-container[data-section="${section}"] form`);
+                if (form && data) {
+                    Object.keys(data).forEach(key => {
+                        if (form.elements[key]) form.elements[key].value = data[key];
+                    });
+                }
+            } catch {}
+        }
+
+        // ═══════════════ LOGS (com rollback) ═══════════════
+        async function loadLogsContent() {
+            const logsList = document.getElementById('logs-list');
+            const solList = document.getElementById('solicitacoes-list');
+            logsList.innerHTML = '<li>A carregar logs...</li>';
+            if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Carregando...</li>';
+
+            try {
+                const solic = await apiRequest('solicitacoes');
+                if (solList) {
+                    if (!solic.length) {
+                        solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
+                    } else {
+                        const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
+                        solList.innerHTML = solic.map(s => {
+                            const acaoBtns = userInfo.isSuperAdmin
+                                ? `<div class="li-actions">
+                                     <button class="btn-aprovar" data-id="${s.id}">✓ Aprovar</button>
+                                     <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
+                                   </div>`
+                                : `<span class="badge-pendente">Aguardando</span>`;
+                            return `<li data-sol-id="${s.id}">
+                                      <div class="log-info">
+                                          <strong>${escapeHtml(s.requestedBy)}</strong>
+                                          <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
+                                          em <em>${escapeHtml(s.collection)}</em>
+                                          <br><small class="log-detail">"${escapeHtml(s.details || 'Sem detalhes')}"</small>
+                                          <br><small class="log-meta">${formatTs(s.requestedAt)}</small>
+                                      </div>
+                                      ${acaoBtns}
+                                    </li>`;
+                        }).join('');
+
+                        if (userInfo.isSuperAdmin) {
+                            solList.querySelectorAll('.btn-aprovar').forEach(btn => {
+                                btn.addEventListener('click', async () => {
+                                    const aprovado = await confirm('Aprovar esta solicitação e executar a ação imediatamente?');
+                                    if (!aprovado) return;
+                                    btn.disabled = true;
+                                    btn.textContent = '...';
+                                    try {
+                                        await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
+                                        await loadLogsContent();
+                                        showMessage('Sucesso', '✅ Solicitação aprovada e ação executada!');
+                                    } catch (err) {
+                                        let msg = 'Erro ao aprovar.';
+                                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                                        showMessage('Erro', msg);
+                                        btn.disabled = false;
+                                        btn.textContent = '✓ Aprovar';
+                                    }
+                                });
+                            });
+
+                            solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
+                                btn.addEventListener('click', async () => {
+                                    const negado = await confirm('Negar esta solicitação? A ação não será executada.');
+                                    if (!negado) return;
+                                    btn.disabled = true;
+                                    btn.textContent = '...';
+                                    try {
+                                        await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
+                                        await loadLogsContent();
+                                    } catch {
+                                        showMessage('Erro', 'Erro ao negar solicitação.');
+                                        btn.disabled = false;
+                                        btn.textContent = '✗ Negar';
+                                    }
+                                });
+                            });
+                        }
+                    }
+                }
+            } catch {
+                if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Erro ao carregar solicitações.</li>';
             }
 
-            // ============================================================
-            // 12. BIBLIOTECA
-            // ============================================================
-            let todosAlunos = [];
-            let todosLivros = [];
-            let bibliotecaCarregada = false;
-            let filtrosInicializados = false;
-            let tipoFiltroEmp = 'todos';
-            let tipoFiltroHist = 'todos';
-
-            function formatarData(ts) {
-                if (!ts) return '—';
-                const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-                const d = ms !== null ? new Date(ms) : new Date(ts);
-                return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
-            }
-
-            function popularSelect(id, items, labelFn) {
-                const sel = document.getElementById(id);
-                if (!sel) return;
-                if (!items.length) {
-                    sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+            try {
+                const logs = await apiRequest('logs');
+                if (!logs.length) {
+                    logsList.innerHTML = '<li>Nenhum registo de atividade encontrado.</li>';
                     return;
                 }
-                sel.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(labelFn(i))}</option>`).join('');
-            }
 
-            async function recarregarDadosBiblioteca() {
-                [todosAlunos, todosLivros] = await Promise.all([
-                    apiRequest('alunosBib'),
-                    apiRequest('livros')
-                ]);
-                atualizarSelects();
-            }
-
-            function obterListaFiltrada(tipo) {
-                if (tipo === 'todos') return todosAlunos;
-                return todosAlunos.filter(a => a.tipo === tipo);
-            }
-
-            function atualizarSelects() {
-                const listaEmp = obterListaFiltrada(tipoFiltroEmp);
-                popularSelect('sel-aluno-emp', listaEmp, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-
-                const listaHist = obterListaFiltrada(tipoFiltroHist);
-                popularSelect('sel-aluno-hist', listaHist, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-
-                const livrosDisp = todosLivros.filter(l => {
-                    const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
-                    return disp > 0;
-                });
-                const labelLivroDisp = l => {
-                    const disp = l.quantidadeDisponivel ?? 1;
-                    const total = l.quantidade || 1;
-                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
-                };
-                popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
-                popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
-            }
-
-            function inicializarFiltros() {
-                if (filtrosInicializados) return;
-                filtrosInicializados = true;
-
-                document.getElementById('filtro-tipo-emp').addEventListener('change', function() {
-                    tipoFiltroEmp = this.value;
-                    document.getElementById('filtro-aluno-emp').value = '';
-                    atualizarSelects();
-                });
-
-                document.getElementById('filtro-tipo-hist').addEventListener('change', function() {
-                    tipoFiltroHist = this.value;
-                    document.getElementById('filtro-aluno-hist').value = '';
-                    atualizarSelects();
-                });
-
-                document.getElementById('filtro-aluno-emp').addEventListener('input', function() {
-                    const q = this.value.toLowerCase();
-                    const base = obterListaFiltrada(tipoFiltroEmp);
-                    const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
-                    popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-                });
-
-                document.getElementById('filtro-aluno-hist').addEventListener('input', function() {
-                    const q = this.value.toLowerCase();
-                    const base = obterListaFiltrada(tipoFiltroHist);
-                    const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
-                    popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-                });
-
-                document.getElementById('filtro-livro-emp').addEventListener('input', function() {
-                    const q = this.value.toLowerCase();
-                    const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
-                    const list = q ? disp.filter(l =>
-                        l.nome.toLowerCase().includes(q) ||
-                        (l.autor || '').toLowerCase().includes(q) ||
-                        (l.codigo || '').toLowerCase().includes(q)
-                    ) : disp;
-                    const labelLivroDisp = l => {
-                        const d = l.quantidadeDisponivel ?? 1;
-                        const t = l.quantidade || 1;
-                        return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
-                    };
-                    popularSelect('sel-livro-emp', list, labelLivroDisp);
-                });
-
-                document.getElementById('filtro-livro-hist').addEventListener('input', function() {
-                    const q = this.value.toLowerCase();
-                    const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
-                    popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
-                });
-
-                document.getElementById('sel-livro-emp').addEventListener('change', function() {
-                    const livroId = this.value;
-                    const grupoQtd = document.getElementById('grupo-qtd-emp');
-                    const inputQtd = document.getElementById('qtd-emprestimo');
-                    const aviso = document.getElementById('qtd-max-aviso');
-
-                    if (!livroId) {
-                        grupoQtd.style.display = 'none';
-                        return;
+                logsList.innerHTML = logs.map(log => {
+                    let rollbackBtn = '';
+                    if (userInfo.isSuperAdmin && log.rollbackPossible) {
+                        rollbackBtn = `<button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>`;
                     }
+                    const details = log.details || 'Sem detalhes';
+                    return `<li>
+                                <div class="log-info">
+                                    <strong>${escapeHtml(log.adminEmail)}</strong>
+                                    <span class="log-action"> ${escapeHtml(log.action)}</span> em <em>${escapeHtml(log.collection)}</em>
+                                    <br><span class="log-detail">${escapeHtml(details)}</span>
+                                    <br><span class="log-meta">${formatTs(log.timestamp)}</span>
+                                </div>
+                                ${rollbackBtn}
+                            </li>`;
+                }).join('');
 
-                    const livro = todosLivros.find(l => l.id === livroId);
-                    if (livro) {
-                        const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-                        grupoQtd.style.display = 'block';
-                        inputQtd.max = disp;
-                        inputQtd.value = 1;
-                        aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
-                    }
-                });
-
-                document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
-                    const selAluno = document.getElementById('sel-aluno-emp');
-                    const selLivro = document.getElementById('sel-livro-emp');
-                    const qtdInput = document.getElementById('qtd-emprestimo');
-
-                    if (!selAluno.value || !selLivro.value) {
-                        showMessage('Aviso', 'Selecione um cadastrado e um livro.');
-                        return;
-                    }
-
-                    const aluno = todosAlunos.find(a => a.id === selAluno.value);
-                    const livro = todosLivros.find(l => l.id === selLivro.value);
-                    const quantidade = parseInt(qtdInput?.value || 1, 10);
-                    const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-
-                    if (quantidade < 1) { showMessage('Erro', 'Quantidade inválida.'); return; }
-                    if (quantidade > disponiveis) {
-                        showMessage('Erro', `Só existem ${disponiveis} exemplar(es) disponível(is).`);
-                        return;
-                    }
-
-                    const btn = document.getElementById('btn-registrar-emprestimo');
-                    btn.disabled = true;
-                    btn.textContent = 'Registrando...';
-
-                    try {
-                        await apiRequest('emprestimos', 'POST', {
-                            alunoId: aluno.id,
-                            livroId: livro.id,
-                            quantidade
-                        });
-                        showMessage('Sucesso', `✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
-                        document.getElementById('filtro-aluno-emp').value = '';
-                        document.getElementById('filtro-livro-emp').value = '';
-                        document.getElementById('grupo-qtd-emp').style.display = 'none';
-                        await recarregarDadosBiblioteca();
-                        await carregarEmprestimosAtivos();
-                    } catch (err) {
-                        let msg = 'Erro ao registrar empréstimo.';
-                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                        showMessage('Erro', msg);
-                    } finally {
-                        btn.disabled = false;
-                        btn.textContent = 'Registrar Empréstimo';
-                    }
-                });
-
-                document.getElementById('tabela-emprestimos-container').addEventListener('click', async (e) => {
-                    const btnDevolver = e.target.closest('.btn-devolver');
-                    if (!btnDevolver) return;
-
-                    const empId = btnDevolver.dataset.id;
-                    const total = parseInt(btnDevolver.dataset.total, 10) || 1;
-                    const qtdInput = document.getElementById(`qtd-dev-${empId}`);
-                    if (!qtdInput) {
-                        showMessage('Erro', 'Campo de quantidade não encontrado.');
-                        return;
-                    }
-                    const qtd = parseInt(qtdInput.value, 10);
-                    if (isNaN(qtd) || qtd < 1 || qtd > total) {
-                        showMessage('Erro', `Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
-                        return;
-                    }
-
-                    const mensagem = qtd < total
-                        ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
-                        : `Devolver todos os ${total} exemplar(es)?`;
-
-                    showConfirm('Confirmar devolução', mensagem, async () => {
-                        btnDevolver.disabled = true;
-                        btnDevolver.textContent = '...';
+                document.querySelectorAll('.btn-rollback').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const logId = btn.dataset.logid;
+                        const confirmado = await confirm('Tem certeza que deseja reverter esta ação?');
+                        if (!confirmado) return;
                         try {
-                            await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
-                            showMessage('Sucesso', '✅ Devolução registrada com sucesso!');
-                            await recarregarDadosBiblioteca();
-                            await carregarEmprestimosAtivos();
+                            await apiRequest(`logs/${logId}/rollback`, 'POST');
+                            showMessage('Sucesso', '✅ Ação revertida com sucesso.');
+                            loadLogsContent();
+                            loadManagementContent();
                         } catch (err) {
-                            let msg = 'Erro ao registrar devolução.';
+                            let msg = 'Erro ao reverter.';
                             try { msg = JSON.parse(err.message)?.error || msg; } catch {}
                             showMessage('Erro', msg);
-                            btnDevolver.disabled = false;
-                            btnDevolver.textContent = 'Devolver';
                         }
                     });
                 });
+            } catch {
+                logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
+            }
+        }
 
-                document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
-                    const sel = document.getElementById('sel-aluno-hist');
-                    const lista = document.getElementById('lista-historico-aluno');
-                    if (!sel.value) { showMessage('Aviso', 'Selecione um cadastrado.'); return; }
-                    lista.innerHTML = '<li>Carregando...</li>';
-                    try {
-                        const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
-                        lista.innerHTML = emp.length
-                            ? emp.map(e => {
-                                const badge = e.devolvido
-                                    ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                                    : `<span class="badge-ativo">📚 Em andamento</span>`;
-                                return `<li><span>${e.livroNome} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-                            }).join('')
-                            : '<li>Nenhum empréstimo encontrado.</li>';
-                    } catch {
-                        lista.innerHTML = '<li>Erro ao buscar.</li>';
-                    }
-                });
+        async function loadPendingAdmins() {
+            try {
+                const admins = await apiRequest('pendentes');
+                document.getElementById('pending-admins-list').innerHTML = admins.length === 0
+                    ? '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>'
+                    : admins.map(a => {
+                        const actionBtns = userInfo.isSuperAdmin
+                            ? `<button class="btn-approve" data-uid="${a.uid}" data-email="${a.username}">✓</button>
+                               <button class="btn-deny" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
+                            : `<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>`;
+                        return `<div class="pending-admin">
+                                   <p><strong>${escapeHtml(a.username)}</strong></p>
+                                   <div class="admin-actions">${actionBtns}</div>
+                                 </div>`;
+                    }).join('');
+            } catch (err) {
+                console.error('Erro ao carregar admins pendentes:', err);
+            }
+        }
 
-                document.getElementById('btn-ver-livro').addEventListener('click', async () => {
-                    const sel = document.getElementById('sel-livro-hist');
-                    const lista = document.getElementById('lista-historico-livro');
-                    if (!sel.value) { showMessage('Aviso', 'Selecione um livro.'); return; }
-                    lista.innerHTML = '<li>Carregando...</li>';
-                    try {
-                        const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
-                        lista.innerHTML = emp.length
-                            ? emp.map(e => {
-                                const badge = e.devolvido
-                                    ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                                    : `<span class="badge-ativo">📚 Em andamento</span>`;
-                                return `<li><span>${e.alunoNome} (${e.alunoMatricula}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-                            }).join('')
-                            : '<li>Nenhum empréstimo encontrado.</li>';
-                    } catch {
-                        lista.innerHTML = '<li>Erro ao buscar.</li>';
-                    }
-                });
+        document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
+            const uid = e.target.dataset.uid;
+            const email = e.target.dataset.email;
+            if (!uid) return;
 
-                document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
-                    await recarregarDadosBiblioteca();
-                    await carregarEmprestimosAtivos();
-                });
+            if (e.target.classList.contains('btn-approve')) {
+                pendingAcceptUid = uid;
+                document.getElementById('accept-modal-email').textContent = email || uid;
+                document.getElementById('nivel-aceitar').value = '';
+                acceptModal.classList.add('active');
+                return;
             }
 
-            async function carregarEmprestimosAtivos() {
-                const container = document.getElementById('tabela-emprestimos-container');
-                container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
+            if (e.target.classList.contains('btn-deny')) {
+                const negado = await confirm(`Negar acesso de ${email || uid}?`);
+                if (!negado) return;
                 try {
-                    const lista = await apiRequest('emprestimos?ativos=true');
-                    if (!lista.length) {
-                        container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
-                        return;
-                    }
-                    container.innerHTML = `
-                        <table class="tabela-bib">
-                            <thead>
-                                <tr>
-                                    <th>Cadastrado</th>
-                                    <th>Livro</th>
-                                    <th>Código</th>
-                                    <th>Qtd.</th>
-                                    <th>Data</th>
-                                    <th>Devolver</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${lista.map(e => `
-                                    <tr>
-                                        <td>${escapeHtml(e.alunoNome)} <small style="color:var(--txt-muted)">(${escapeHtml(e.alunoMatricula)})</small></td>
-                                        <td>${escapeHtml(e.livroNome)}</td>
-                                        <td><small>${escapeHtml(e.livroCodigo || '—')}</small></td>
-                                        <td>${e.quantidade || 1}</td>
-                                        <td>${formatarData(e.dataEmprestimo)}</td>
-                                        <td style="display:flex; gap:4px; align-items:center;">
-                                            <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
-                                            <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>`;
+                    await apiRequest('pendentes/negar', 'POST', { uid });
+                    loadPendingAdmins();
                 } catch {
-                    container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+                    showMessage('Erro', 'Não foi possível negar o administrador.');
                 }
             }
-
-            async function carregarBiblioteca() {
-                try {
-                    await recarregarDadosBiblioteca();
-                    inicializarFiltros();
-                    await carregarEmprestimosAtivos();
-                    bibliotecaCarregada = true;
-                } catch (err) {
-                    console.error('Erro ao carregar biblioteca:', err);
-                }
-            }
-
-            // ============================================================
-            // 13. INICIALIZAÇÃO
-            // ============================================================
-            async function init() {
-                await carregarUserInfo();
-                loadInitialData('alunos');
-                loadInitialData('responsaveis');
-                carregarCargosSelect();
-                loadManagementContent();
-            }
-            init();
         });
+
+        document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
+            const nivel = parseInt(document.getElementById('nivel-aceitar').value, 10);
+            if (isNaN(nivel) || nivel < 1 || nivel > 8) {
+                showMessage('Erro', 'Informe um nível válido entre 1 (Diretor) e 8 (TI).');
+                return;
+            }
+            if (!pendingAcceptUid) return;
+            const btn = document.getElementById('btn-confirm-accept');
+            btn.disabled = true;
+            try {
+                await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
+                acceptModal.classList.remove('active');
+                pendingAcceptUid = null;
+                loadPendingAdmins();
+                showMessage('Sucesso', '✅ Administrador aceito com sucesso!');
+            } catch (err) {
+                let msg = 'Não foi possível aceitar o administrador.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                showMessage('Erro', msg);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-accept').addEventListener('click', () => {
+            acceptModal.classList.remove('active');
+            pendingAcceptUid = null;
+        });
+
+        // ═══════════════════════════ BIBLIOTECA ═══════════════════════════
+        let todosAlunos = [];
+        let todosLivros = [];
+        let bibliotecaCarregada = false;
+        let filtrosInicializados = false;
+        let tipoFiltroEmp = 'todos';
+        let tipoFiltroHist = 'todos';
+
+        function formatarData(ts) {
+            if (!ts) return '—';
+            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+            const d = ms !== null ? new Date(ms) : new Date(ts);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
+        }
+
+        function popularSelect(id, items, labelFn) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            if (!items.length) {
+                sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+                return;
+            }
+            sel.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(labelFn(i))}</option>`).join('');
+        }
+
+        async function recarregarDadosBiblioteca() {
+            [todosAlunos, todosLivros] = await Promise.all([
+                apiRequest('alunosBib'),
+                apiRequest('livros')
+            ]);
+            atualizarSelects();
+        }
+
+        function obterListaFiltrada(tipo) {
+            if (tipo === 'todos') return todosAlunos;
+            return todosAlunos.filter(a => a.tipo === tipo);
+        }
+
+        function atualizarSelects() {
+            const listaEmp = obterListaFiltrada(tipoFiltroEmp);
+            popularSelect('sel-aluno-emp', listaEmp, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+            const listaHist = obterListaFiltrada(tipoFiltroHist);
+            popularSelect('sel-aluno-hist', listaHist, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+            const livrosDisp = todosLivros.filter(l => {
+                const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
+                return disp > 0;
+            });
+            const labelLivroDisp = l => {
+                const disp = l.quantidadeDisponivel ?? 1;
+                const total = l.quantidade || 1;
+                return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
+            };
+            popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
+            popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
+        }
+
+        function inicializarFiltros() {
+            if (filtrosInicializados) return;
+            filtrosInicializados = true;
+
+            document.getElementById('filtro-tipo-emp').addEventListener('change', function() {
+                tipoFiltroEmp = this.value;
+                document.getElementById('filtro-aluno-emp').value = '';
+                atualizarSelects();
+            });
+
+            document.getElementById('filtro-tipo-hist').addEventListener('change', function() {
+                tipoFiltroHist = this.value;
+                document.getElementById('filtro-aluno-hist').value = '';
+                atualizarSelects();
+            });
+
+            document.getElementById('filtro-aluno-emp').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const base = obterListaFiltrada(tipoFiltroEmp);
+                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+            });
+
+            document.getElementById('filtro-aluno-hist').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const base = obterListaFiltrada(tipoFiltroHist);
+                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+            });
+
+            document.getElementById('filtro-livro-emp').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
+                const list = q ? disp.filter(l =>
+                    l.nome.toLowerCase().includes(q) ||
+                    (l.autor || '').toLowerCase().includes(q) ||
+                    (l.codigo || '').toLowerCase().includes(q)
+                ) : disp;
+                const labelLivroDisp = l => {
+                    const d = l.quantidadeDisponivel ?? 1;
+                    const t = l.quantidade || 1;
+                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
+                };
+                popularSelect('sel-livro-emp', list, labelLivroDisp);
+            });
+
+            document.getElementById('filtro-livro-hist').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
+                popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
+            });
+
+            document.getElementById('sel-livro-emp').addEventListener('change', function() {
+                const livroId = this.value;
+                const grupoQtd = document.getElementById('grupo-qtd-emp');
+                const inputQtd = document.getElementById('qtd-emprestimo');
+                const aviso = document.getElementById('qtd-max-aviso');
+
+                if (!livroId) {
+                    grupoQtd.style.display = 'none';
+                    return;
+                }
+
+                const livro = todosLivros.find(l => l.id === livroId);
+                if (livro) {
+                    const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+                    grupoQtd.style.display = 'block';
+                    inputQtd.max = disp;
+                    inputQtd.value = 1;
+                    aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
+                }
+            });
+
+            document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
+                const selAluno = document.getElementById('sel-aluno-emp');
+                const selLivro = document.getElementById('sel-livro-emp');
+                const qtdInput = document.getElementById('qtd-emprestimo');
+
+                if (!selAluno.value || !selLivro.value) {
+                    showMessage('Aviso', 'Selecione um cadastrado e um livro.');
+                    return;
+                }
+
+                const aluno = todosAlunos.find(a => a.id === selAluno.value);
+                const livro = todosLivros.find(l => l.id === selLivro.value);
+                const quantidade = parseInt(qtdInput?.value || 1, 10);
+                const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+
+                if (quantidade < 1) { showMessage('Erro', 'Quantidade inválida.'); return; }
+                if (quantidade > disponiveis) {
+                    showMessage('Erro', `Só existem ${disponiveis} exemplar(es) disponível(is).`);
+                    return;
+                }
+
+                const btn = document.getElementById('btn-registrar-emprestimo');
+                btn.disabled = true;
+                btn.textContent = 'Registrando...';
+
+                try {
+                    const result = await apiRequest('emprestimos', 'POST', {
+                        alunoId: aluno.id,
+                        livroId: livro.id,
+                        quantidade
+                    });
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação de empréstimo enviada para aprovação.');
+                    } else {
+                        showMessage('Sucesso', `✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
+                    }
+                    document.getElementById('filtro-aluno-emp').value = '';
+                    document.getElementById('filtro-livro-emp').value = '';
+                    document.getElementById('grupo-qtd-emp').style.display = 'none';
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar empréstimo.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Registrar Empréstimo';
+                }
+            });
+
+            document.getElementById('tabela-emprestimos-container').addEventListener('click', async (e) => {
+                const btnDevolver = e.target.closest('.btn-devolver');
+                if (!btnDevolver) return;
+
+                const empId = btnDevolver.dataset.id;
+                const total = parseInt(btnDevolver.dataset.total, 10) || 1;
+                const qtdInput = document.getElementById(`qtd-dev-${empId}`);
+                if (!qtdInput) {
+                    showMessage('Erro', 'Campo de quantidade não encontrado.');
+                    return;
+                }
+                const qtd = parseInt(qtdInput.value, 10);
+                if (isNaN(qtd) || qtd < 1 || qtd > total) {
+                    showMessage('Erro', `Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
+                    return;
+                }
+
+                const mensagem = qtd < total
+                    ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
+                    : `Devolver todos os ${total} exemplar(es)?`;
+
+                const confirmado = await confirm(mensagem);
+                if (!confirmado) return;
+
+                btnDevolver.disabled = true;
+                btnDevolver.textContent = '...';
+                try {
+                    await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
+                    showMessage('Sucesso', '✅ Devolução registrada com sucesso!');
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar devolução.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                    btnDevolver.disabled = false;
+                    btnDevolver.textContent = 'Devolver';
+                }
+            });
+
+            document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-aluno-hist');
+                const lista = document.getElementById('lista-historico-aluno');
+                if (!sel.value) { showMessage('Aviso', 'Selecione um cadastrado.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${escapeHtml(e.livroNome)} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-ver-livro').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-livro-hist');
+                const lista = document.getElementById('lista-historico-livro');
+                if (!sel.value) { showMessage('Aviso', 'Selecione um livro.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${escapeHtml(e.alunoNome)} (${escapeHtml(e.alunoMatricula)}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
+                await recarregarDadosBiblioteca();
+                await carregarEmprestimosAtivos();
+            });
+        }
+
+        async function carregarEmprestimosAtivos() {
+            const container = document.getElementById('tabela-emprestimos-container');
+            container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
+            try {
+                const lista = await apiRequest('emprestimos?ativos=true');
+                if (!lista.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <table class="tabela-bib">
+                        <thead>
+                            <tr>
+                                <th>Cadastrado</th>
+                                <th>Livro</th>
+                                <th>Código</th>
+                                <th>Qtd.</th>
+                                <th>Data</th>
+                                <th>Devolver</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lista.map(e => `
+                                <tr>
+                                    <td>${escapeHtml(e.alunoNome)} <small style="color:var(--txt-muted)">(${escapeHtml(e.alunoMatricula)})</small></td>
+                                    <td>${escapeHtml(e.livroNome)}</td>
+                                    <td><small>${escapeHtml(e.livroCodigo || '—')}</small></td>
+                                    <td>${e.quantidade || 1}</td>
+                                    <td>${formatarData(e.dataEmprestimo)}</td>
+                                    <td style="display:flex; gap:4px; align-items:center;">
+                                        <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
+                                        <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } catch {
+                container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+            }
+        }
+
+        async function carregarBiblioteca() {
+            try {
+                await recarregarDadosBiblioteca();
+                inicializarFiltros();
+                await carregarEmprestimosAtivos();
+                bibliotecaCarregada = true;
+            } catch (err) {
+                console.error('Erro ao carregar biblioteca:', err);
+            }
+        }
+
+        async function init() {
+            await carregarUserInfo();
+            loadInitialData('alunos');
+            loadInitialData('responsaveis');
+            loadPendingAdmins();
+            carregarCargosSelect();
+        }
+        init();
+    });
     </script>
 </body>
 </html>

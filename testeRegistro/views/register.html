@@ -5,134 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registo - Painel Administrativo GETECO</title>
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="icon" type="image/png" href="/images/logo.png">
-    <style>
-        /* Estilos específicos para registro (não conflitam com o style.css) */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: var(--bg-body, #f3f4f6);
-            padding: 20px;
-        }
-        .login-box {
-            background: var(--bg-card, #ffffff);
-            border: 1px solid var(--border, #e5e7eb);
-            border-radius: var(--radius, 12px);
-            padding: 2rem;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.08));
-            text-align: center;
-        }
-        .login-logo {
-            max-width: 80px;
-            margin-bottom: 1rem;
-        }
-        .login-box h2 {
-            margin-bottom: 0.5rem;
-            color: var(--txt-primary, #111827);
-        }
-        .login-box p {
-            color: var(--txt-secondary, #6b7280);
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-        }
-        .input-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--txt-secondary, #4b5563);
-        }
-        .input-group input {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: var(--bg-input, #f9fafb);
-            border: 1px solid var(--border, #d1d5db);
-            border-radius: var(--radius-sm, 6px);
-            font-size: 0.95rem;
-            color: var(--txt-primary, #111827);
-            font-family: inherit;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .input-group input:focus {
-            border-color: var(--border-focus, #3b82f6);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .input-group small {
-            display: block;
-            color: var(--txt-muted, #9ca3af);
-            font-size: 0.75rem;
-            margin-top: 4px;
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--blue, #2563eb);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm, 6px);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s ease;
-            font-family: inherit;
-        }
-        .btn-submit:hover {
-            background: var(--blue-dark, #1d4ed8);
-        }
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .login-footer {
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: var(--txt-secondary, #6b7280);
-        }
-        .login-footer a {
-            color: var(--blue, #2563eb);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .login-footer a:hover {
-            text-decoration: underline;
-        }
-        #errorMessage, #successMessage {
-            padding: 0.75rem;
-            border-radius: var(--radius-sm, 6px);
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-        #errorMessage {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        #successMessage {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-    </style>
+    <link rel="icon" type="image/png" href="/images/watermark.png">
 </head>
 <body>
     <div class="login-container">
         <div class="login-box">
-            <img src="/images/logo.png" alt="Logo GETECO" class="login-logo">
+            <img src="/images/watermark.png" alt="Logo GETECO" class="login-logo">
             <h2>Criar Nova Conta</h2>
             <p>Preencha os dados para solicitar acesso ao painel.</p>
             
-            <div id="errorMessage" style="display: none;"></div>
-            <div id="successMessage" style="display: none;"></div>
+            <div id="errorMessage" style="color: red; display: none; margin-bottom: 1rem;"></div>
+            <div id="successMessage" style="color: green; display: none; margin-bottom: 1rem;"></div>
             
             <form id="registerForm">
                 <div class="input-group">
@@ -161,7 +44,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <script>
-        // (código JavaScript completo – igual à versão anterior)
+        // Carrega a configuração do Firebase e inicializa o formulário
         fetch('/firebase-config.json')
           .then(res => res.json())
           .then(firebaseConfig => {
@@ -179,6 +62,7 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
+            // Validações
             if (!email || !password || !confirmPassword) {
                 showError('Por favor, preencha todos os campos.');
                 return;
@@ -202,10 +86,14 @@
             btn.textContent = 'A processar...';
 
             try {
+                // Criar usuário no Firebase
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
+
+                // Enviar e-mail de verificação
                 await user.sendEmailVerification();
 
+                // Enviar dados para o servidor
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -220,12 +108,17 @@
                     throw new Error('Erro ao registar no servidor.');
                 }
 
+                // Logout após registro
                 await firebase.auth().signOut();
+
                 showSuccess('✅ Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.');
+                
+                // Redirecionar após 5 segundos
                 setTimeout(() => window.location.assign('/login'), 5000);
 
             } catch (error) {
                 console.error('❌ Erro de registro:', error);
+                
                 let mensagem = 'Erro ao criar a conta. Tente novamente.';
                 if (error.code === 'auth/email-already-in-use') {
                     mensagem = 'Este e-mail já está registado.';
@@ -236,6 +129,7 @@
                 } else if (error.message) {
                     mensagem = error.message;
                 }
+                
                 showError(mensagem);
                 btn.disabled = false;
                 btn.textContent = 'Registar';
