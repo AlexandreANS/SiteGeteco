@@ -8,7 +8,6 @@ const fs = require("fs");
 const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
-const dns = require("dns").promises;   // ← necessário para validação MX
 
 // Se usar dotenv para ambiente local
 // require('dotenv').config();
@@ -125,21 +124,17 @@ app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, 
 app.get("/", (req, res) => res.redirect("/login"));
 
 // ══════════════════════════════════════════════════════════════════
-// API Login
+// API Login – permite login a administradores já aprovados
+// (já não verifica se o e‑mail foi verificado)
 // ══════════════════════════════════════════════════════════════════
 app.post("/sessionLogin", async (req, res) => {
     try {
         const { idToken } = req.body;
         const decoded = await auth.verifyIdToken(idToken);
         
+        // Só administradores podem fazer login
         if (!decoded.isAdmin) {
             return res.status(403).send('Não autorizado');
-        }
-
-        const userRecord = await auth.getUser(decoded.uid);
-        
-        if (!userRecord.emailVerified && !decoded.isAdmin) {
-            return res.status(403).send('Por favor, verifique seu e‑mail antes de fazer login.');
         }
 
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
@@ -165,21 +160,8 @@ app.post("/checkAdmin", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// VALIDAÇÃO DE DOMÍNIO (verifica se o e‑mail tem servidor MX)
-// ══════════════════════════════════════════════════════════════════
-async function isEmailDomainValid(email) {
-    try {
-        const domain = email.split('@')[1];
-        if (!domain) return false;
-        const addresses = await dns.resolveMx(domain);
-        return addresses && addresses.length > 0;
-    } catch (err) {
-        return false;
-    }
-}
-
-// ══════════════════════════════════════════════════════════════════
-// REGISTRO – e‑mail verificado automaticamente
+// REGISTRO – apenas verificação básica de formato e duplicidade
+// (sem validação MX, sem envio de e‑mails, sem emailVerified)
 // ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
@@ -196,18 +178,12 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Formato de e‑mail inválido.' });
         }
 
-        // Valida se o domínio do e‑mail tem servidores MX
-        const domainValid = await isEmailDomainValid(email);
-        if (!domainValid) {
-            return res.status(400).json({ error: 'Domínio de e‑mail inválido ou não consegue receber mensagens.' });
-        }
-
         let userRecord;
         try {
+            // Criar utilizador sem forçar emailVerified (Firebase trata como false por padrão)
             userRecord = await auth.createUser({
                 email,
-                password,
-                emailVerified: false
+                password
             });
         } catch (e) {
             if (e.code === 'auth/email-already-exists') {
@@ -216,8 +192,6 @@ app.post('/register', async (req, res) => {
             throw e;
         }
 
-        // Força o e‑mail como verificado para não depender de envio de link
-        await auth.updateUser(userRecord.uid, { emailVerified: true });
         await auth.setCustomUserClaims(userRecord.uid, { status: 'pending' });
 
         await db.collection('registrations').doc(userRecord.uid).set({
@@ -510,9 +484,10 @@ app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// LOGS E ROLLBACK (tudo em memória, sem necessidade de índices)
+// LOGS E ROLLBACK (rotas fixas antes das com :id)
 // ══════════════════════════════════════════════════════════════════
 
+// Listar logs
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
         const snap = await db.collection('logs').get();
@@ -527,89 +502,6 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     } catch (e) {
         console.error('Erro ao buscar logs:', e);
         res.status(500).json({ error: 'Erro ao buscar logs.' });
-    }
-});
-
-app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações.' });
-        }
-
-        const logRef = db.collection('logs').doc(req.params.id);
-        const logSnap = await logRef.get();
-        if (!logSnap.exists) return res.status(404).json({ error: 'Log não encontrado.' });
-        const log = logSnap.data();
-        if (!log.rollbackPossible) {
-            return res.status(400).json({ error: 'Este log não pode ser revertido.' });
-        }
-
-        const { collection, docId, previousData, action } = log;
-        if (!previousData && action !== 'criou') {
-            return res.status(400).json({ error: 'Dados anteriores não disponíveis para rollback.' });
-        }
-
-        if (action === 'excluiu' || action === 'editou') {
-            await db.collection(collection).doc(docId).set(previousData);
-        } else if (action === 'criou') {
-            await db.collection(collection).doc(docId).delete();
-        } else {
-            return res.status(400).json({ error: 'Ação não suportada para rollback.' });
-        }
-
-        await logRef.update({ revertedAt: new Date(), revertedBy: req.user.email });
-        await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback do log ${req.params.id}`);
-
-        res.json({ success: true });
-    } catch (e) {
-        console.error('Erro no rollback:', e);
-        res.status(500).json({ error: 'Erro ao executar rollback.' });
-    }
-});
-
-app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs.' });
-        }
-        const docRef = db.collection('logs').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Log não encontrado.' });
-        }
-        const log = docSnap.data();
-        if (!log.rollbackPossible) {
-            return res.status(400).json({ error: 'Este log já está confirmado.' });
-        }
-        await docRef.update({
-            previousData: admin.firestore.FieldValue.delete(),
-            newData: admin.firestore.FieldValue.delete(),
-            rollbackPossible: false
-        });
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao confirmar log.' });
-    }
-});
-
-app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
-        }
-        const docRef = db.collection('logs').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Log não encontrado.' });
-        }
-        const log = docSnap.data();
-        if (log.rollbackPossible === true) {
-            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
-        }
-        await docRef.delete();
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao apagar log.' });
     }
 });
 
@@ -705,6 +597,7 @@ app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
 });
 
 // Limpar histórico (apenas logs não reversíveis)
+// ⚠️ Esta rota está ANTES das rotas com :id para evitar conflito
 app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -733,16 +626,498 @@ app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     }
 });
 
-// ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — ALUNOS/PROFESSORES, LIVROS, EMPRÉSTIMOS
-// (rotas mantidas inalteradas em relação à versão anterior)
-// ══════════════════════════════════════════════════════════════════
-app.get('/api/alunosBib', requireAdmin, async (req, res) => {
-    // ... (código igual ao original)
+// Rollback individual
+app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações.' });
+        }
+
+        const logRef = db.collection('logs').doc(req.params.id);
+        const logSnap = await logRef.get();
+        if (!logSnap.exists) return res.status(404).json({ error: 'Log não encontrado.' });
+        const log = logSnap.data();
+        if (!log.rollbackPossible) {
+            return res.status(400).json({ error: 'Este log não pode ser revertido.' });
+        }
+
+        const { collection, docId, previousData, action } = log;
+        if (!previousData && action !== 'criou') {
+            return res.status(400).json({ error: 'Dados anteriores não disponíveis para rollback.' });
+        }
+
+        if (action === 'excluiu' || action === 'editou') {
+            await db.collection(collection).doc(docId).set(previousData);
+        } else if (action === 'criou') {
+            await db.collection(collection).doc(docId).delete();
+        } else {
+            return res.status(400).json({ error: 'Ação não suportada para rollback.' });
+        }
+
+        await logRef.update({ revertedAt: new Date(), revertedBy: req.user.email });
+        await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback do log ${req.params.id}`);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('Erro no rollback:', e);
+        res.status(500).json({ error: 'Erro ao executar rollback.' });
+    }
 });
 
-// As restantes rotas da biblioteca permanecem exatamente iguais.
-// Para não alongar ainda mais, assume‑se que são copiadas do ficheiro anterior completo.
+// Confirmar log individual
+app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (!log.rollbackPossible) {
+            return res.status(400).json({ error: 'Este log já está confirmado.' });
+        }
+        await docRef.update({
+            previousData: admin.firestore.FieldValue.delete(),
+            newData: admin.firestore.FieldValue.delete(),
+            rollbackPossible: false
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao confirmar log.' });
+    }
+});
+
+// Apagar log individual
+app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (log.rollbackPossible === true) {
+            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
+        }
+        await docRef.delete();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao apagar log.' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// BIBLIOTECA — ALUNOS/PROFESSORES
+// ══════════════════════════════════════════════════════════════════
+app.get('/api/alunosBib', requireAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('alunosBib').get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar cadastros.' });
+    }
+});
+
+app.get('/api/alunosBib/:id', requireAdmin, async (req, res) => {
+    try {
+        const doc = await db.collection('alunosBib').doc(req.params.id).get();
+        if (!doc.exists) return res.status(404).json({ error: 'Cadastro não encontrado.' });
+        res.json({ id: doc.id, ...doc.data() });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao buscar cadastro.' });
+    }
+});
+
+async function gerarMatricula(tipo) {
+    const prefixo = tipo === 'professor' ? 'SGBGP' : 'SGBG';
+    const query = await db.collection('alunosBib')
+        .where('tipo', '==', tipo)
+        .get();
+    const count = query.size;
+    const numero = String(count + 1).padStart(4, '0');
+    return prefixo + numero;
+}
+
+app.post('/api/alunosBib', requireAdmin, async (req, res) => {
+    try {
+        const { tipo, nome } = req.body;
+        if (!tipo || !nome) return res.status(400).json({ error: 'Tipo e nome são obrigatórios.' });
+        if (tipo !== 'aluno' && tipo !== 'professor') {
+            return res.status(400).json({ error: 'Tipo inválido. Use "aluno" ou "professor".' });
+        }
+
+        const matricula = await gerarMatricula(tipo);
+        const ref = await db.collection('alunosBib').add({
+            matricula,
+            nome,
+            tipo,
+            criadoEm: new Date()
+        });
+        await registrarLog(req.user.email, 'criou', 'alunosBib', ref.id, null, { matricula, nome, tipo }, `${nome} (${matricula})`);
+        res.json({ success: true, id: ref.id, matricula });
+    } catch (e) {
+        console.error('Erro ao cadastrar:', e);
+        res.status(500).json({ error: 'Erro ao cadastrar.', detalhe: e.message });
+    }
+});
+
+app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
+    try {
+        const { matricula, nome, tipo } = req.body;
+        if (!matricula || !nome || !tipo) {
+            return res.status(400).json({ error: 'Matrícula, nome e tipo são obrigatórios.' });
+        }
+
+        const docRef = db.collection('alunosBib').doc(req.params.id);
+        const oldDoc = await docRef.get();
+        const previousData = oldDoc.exists ? oldDoc.data() : null;
+
+        await docRef.update({ matricula, nome, tipo, atualizadoEm: new Date() });
+        await registrarLog(req.user.email, 'editou', 'alunosBib', req.params.id, previousData, { matricula, nome, tipo }, `${nome} (${matricula})`);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao editar cadastro.' });
+    }
+});
+
+app.delete('/api/alunosBib/:id', requireAdmin, async (req, res) => {
+    try {
+        const empAtivos = await db.collection('emprestimos')
+            .where('alunoId', '==', req.params.id)
+            .where('devolvido', '==', false)
+            .get();
+        if (!empAtivos.empty) {
+            return res.status(400).json({ error: 'Não é possível excluir um cadastro com empréstimos em andamento.' });
+        }
+
+        const docRef = db.collection('alunosBib').doc(req.params.id);
+        const oldDoc = await docRef.get();
+        const previousData = oldDoc.exists ? oldDoc.data() : null;
+
+        await docRef.delete();
+        await registrarLog(req.user.email, 'excluiu', 'alunosBib', req.params.id, previousData, null, req.params.id);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao excluir cadastro.' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// BIBLIOTECA — LIVROS
+// ══════════════════════════════════════════════════════════════════
+app.get('/api/livros', async (req, res) => {
+    try {
+        const snap = await db.collection('livros').get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar livros.' });
+    }
+});
+
+app.get('/api/livros/:id', async (req, res) => {
+    try {
+        const doc = await db.collection('livros').doc(req.params.id).get();
+        if (!doc.exists) return res.status(404).json({ error: 'Livro não encontrado.' });
+        res.json({ id: doc.id, ...doc.data() });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao buscar livro.' });
+    }
+});
+
+app.post('/api/livros', requireAdmin, async (req, res) => {
+    try {
+        const { codigo, nome, autor, quantidade } = req.body;
+        if (!codigo || !nome || !autor) {
+            return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        }
+
+        const qtd = parseInt(quantidade, 10) || 1;
+        if (qtd < 1) return res.status(400).json({ error: 'Quantidade deve ser pelo menos 1.' });
+
+        const existente = await db.collection('livros')
+            .where('codigo', '==', codigo)
+            .limit(1)
+            .get();
+        if (!existente.empty) return res.status(400).json({ error: 'Já existe um livro com esse código.' });
+
+        const data = {
+            codigo,
+            nome,
+            autor,
+            quantidade: qtd,
+            quantidadeDisponivel: qtd,
+            emprestado: false,
+            criadoEm: new Date()
+        };
+        const ref = await db.collection('livros').add(data);
+        await registrarLog(req.user.email, 'criou', 'livros', ref.id, null, data, `${nome} — ${autor} (${qtd}x)`);
+        res.json({ success: true, id: ref.id });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao cadastrar livro.' });
+    }
+});
+
+app.put('/api/livros/:id', requireAdmin, async (req, res) => {
+    try {
+        const { codigo, nome, autor, quantidade } = req.body;
+        if (!codigo || !nome || !autor) {
+            return res.status(400).json({ error: 'Código, título e autor são obrigatórios.' });
+        }
+
+        const existente = await db.collection('livros')
+            .where('codigo', '==', codigo)
+            .limit(1)
+            .get();
+        if (!existente.empty && existente.docs[0].id !== req.params.id) {
+            return res.status(400).json({ error: 'Já existe outro livro com esse código.' });
+        }
+
+        const docRef = db.collection('livros').doc(req.params.id);
+        const oldDoc = await docRef.get();
+        const previousData = oldDoc.exists ? oldDoc.data() : null;
+
+        const docAtual = await docRef.get();
+        const atual = docAtual.data() || {};
+        const novaQtd = parseInt(quantidade, 10) || atual.quantidade || 1;
+        const emprestados = (atual.quantidade || 1) - (atual.quantidadeDisponivel ?? (atual.emprestado ? 0 : 1));
+        const novaDisp = Math.max(0, novaQtd - emprestados);
+
+        const data = {
+            codigo,
+            nome,
+            autor,
+            quantidade: novaQtd,
+            quantidadeDisponivel: novaDisp,
+            emprestado: novaDisp <= 0,
+            atualizadoEm: new Date()
+        };
+        await docRef.update(data);
+        await registrarLog(req.user.email, 'editou', 'livros', req.params.id, previousData, data, `${nome} — ${autor}`);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao editar livro.' });
+    }
+});
+
+app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
+    try {
+        const docRef = db.collection('livros').doc(req.params.id);
+        const doc = await docRef.get();
+        if (!doc.exists) return res.status(404).json({ error: 'Livro não encontrado.' });
+        const livro = doc.data();
+
+        const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+        const quantidade = livro.quantidade || 1;
+        if (disponiveis < quantidade) {
+            return res.status(400).json({
+                error: `Não é possível excluir: ${quantidade - disponiveis} cópia(s) deste livro estão emprestadas no momento.`
+            });
+        }
+
+        const historico = await db.collection('emprestimos')
+            .where('livroId', '==', req.params.id)
+            .limit(1)
+            .get();
+        const temHistorico = !historico.empty;
+        const deleteHistory = req.query.deleteHistory === 'true';
+
+        if (temHistorico && !deleteHistory) {
+            return res.status(409).json({
+                error: 'Este livro possui histórico de empréstimos.',
+                temHistorico: true,
+                message: 'Confirme se deseja excluir o histórico também.'
+            });
+        }
+
+        const previousData = livro;
+
+        if (deleteHistory && temHistorico) {
+            const hist = await db.collection('emprestimos')
+                .where('livroId', '==', req.params.id)
+                .get();
+            const batch = db.batch();
+            hist.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+        }
+
+        await docRef.delete();
+        await registrarLog(req.user.email, 'excluiu', 'livros', req.params.id, previousData, null, `${livro.nome}${deleteHistory ? ' (histórico incluído)' : ''}`);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao excluir livro.' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// BIBLIOTECA — EMPRÉSTIMOS
+// ══════════════════════════════════════════════════════════════════
+app.get('/api/emprestimos', requireAdmin, async (req, res) => {
+    try {
+        const snap = req.query.ativos === 'true'
+            ? await db.collection('emprestimos').where('devolvido', '==', false).get()
+            : await db.collection('emprestimos').get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar empréstimos.' });
+    }
+});
+
+app.get('/api/emprestimos/aluno/:id', requireAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('emprestimos')
+            .where('alunoId', '==', req.params.id)
+            .get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao buscar empréstimos do cadastrado.' });
+    }
+});
+
+app.get('/api/emprestimos/livro/:id', requireAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('emprestimos')
+            .where('livroId', '==', req.params.id)
+            .get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao buscar empréstimos do livro.' });
+    }
+});
+
+app.post('/api/emprestimos', requireAdmin, async (req, res) => {
+    try {
+        const { alunoId, livroId, quantidade } = req.body;
+        if (!alunoId || !livroId) {
+            return res.status(400).json({ error: 'Cadastrado e livro são obrigatórios.' });
+        }
+
+        const qtd = parseInt(quantidade, 10) || 1;
+        if (qtd < 1) return res.status(400).json({ error: 'Quantidade inválida.' });
+
+        const alunoRef = db.collection('alunosBib').doc(alunoId);
+        const livroRef = db.collection('livros').doc(livroId);
+        let logNomeAluno = '', logNomeLivro = '';
+
+        await db.runTransaction(async t => {
+            const [alunoSnap, livroSnap] = await Promise.all([
+                t.get(alunoRef),
+                t.get(livroRef)
+            ]);
+
+            if (!alunoSnap.exists) throw Object.assign(new Error('Cadastrado não encontrado.'), { code: 404 });
+            if (!livroSnap.exists) throw Object.assign(new Error('Livro não encontrado.'), { code: 404 });
+
+            const livro = livroSnap.data();
+            const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+
+            if (disponiveis <= 0) {
+                throw Object.assign(new Error('Não há cópias disponíveis para empréstimo.'), { code: 400 });
+            }
+            if (qtd > disponiveis) {
+                throw Object.assign(
+                    new Error(`Só existem ${disponiveis} exemplar(es) disponível(is).`),
+                    { code: 400 }
+                );
+            }
+
+            const aluno = alunoSnap.data();
+            logNomeAluno = aluno.nome;
+            logNomeLivro = livro.nome;
+
+            const empRef = db.collection('emprestimos').doc();
+            t.set(empRef, {
+                alunoId,
+                livroId,
+                alunoNome: aluno.nome,
+                alunoMatricula: aluno.matricula,
+                livroNome: livro.nome,
+                livroCodigo: livro.codigo,
+                quantidade: qtd,
+                dataEmprestimo: new Date(),
+                devolvido: false
+            });
+
+            const novaDisp = disponiveis - qtd;
+            t.update(livroRef, {
+                quantidadeDisponivel: novaDisp,
+                emprestado: novaDisp <= 0
+            });
+        });
+
+        await registrarLog(req.user.email, 'emprestou', 'emprestimos', null, null, { alunoId, livroId, qtd }, `${logNomeAluno} ← ${qtd}x ${logNomeLivro}`);
+        res.json({ success: true });
+    } catch (e) {
+        if (e.code === 404) return res.status(404).json({ error: e.message });
+        if (e.code === 400) return res.status(400).json({ error: e.message });
+        console.error('ERRO ao registrar empréstimo:', e);
+        res.status(500).json({ error: 'Erro ao registrar empréstimo.', detalhe: e.message });
+    }
+});
+
+app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
+    try {
+        const empRef = db.collection('emprestimos').doc(req.params.id);
+        const { quantidade } = req.body;
+        let logDetalhes = '';
+
+        await db.runTransaction(async t => {
+            const empSnap = await t.get(empRef);
+            if (!empSnap.exists) {
+                throw Object.assign(new Error('Empréstimo não encontrado.'), { code: 404 });
+            }
+
+            const emprestimo = empSnap.data();
+            const { livroId, alunoNome, livroNome, devolvido, quantidade: qtdEmprestada } = emprestimo;
+
+            if (devolvido) {
+                throw Object.assign(new Error('Este livro já foi devolvido.'), { code: 400 });
+            }
+
+            const totalEmprestado = qtdEmprestada || 1;
+            const qtdDevolver = parseInt(quantidade, 10) || totalEmprestado;
+
+            if (qtdDevolver < 1 || qtdDevolver > totalEmprestado) {
+                throw Object.assign(
+                    new Error(`Quantidade inválida. O empréstimo tem ${totalEmprestado} exemplar(es).`),
+                    { code: 400 }
+                );
+            }
+
+            const livroRef = db.collection('livros').doc(livroId);
+            const livroSnap = await t.get(livroRef);
+            const livro = livroSnap.data() || {};
+            const novaDisp = (livro.quantidadeDisponivel ?? 0) + qtdDevolver;
+
+            if (qtdDevolver < totalEmprestado) {
+                const novaQtd = totalEmprestado - qtdDevolver;
+                t.update(empRef, { quantidade: novaQtd });
+                logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (parcial, resta ${novaQtd})`;
+            } else {
+                t.update(empRef, { devolvido: true, dataDevolucao: new Date() });
+                logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (total)`;
+            }
+
+            t.update(livroRef, {
+                quantidadeDisponivel: novaDisp,
+                emprestado: false
+            });
+        });
+
+        await registrarLog(req.user.email, 'devolveu', 'emprestimos', req.params.id, null, { quantidade }, logDetalhes);
+        res.json({ success: true });
+    } catch (e) {
+        if (e.code === 404) return res.status(404).json({ error: e.message });
+        if (e.code === 400) return res.status(400).json({ error: e.message });
+        console.error('ERRO ao registrar devolução:', e);
+        res.status(500).json({ error: 'Erro ao registrar devolução.' });
+    }
+});
 
 // ══════════════════════════════════════════════════════════════════
 // NOVA ABA: ADMINISTRADORES
