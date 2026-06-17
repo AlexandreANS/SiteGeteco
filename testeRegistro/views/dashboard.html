@@ -483,7 +483,7 @@
             color: var(--txt-muted);
         }
 
-        /* ===== CORREÇÃO DOS SELECTS (texto branco em fundo branco) ===== */
+        /* ===== CORREÇÃO DOS SELECTS ===== */
         select,
         .bib-select,
         .filtro-tipo-select {
@@ -492,7 +492,6 @@
             appearance: none !important;
             background-color: var(--bg-input) !important;
             color: var(--txt-primary) !important;
-            /* seta customizada para dropdown */
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
             background-repeat: no-repeat !important;
             background-position: right 0.7em center !important;
@@ -500,18 +499,117 @@
             padding-right: 2.5rem !important;
         }
 
-        /* Remove a seta em selects que são listas abertas (size > 1) */
         select[size],
         .bib-select[size] {
             background-image: none !important;
             padding-right: 4px !important;
         }
 
-        /* Estilização das opções dentro de qualquer select */
         option,
         .bib-select option {
             background-color: var(--bg-card) !important;
             color: var(--txt-primary) !important;
+        }
+
+        /* ===== NOVOS ESTILOS PARA ABA ADMINS ===== */
+        .admin-list-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .admin-item:last-child {
+            border-bottom: none;
+        }
+        .admin-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .admin-email {
+            font-weight: 600;
+            color: var(--txt-primary);
+        }
+        .admin-level {
+            font-size: 0.8rem;
+            color: var(--txt-muted);
+        }
+        .admin-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-edit-level {
+            background: var(--blue-dim);
+            color: var(--blue);
+            border: 1px solid rgba(58, 130, 246, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .btn-edit-level:hover {
+            background: var(--blue);
+            color: white;
+        }
+        .btn-delete-admin {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .btn-delete-admin:hover {
+            background: var(--red);
+            color: white;
+        }
+        .pending-admin-solicitations {
+            margin-top: 1.5rem;
+        }
+        .solicitation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .approval-count {
+            font-size: 0.75rem;
+            color: var(--txt-muted);
+        }
+        .btn-approve-admin {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, .2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .btn-approve-admin:hover {
+            background: var(--green);
+            color: white;
+        }
+        .btn-approve-admin:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -546,6 +644,7 @@
             <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
             <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
             <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
+            <button class="tab-btn" data-tab="admins" id="tab-admins" style="display:none;">Administradores</button>
             <button class="tab-btn" data-tab="logs">Logs</button>
         </div>
 
@@ -738,6 +837,23 @@
             </div>
         </div>
 
+        <!-- ═══════════════ ABA: ADMINISTRADORES ═══════════════ -->
+        <div id="admins" class="tab-pane">
+            <div class="admin-list-container">
+                <h3>Administradores Aprovados</h3>
+                <div id="admin-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
+
+            <div class="admin-list-container pending-admin-solicitations">
+                <h3>⏳ Solicitações de Administradores Pendentes</h3>
+                <div id="admin-solicitations-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- ── ABA: LOGS ── -->
         <div id="logs" class="tab-pane">
             <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
@@ -834,6 +950,25 @@
         </div>
     </div>
 
+    <!-- Modal: Editar nível de admin (nova) -->
+    <div id="edit-level-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Editar Nível do Administrador</h2>
+            <p id="edit-level-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
+            <div class="input-group">
+                <label>Novo Nível (1-8)</label>
+                <input type="number" id="new-level" min="1" max="8" value="1" required>
+                <small style="color:var(--txt-muted);display:block;margin-top:4px;">
+                    Níveis 1 (Diretor) e 8 (TI) têm acesso total.
+                </small>
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-edit-level" class="btn-confirm">Solicitar Alteração</button>
+                <button id="btn-cancel-edit-level" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const tabs = document.querySelectorAll('.tab-btn');
@@ -847,6 +982,7 @@
         let itemToDelete = null;
         let itemToEdit = null;
         let pendingAcceptUid = null;
+        let currentEditTarget = null; // para modal editar nível
 
         let userInfo = { email: '', nivel: null, isSuperAdmin: false };
 
@@ -878,7 +1014,6 @@
             };
         }
 
-        // Sobrescreve alert e confirm nativos para usar modais
         window.alert = function(msg) { showMessage('Aviso', msg); };
         window.confirm = function(msg) {
             return new Promise((resolve) => {
@@ -891,12 +1026,16 @@
                 userInfo = await apiRequest('me');
                 const badge = document.getElementById('user-nivel-info');
                 const banner = document.getElementById('banner-nivel-limitado');
+                const tabAdmins = document.getElementById('tab-admins');
                 if (badge) {
                     const nivelLabel = `Administrador nível Atual: ${userInfo.nivel ?? '?'}`;
                     badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
                 }
                 if (banner && !userInfo.isSuperAdmin) {
                     banner.style.display = 'block';
+                }
+                if (tabAdmins) {
+                    tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
                 }
             } catch (e) {
                 console.warn('Não foi possível carregar informações do usuário:', e);
@@ -947,6 +1086,10 @@
                 if (tab.dataset.tab === 'gerenciar') loadManagementContent();
                 if (tab.dataset.tab === 'logs') loadLogsContent();
                 if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+                if (tab.dataset.tab === 'admins') {
+                    loadAdmins();
+                    loadAdminSolicitations();
+                }
             });
         });
 
@@ -1866,6 +2009,144 @@
                 console.error('Erro ao carregar biblioteca:', err);
             }
         }
+
+        // ═══════════════════════════ ADMINISTRADORES ═══════════════════════════
+        async function loadAdmins() {
+            if (!userInfo.isSuperAdmin) return;
+            try {
+                const admins = await apiRequest('admins');
+                const container = document.getElementById('admin-list');
+                if (!admins.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted)">Nenhum administrador encontrado.</p>';
+                    return;
+                }
+                container.innerHTML = admins.map(a => `
+                    <div class="admin-item" data-uid="${a.uid}">
+                        <div class="admin-info">
+                            <span class="admin-email">${escapeHtml(a.email)}</span>
+                            <span class="admin-level">Nível: ${a.nivel}</span>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn-edit-level" data-uid="${a.uid}" data-email="${a.email}" data-current="${a.nivel}">Editar Nível</button>
+                            <button class="btn-delete-admin" data-uid="${a.uid}" data-email="${a.email}">Excluir</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('admin-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar administradores.</p>';
+            }
+        }
+
+        async function loadAdminSolicitations() {
+            if (!userInfo.isSuperAdmin) return;
+            try {
+                const solicitations = await apiRequest('admin-solicitations');
+                const container = document.getElementById('admin-solicitations-list');
+                if (!solicitations.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted);font-style:italic;">Nenhuma solicitação pendente.</p>';
+                    return;
+                }
+                container.innerHTML = solicitations.map(s => {
+                    const alreadyApproved = s.approvals && s.approvals.includes(userInfo.email);
+                    const approvalCount = s.approvals ? s.approvals.length : 0;
+                    const reqCount = s.requiredApprovals || 2;
+                    const btnDisabled = alreadyApproved ? 'disabled' : '';
+                    const btnText = alreadyApproved ? '✓ Aprovado' : 'Aprovar';
+                    let descricao = '';
+                    if (s.type === 'edit') {
+                        descricao = `Alterar nível de ${escapeHtml(s.targetEmail)} para ${s.newNivel}`;
+                    } else if (s.type === 'delete') {
+                        descricao = `Excluir administrador ${escapeHtml(s.targetEmail)}`;
+                    }
+                    return `
+                        <div class="solicitation-item" data-id="${s.id}">
+                            <div>
+                                <strong>${escapeHtml(s.requestedBy)}</strong> solicitou: ${descricao}
+                                <br><span class="approval-count">Aprovações: ${approvalCount}/${reqCount} ${s.approvals ? '— ' + s.approvals.join(', ') : ''}</span>
+                            </div>
+                            <button class="btn-approve-admin" data-id="${s.id}" ${btnDisabled}>${btnText}</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('admin-solicitations-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar solicitações.</p>';
+            }
+        }
+
+        // Eventos para ações na lista de admins
+        document.getElementById('admin-list').addEventListener('click', (e) => {
+            const uid = e.target.dataset.uid;
+            if (!uid) return;
+            if (e.target.classList.contains('btn-edit-level')) {
+                currentEditTarget = { uid, email: e.target.dataset.email };
+                document.getElementById('edit-level-email').textContent = e.target.dataset.email;
+                document.getElementById('new-level').value = e.target.dataset.current;
+                document.getElementById('edit-level-modal').classList.add('active');
+            } else if (e.target.classList.contains('btn-delete-admin')) {
+                const email = e.target.dataset.email;
+                showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`, 
+                    async () => {
+                        try {
+                            await apiRequest('admin-solicitations', 'POST', {
+                                type: 'delete',
+                                targetUid: uid,
+                                targetEmail: email
+                            });
+                            showMessage('Sucesso', 'Solicitação de exclusão enviada para aprovação.');
+                            await loadAdminSolicitations();
+                        } catch (err) {
+                            showMessage('Erro', 'Não foi possível criar a solicitação.');
+                        }
+                    }
+                );
+            }
+        });
+
+        // Modal editar nível
+        document.getElementById('btn-confirm-edit-level').addEventListener('click', async () => {
+            if (!currentEditTarget) return;
+            const newNivel = parseInt(document.getElementById('new-level').value, 10);
+            if (isNaN(newNivel) || newNivel < 1 || newNivel > 8) {
+                showMessage('Erro', 'Nível inválido (1-8).');
+                return;
+            }
+            try {
+                await apiRequest('admin-solicitations', 'POST', {
+                    type: 'edit',
+                    targetUid: currentEditTarget.uid,
+                    targetEmail: currentEditTarget.email,
+                    newNivel
+                });
+                showMessage('Sucesso', 'Solicitação de alteração de nível enviada para aprovação.');
+                document.getElementById('edit-level-modal').classList.remove('active');
+                currentEditTarget = null;
+                await loadAdminSolicitations();
+            } catch (err) {
+                showMessage('Erro', 'Não foi possível criar a solicitação.');
+            }
+        });
+
+        document.getElementById('btn-cancel-edit-level').addEventListener('click', () => {
+            document.getElementById('edit-level-modal').classList.remove('active');
+            currentEditTarget = null;
+        });
+
+        // Aprovação de solicitações de admin
+        document.getElementById('admin-solicitations-list').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-approve-admin');
+            if (!btn || btn.disabled) return;
+            const solicitationId = btn.dataset.id;
+            btn.disabled = true;
+            try {
+                await apiRequest(`admin-solicitations/${solicitationId}/approve`, 'POST');
+                showMessage('Sucesso', 'Aprovação registrada. Se foi a segunda, a ação já foi executada!');
+                await loadAdminSolicitations();
+                await loadAdmins();
+            } catch (err) {
+                showMessage('Erro', 'Erro ao aprovar.');
+                btn.disabled = false;
+            }
+        });
 
         async function init() {
             await carregarUserInfo();

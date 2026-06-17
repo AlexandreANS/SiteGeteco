@@ -8,7 +8,7 @@ const fs = require("fs");
 const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
-const dns = require("dns").promises;  // <-- NOVO: para validar registros MX
+const dns = require("dns").promises;
 
 // --- INICIALIZAÇÃO DO FIREBASE ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -170,7 +170,7 @@ async function isEmailDomainValid(email) {
         const addresses = await dns.resolveMx(domain);
         return addresses && addresses.length > 0;
     } catch (err) {
-        return false; // sem MX = domínio inválido
+        return false;
     }
 }
 
@@ -192,13 +192,11 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Formato de e‑mail inválido.' });
         }
 
-        // Valida domínio (MX)
         const domainValid = await isEmailDomainValid(email);
         if (!domainValid) {
             return res.status(400).json({ error: 'Domínio de e‑mail inválido ou não consegue receber mensagens.' });
         }
 
-        // Cria usuário no Firebase Auth via Admin SDK
         let userRecord;
         try {
             userRecord = await auth.createUser({
@@ -213,10 +211,8 @@ app.post('/register', async (req, res) => {
             throw e;
         }
 
-        // Define claims como pendente
         await auth.setCustomUserClaims(userRecord.uid, { status: 'pending' });
 
-        // Salva registro no Firestore
         await db.collection('registrations').doc(userRecord.uid).set({
             email,
             uid: userRecord.uid,
@@ -224,10 +220,8 @@ app.post('/register', async (req, res) => {
             requestedAt: new Date()
         });
 
-        // Gera link de verificação (em produção enviar por e‑mail com nodemailer)
         const verificationLink = await auth.generateEmailVerificationLink(email);
         console.log('Link de verificação:', verificationLink);
-        // TODO: integrar envio real de e‑mail com nodemailer ou outro serviço
 
         res.json({ success: true, message: 'Conta criada com sucesso. Verifique seu e‑mail para confirmar.' });
     } catch (e) {
@@ -264,7 +258,7 @@ async function registrarLog(adminEmail, action, collection, docId, previousData,
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CRUD GENÉRICO (sem verificação de superadmin, todos os admins executam)
+// CRUD GENÉRICO
 // ══════════════════════════════════════════════════════════════════
 const collections = ['noticias', 'novidades', 'cursos', 'contato', 'cargos'];
 
@@ -447,7 +441,7 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// PENDENTES (apenas listagem e aceitar/negar mantido para aprovação de admins)
+// PENDENTES (listagem e aceitar/negar)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/pendentes', requireAdmin, async (req, res) => {
     try {
@@ -461,7 +455,6 @@ app.get('/api/pendentes', requireAdmin, async (req, res) => {
     }
 });
 
-// Aceitar admin — apenas superadmin (nível 1 ou 8)
 app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -523,7 +516,6 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     }
 });
 
-// Rollback — restaura o estado anterior
 app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -562,7 +554,7 @@ app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — ALUNOS/PROFESSORES (com geração automática de matrícula)
+// BIBLIOTECA — ALUNOS/PROFESSORES
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/alunosBib', requireAdmin, async (req, res) => {
     try {
@@ -965,6 +957,154 @@ app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
         if (e.code === 400) return res.status(400).json({ error: e.message });
         console.error('ERRO ao registrar devolução:', e);
         res.status(500).json({ error: 'Erro ao registrar devolução.' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// NOVA ABA: ADMINISTRADORES (apenas super admins)
+// ══════════════════════════════════════════════════════════════════
+
+// Lista todos os admins aprovados
+app.get('/api/admins', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Acesso negado.' });
+        }
+        const snap = await db.collection('registrations')
+            .where('status', '==', 'approved')
+            .get();
+        const admins = [];
+        snap.forEach(doc => {
+            const data = doc.data();
+            admins.push({
+                uid: doc.id,
+                email: data.email,
+                nivel: data.nivel
+            });
+        });
+        res.json(admins);
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar administradores.' });
+    }
+});
+
+// Criar solicitação de ação administrativa (editar nível ou excluir)
+app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem criar este tipo de solicitação.' });
+        }
+        const { type, targetUid, targetEmail, newNivel } = req.body;
+        if (!type || !targetUid || !targetEmail) {
+            return res.status(400).json({ error: 'Dados incompletos.' });
+        }
+        if (type !== 'edit' && type !== 'delete') {
+            return res.status(400).json({ error: 'Tipo inválido.' });
+        }
+        if (type === 'edit' && (newNivel === undefined || newNivel < 1 || newNivel > 8)) {
+            return res.status(400).json({ error: 'Nível inválido.' });
+        }
+
+        const solicitation = {
+            type,
+            targetUid,
+            targetEmail,
+            requestedBy: req.user.email,
+            requestedAt: new Date(),
+            status: 'pending',
+            approvals: [],
+            requiredApprovals: 2
+        };
+        if (type === 'edit') {
+            solicitation.newNivel = newNivel;
+        }
+
+        const ref = await db.collection('adminSolicitations').add(solicitation);
+        res.json({ success: true, id: ref.id });
+    } catch (e) {
+        console.error('Erro ao criar solicitação admin:', e);
+        res.status(500).json({ error: 'Erro interno.' });
+    }
+});
+
+// Listar solicitações pendentes de admin
+app.get('/api/admin-solicitations', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Acesso negado.' });
+        }
+        const snap = await db.collection('adminSolicitations')
+            .where('status', '==', 'pending')
+            .get();
+        const solicitations = [];
+        snap.forEach(doc => {
+            solicitations.push({ id: doc.id, ...doc.data() });
+        });
+        res.json(solicitations);
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar solicitações.' });
+    }
+});
+
+// Aprovar solicitação de admin (ao atingir 2 aprovações, executa a ação)
+app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem aprovar.' });
+        }
+
+        const docRef = db.collection('adminSolicitations').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Solicitação não encontrada.' });
+        }
+        const solicitation = docSnap.data();
+        if (solicitation.status !== 'pending') {
+            return res.status(400).json({ error: 'Solicitação já foi processada.' });
+        }
+        if (solicitation.approvals.includes(req.user.email)) {
+            return res.status(400).json({ error: 'Você já aprovou esta solicitação.' });
+        }
+
+        const newApprovals = [...solicitation.approvals, req.user.email];
+        let newStatus = 'pending';
+        if (newApprovals.length >= solicitation.requiredApprovals) {
+            newStatus = 'approved';
+        }
+
+        await docRef.update({ approvals: newApprovals, status: newStatus });
+
+        if (newStatus === 'approved') {
+            const { type, targetUid, newNivel } = solicitation;
+            try {
+                if (type === 'edit') {
+                    await auth.setCustomUserClaims(targetUid, { nivel: newNivel, isAdmin: true });
+                    await db.collection('registrations').doc(targetUid).update({ nivel: newNivel });
+                } else if (type === 'delete') {
+                    await auth.deleteUser(targetUid);
+                    await db.collection('registrations').doc(targetUid).delete();
+                }
+                await docRef.update({ executedAt: new Date() });
+                await registrarLog(
+                    req.user.email,
+                    `executou ação admin (${type})`,
+                    'admins',
+                    targetUid,
+                    null,
+                    null,
+                    `Ação solicitada por ${solicitation.requestedBy} aprovada por ${newApprovals.join(', ')}`
+                );
+            } catch (execError) {
+                console.error('Erro ao executar ação admin:', execError);
+                await docRef.update({ status: 'error', errorMessage: execError.message });
+                return res.status(500).json({ error: 'Ação aprovada mas falhou na execução: ' + execError.message });
+            }
+        }
+
+        res.json({ success: true, executed: newStatus === 'approved' });
+    } catch (e) {
+        console.error('Erro ao aprovar solicitação admin:', e);
+        res.status(500).json({ error: 'Erro interno.' });
     }
 });
 
