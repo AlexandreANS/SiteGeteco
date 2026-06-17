@@ -12,10 +12,6 @@ const cloudinary = require("cloudinary").v2;
 // ══════════════════════════════════════════════════════════════════
 // VALIDAÇÃO DE E-MAIL — AbstractAPI
 // ══════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-
-=======
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 const ABSTRACT_EMAIL_API_KEY = "16dafc1181bc4ee98d8da4206b21fca6";
 
@@ -31,11 +27,7 @@ async function validarEmail(email) {
         const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${ABSTRACT_EMAIL_API_KEY}&email=${encodeURIComponent(emailLimpo)}`;
         const res = await fetch(url);
         const data = await res.json();
-<<<<<<< HEAD
-        console.log(`[AbstractAPI] ${emailLimpo} → deliverability=${data.deliverability} is_disposable=${data.is_disposable_email?.value}`);
-=======
         console.log(`[AbstractAPI] ${emailLimpo} → deliverability=${data.deliverability} is_disposable=${data.is_disposable_email?.value} is_valid_format=${data.is_valid_format?.value}`);
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
         if (data.is_disposable_email?.value === true) {
             return { valid: false, reason: 'E-mails temporários ou descartáveis não são permitidos.' };
         }
@@ -745,14 +737,12 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
             .orderBy('timestamp', 'desc')
             .limit(50)
             .get();
-        res.json(snap.docs.map(d => d.data()));
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
         res.status(500).json({ error: 'Erro ao buscar logs.' });
     }
 });
 
-<<<<<<< HEAD
-=======
 app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -953,7 +943,6 @@ app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     }
 });
 
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
         let snap;
@@ -1095,8 +1084,6 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
         if (!nome || !tipo) {
             return res.status(400).json({ error: 'Nome e tipo são obrigatórios.' });
         }
-<<<<<<< HEAD
-=======
 
         // 🔧 GERAÇÃO AUTOMÁTICA DE MATRÍCULA PARA PROFESSOR
         if (tipo === 'professor' && !matricula) {
@@ -1122,32 +1109,7 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
         if (!matricula) {
             return res.status(400).json({ error: 'Matrícula é obrigatória para alunos.' });
         }
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 
-        // 🔧 Geração automática para professor se a matrícula não foi enviada
-        if (tipo === 'professor' && !matricula) {
-            const professoresSnap = await db.collection('alunosBib')
-                .where('tipo', '==', 'professor')
-                .orderBy('matricula', 'desc')
-                .limit(1)
-                .get();
-            
-            let ultimoNumero = 0;
-            if (!professoresSnap.empty) {
-                const ultimaMatricula = professoresSnap.docs[0].data().matricula;
-                const numeroString = ultimaMatricula.replace('SGBGP', '');
-                ultimoNumero = parseInt(numeroString, 10) || 0;
-            }
-            const proximoNumero = ultimoNumero + 1;
-            matricula = `SGBGP${String(proximoNumero).padStart(3, '0')}`;
-        }
-
-        // Validação de matrícula obrigatória para aluno
-        if (!matricula) {
-            return res.status(400).json({ error: 'Matrícula é obrigatória para alunos.' });
-        }
-
-        // Verificar duplicidade de matrícula
         const existente = await db.collection('alunosBib')
             .where('matricula', '==', matricula)
             .limit(1)
@@ -1156,7 +1118,6 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Já existe um cadastro com essa matrícula.' });
         }
 
-        // Salva via solicitação ou diretamente
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
                 user: req.user,
@@ -1182,17 +1143,11 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
             details: `${nome} (${matricula}) [${tipo}]`,
             timestamp: new Date()
         });
-<<<<<<< HEAD
-        res.json({ success: true, id: ref.id, matricula });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao cadastrar.' });
-=======
 
         res.json({ success: true, id: ref.id, matricula });
     } catch (e) {
         console.error('Erro ao cadastrar:', e);
         res.status(500).json({ error: 'Erro ao cadastrar. ' + e.message });
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
     }
 });
 
@@ -1279,7 +1234,7 @@ app.delete('/api/alunosBib/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — LIVROS (mantido igual, sem alterações)
+// BIBLIOTECA — LIVROS
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/livros', async (req, res) => {
     try {
@@ -1469,11 +1424,7 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-// BIBLIOTECA — EMPRÉSTIMOS (mantido igual)
-=======
 // BIBLIOTECA — EMPRÉSTIMOS
->>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
