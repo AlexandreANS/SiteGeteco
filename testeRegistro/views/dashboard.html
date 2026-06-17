@@ -94,7 +94,6 @@
         select[size], .bib-select[size] { background-image: none !important; padding-right: 4px !important; }
         option, .bib-select option { background-color: var(--bg-card) !important; color: var(--txt-primary) !important; }
 
-        /* ===== NOVOS ESTILOS PARA ABA ADMINS ===== */
         .admin-list-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
         .admin-list { display: flex; flex-direction: column; gap: 0.75rem; }
         .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
@@ -114,1215 +113,1599 @@
         .btn-approve-admin:hover { background: var(--green); color: white; }
         .btn-approve-admin:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        #logs-list {
-            max-height: 70vh;
-            overflow-y: auto;
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-        #logs-list li {
-            padding: 0.6rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-        .log-info {
-            flex: 1;
-        }
-        .log-action {
-            font-weight: 500;
-        }
-        .log-detail {
-            font-size: 0.82rem;
-            opacity: 0.9;
-        }
-        .log-meta {
-            font-size: 0.72rem;
-            color: var(--txt-muted);
-        }
+        #logs-list { max-height: 70vh; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; }
+        #logs-list li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+        .log-info { flex: 1; }
+        .log-action { font-weight: 500; }
+        .log-detail { font-size: 0.82rem; opacity: 0.9; }
+        .log-meta { font-size: 0.72rem; color: var(--txt-muted); }
     </style>
 </head>
 <body class="dashboard-body">
-    <!-- ... (todo o HTML permanece igual, com os modais, sidebar, etc.) ... -->
-    <!-- (copie o corpo completo do meu último dashboard.html) -->
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
+            <h2>GETECO Admin</h2>
+        </div>
+        <div id="user-nivel-info">Carregando...</div>
+        <div id="banner-nivel-limitado">⚠️ Nível limitado — suas ações criam solicitações que precisam de aprovação.</div>
+        <div class="sidebar-menu">
+            <h3>Aprovações Pendentes</h3>
+            <div id="pending-admins-container">
+                <div id="pending-admins-list"><p>A carregar...</p></div>
+            </div>
+        </div>
+        <a href="/logout" class="logout-btn">
+            <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+            </svg>
+            Sair
+        </a>
+    </aside>
+
+    <main class="main-content">
+        <header><h1>Painel de Gestão</h1></header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
+            <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
+            <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
+            <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
+            <button class="tab-btn" data-tab="admins" id="tab-admins" style="display:none;">Administradores</button>
+            <button class="tab-btn" data-tab="logs">Logs</button>
+        </div>
+
+        <!-- ── ABA: CADASTRAR ── -->
+        <div id="cadastrar" class="tab-pane active">
+            <div class="grid-forms">
+                <div class="form-container" data-section="noticias">
+                    <h3>Nova Notícia</h3>
+                    <form>
+                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Notícia</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="novidades">
+                    <h3>Nova Novidade/Infraestrutura</h3>
+                    <form>
+                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
+                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Novidade</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="cargos">
+                    <h3>Novo Cargo/Função</h3>
+                    <form>
+                        <div class="input-group"><label>Nome do Cargo</label><input type="text" name="cargo" placeholder="Ex: Professor, Diretor" required></div>
+                        <div class="input-group"><label>Nível Hierárquico</label><input type="number" name="nivel" placeholder="1 = Mais alto" required></div>
+                        <button type="submit" class="btn-submit">Salvar Cargo</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="docente">
+                    <h3>Novo Docente</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group">
+                            <label>Cargo/Função</label>
+                            <select name="cargo" id="docente-cargo-select" required>
+                                <option value="">Carregando cargos...</option>
+                            </select>
+                        </div>
+                        <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
+                        <div class="input-group"><label>Foto</label><input type="file" name="foto" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Docente</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="cursos">
+                    <h3>Novo Curso</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
+                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
+                        <button type="submit" class="btn-submit">Salvar Curso</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="contato">
+                    <h3>Novo Contacto</h3>
+                    <form>
+                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Email</label><input type="email" name="email" required></div>
+                        <button type="submit" class="btn-submit">Salvar Contacto</button>
+                    </form>
+                </div>
+                <!-- ⚡️ FORMULÁRIO SEM MATRÍCULA -->
+                <div class="form-container" data-section="alunosBib">
+                    <h3>Novo Cadastro (Biblioteca)</h3>
+                    <form>
+                        <div class="input-group">
+                            <label>Tipo</label>
+                            <select name="tipo" id="cad-tipo" required>
+                                <option value="aluno">Aluno</option>
+                                <option value="professor">Professor</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Nome</label>
+                            <input type="text" name="nome" required>
+                        </div>
+                        <button type="submit" class="btn-submit">Salvar</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="livros">
+                    <h3>Novo Livro</h3>
+                    <form>
+                        <div class="input-group"><label>Código</label><input type="text" name="codigo" required></div>
+                        <div class="input-group"><label>Título</label><input type="text" name="nome" required></div>
+                        <div class="input-group"><label>Autor</label><input type="text" name="autor" required></div>
+                        <div class="input-group">
+                            <label>Quantidade de Exemplares</label>
+                            <input type="number" name="quantidade" min="1" value="1" required>
+                        </div>
+                        <button type="submit" class="btn-submit">Salvar Livro</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: GERIR ── -->
+        <div id="gerenciar" class="tab-pane"></div>
+
+        <!-- ── ABA: INFORMAÇÕES ── -->
+        <div id="informacoes" class="tab-pane">
+            <div class="grid-forms">
+                <div class="form-container" data-section="alunos">
+                    <h3>Informações para Alunos</h3>
+                    <form>
+                        <div class="input-group"><label>Semana de Provas</label><input type="text" name="semanaProvas"></div>
+                        <div class="input-group"><label>Gincana</label><input type="text" name="gincana"></div>
+                        <div class="input-group"><label>Feira de Ciências</label><input type="text" name="feiraCiencias"></div>
+                        <div class="input-group"><label>Semana Cultural</label><input type="text" name="semanaCultural"></div>
+                        <div class="input-group"><label>Férias</label><input type="text" name="ferias"></div>
+                        <button type="submit" class="btn-submit">Atualizar Alunos</button>
+                    </form>
+                </div>
+                <div class="form-container" data-section="responsaveis">
+                    <h3>Informações para Responsáveis</h3>
+                    <form>
+                        <div class="input-group"><label>Reunião de Pais</label><input type="text" name="reuniaoPais"></div>
+                        <div class="input-group"><label>Entrega de Boletins</label><input type="text" name="entregaBoletins"></div>
+                        <button type="submit" class="btn-submit">Atualizar Responsáveis</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: BIBLIOTECA ── -->
+        <div id="biblioteca" class="tab-pane">
+            <div class="grid-forms">
+                <div class="form-container">
+                    <h3>Registrar Empréstimo</h3>
+                    <div class="input-group">
+                        <label>Filtrar Cadastrados</label>
+                        <select id="filtro-tipo-emp" class="filtro-tipo-select">
+                            <option value="todos">Todos</option>
+                            <option value="aluno">Apenas Alunos</option>
+                            <option value="professor">Apenas Professores</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Cadastrado (Aluno/Professor)</label>
+                        <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
+                        <select id="sel-aluno-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Livro disponível</label>
+                        <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
+                        <select id="sel-livro-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group" id="grupo-qtd-emp" style="display:none;">
+                        <label>Quantidade de exemplares</label>
+                        <input type="number" id="qtd-emprestimo" min="1" value="1">
+                        <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
+                    </div>
+                    <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Cadastrado</h3>
+                    <div class="input-group">
+                        <label>Filtrar Cadastrados</label>
+                        <select id="filtro-tipo-hist" class="filtro-tipo-select">
+                            <option value="todos">Todos</option>
+                            <option value="aluno">Apenas Alunos</option>
+                            <option value="professor">Apenas Professores</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Selecionar cadastrado</label>
+                        <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar...">
+                        <select id="sel-aluno-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Livro</h3>
+                    <div class="input-group">
+                        <label>Selecionar livro</label>
+                        <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
+                        <select id="sel-livro-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+            </div>
+            <div class="list-container" style="margin-top:1.5rem">
+                <div class="bib-header">
+                    <h3>Empréstimos em Andamento</h3>
+                    <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
+                </div>
+                <div id="tabela-emprestimos-container">
+                    <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ ABA: ADMINISTRADORES ═══════════════ -->
+        <div id="admins" class="tab-pane">
+            <div class="admin-list-container">
+                <h3>Administradores Aprovados</h3>
+                <div id="admin-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
+
+            <div class="admin-list-container pending-admin-solicitations">
+                <h3>⏳ Solicitações de Administradores Pendentes</h3>
+                <div id="admin-solicitations-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ABA: LOGS ── -->
+        <div id="logs" class="tab-pane">
+            <div class="list-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="margin:0;">Histórico de Atividades</h3>
+                    <div id="clear-history-container" style="display:none;">
+                        <button id="btn-clear-history" class="btn-clear-history">🗑 Limpar Histórico</button>
+                    </div>
+                </div>
+                <ul id="logs-list" class="item-list"></ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Mensagem -->
+    <div id="message-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="msg-modal-title">Mensagem</h2>
+            <p id="msg-modal-text"></p>
+            <div class="modal-buttons">
+                <button id="msg-modal-btn" class="btn-confirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmação -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="confirm-modal-title">Confirmar</h2>
+            <p id="confirm-modal-text"></p>
+            <div class="modal-buttons">
+                <button id="confirm-modal-yes" class="btn-confirm">Sim</button>
+                <button id="confirm-modal-no" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Exclusão genérica -->
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem a certeza? Esta ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button id="btn-confirm-delete" class="btn-confirm">Sim, Excluir</button>
+                <button id="btn-cancel-delete" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Exclusão de livro COM histórico -->
+    <div id="delete-history-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="warning-icon">⚠️</span>
+            <h2>Livro Possui Histórico de Empréstimos</h2>
+            <p id="delete-history-msg" style="margin-bottom:1rem"></p>
+            <p style="font-size:0.82rem;color:var(--txt-muted)">
+                Se excluir <strong>sem</strong> o histórico, o servidor vai bloquear a exclusão pois há registros vinculados.
+                Você precisa excluir o histórico junto para poder remover este livro.
+            </p>
+            <div class="modal-buttons">
+                <button id="btn-delete-with-history" class="btn-danger">Excluir Livro e Histórico</button>
+                <button id="btn-cancel-delete-history" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edição -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Editar Item</h2>
+            <div id="edit-fields"></div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-edit" class="btn-confirm">Salvar Alterações</button>
+                <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Aceitar administrador pendente -->
+    <div id="accept-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Aceitar Administrador</h2>
+            <p id="accept-modal-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
+            <div class="input-group">
+                <label>Nível de Acesso</label>
+                <input type="number" id="nivel-aceitar" min="1" max="8" placeholder="Ex: 1 = Diretor, 8 = TI">
+                <small style="color:var(--txt-muted);font-size:0.78rem;margin-top:4px;display:block">
+                    Níveis 1 (Diretor) e 8 (TI) têm acesso total e podem aprovar outros. Demais níveis criam solicitações.
+                </small>
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-accept" class="btn-confirm">Aceitar</button>
+                <button id="btn-cancel-accept" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar nível de admin -->
+    <div id="edit-level-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Editar Nível do Administrador</h2>
+            <p id="edit-level-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
+            <div class="input-group">
+                <label>Novo Nível (1-8)</label>
+                <input type="number" id="new-level" min="1" max="8" value="1" required>
+                <small style="color:var(--txt-muted);display:block;margin-top:4px;">
+                    Níveis 1 (Diretor) e 8 (TI) têm acesso total.
+                </small>
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-confirm-edit-level" class="btn-confirm">Solicitar Alteração</button>
+                <button id="btn-cancel-edit-level" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // ═══════════════════════════════════════════════════════════
-        // TODAS AS FUNÇÕES E VARIÁVEIS GLOBAIS
-        // ═══════════════════════════════════════════════════════════
+    (function() {
+        'use strict';
 
-        const tabs = document.querySelectorAll('.tab-btn');
-        const panes = document.querySelectorAll('.tab-pane');
-        const deleteModal = document.getElementById('delete-modal');
-        const deleteHistModal = document.getElementById('delete-history-modal');
-        const editModal = document.getElementById('edit-modal');
-        const acceptModal = document.getElementById('accept-modal');
-        const editFields = document.getElementById('edit-fields');
-
-        let itemToDelete = null;
-        let itemToEdit = null;
-        let pendingAcceptUid = null;
-        let currentEditTarget = null;
-        let userInfo = { email: '', nivel: null, isSuperAdmin: false };
-
-        // ── Utilitários de modais ──
-        function showMessage(title, text, callback) {
-            document.getElementById('msg-modal-title').textContent = title;
-            document.getElementById('msg-modal-text').textContent = text;
-            document.getElementById('message-modal').classList.add('active');
-            const btn = document.getElementById('msg-modal-btn');
-            btn.onclick = () => {
-                document.getElementById('message-modal').classList.remove('active');
-                if (callback) callback();
-            };
-        }
-
-        function showConfirm(title, text, onYes, onNo) {
-            document.getElementById('confirm-modal-title').textContent = title;
-            document.getElementById('confirm-modal-text').textContent = text;
-            document.getElementById('confirm-modal').classList.add('active');
-            document.getElementById('confirm-modal-yes').onclick = () => {
-                document.getElementById('confirm-modal').classList.remove('active');
-                if (onYes) onYes();
-            };
-            document.getElementById('confirm-modal-no').onclick = () => {
-                document.getElementById('confirm-modal').classList.remove('active');
-                if (onNo) onNo();
-            };
-        }
-
-        window.alert = msg => showMessage('Aviso', msg);
-        window.confirm = msg => new Promise(resolve => {
-            showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
-        });
-
-        // ── User info ──
-        async function carregarUserInfo() {
-            try {
-                userInfo = await apiRequest('me');
-                const badge = document.getElementById('user-nivel-info');
-                const banner = document.getElementById('banner-nivel-limitado');
-                const tabAdmins = document.getElementById('tab-admins');
-                if (badge) {
-                    badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>Administrador nível Atual: ${userInfo.nivel ?? '?'}</strong>`;
-                }
-                if (banner && !userInfo.isSuperAdmin) banner.style.display = 'block';
-                if (tabAdmins) tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
-                const clearContainer = document.getElementById('clear-history-container');
-                if (clearContainer) clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
-            } catch (e) {
-                console.warn('Não foi possível carregar informações do utilizador:', e);
-            }
-        }
-
-        // ── Utilidades ──
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-
-        function formatTs(ts) {
-            if (!ts) return '—';
-            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-            const d = ms !== null ? new Date(ms) : new Date(ts);
-            return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
-        }
-
-        async function apiRequest(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: {} };
-            if (body) {
-                if (body instanceof FormData) {
-                    options.body = body;
-                } else {
-                    options.headers['Content-Type'] = 'application/json';
-                    options.body = JSON.stringify(body);
-                }
-            }
-            const response = await fetch(`/api/${endpoint}`, options);
-            let data;
-            try { data = await response.json(); } catch { data = {}; }
-            if (!response.ok && response.status !== 202) {
-                throw new Error(JSON.stringify(data));
-            }
-            return data;
-        }
-
-        // ── Definição dos campos por coleção ──
-        const fieldsByCollection = {
-            novidades: [
-                { name: 'titulo', label: 'Título', type: 'text' },
-                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-            ],
-            cargos: [
-                { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
-                { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
-            ],
-            docente: [
-                { name: 'nome', label: 'Nome', type: 'text' },
-                { name: 'cargo', label: 'Cargo/Função', type: 'text' },
-                { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
-                { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
-            ],
-            cursos: [
-                { name: 'nome', label: 'Nome', type: 'text' },
-                { name: 'descricao', label: 'Descrição', type: 'textarea' },
-                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-            ],
-            contato: [
-                { name: 'nome', label: 'Nome', type: 'text' },
-                { name: 'email', label: 'Email', type: 'email' }
-            ],
-            noticias: [
-                { name: 'titulo', label: 'Título', type: 'text' },
-                { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
-                { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
-            ],
-            alunos: [
-                { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
-                { name: 'gincana', label: 'Gincana', type: 'text' },
-                { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
-                { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
-                { name: 'ferias', label: 'Férias', type: 'text' }
-            ],
-            responsaveis: [
-                { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
-                { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
-            ],
-            alunosBib: [
-                { name: 'nome', label: 'Nome', type: 'text' },
-                { name: 'tipo', label: 'Tipo', type: 'select', options: ['aluno', 'professor'] }
-            ],
-            livros: [
-                { name: 'codigo', label: 'Código', type: 'text' },
-                { name: 'nome', label: 'Título', type: 'text' },
-                { name: 'autor', label: 'Autor', type: 'text' },
-                { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
-            ]
-        };
-
-        // ── Trocador de abas ──
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                panes.forEach(p => p.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-                if (tab.dataset.tab === 'gerenciar') loadManagementContent();
-                if (tab.dataset.tab === 'logs') loadLogsContent();
-                if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
-                if (tab.dataset.tab === 'admins') {
-                    loadAdmins();
-                    loadAdminSolicitations();
-                }
-            });
-        });
-
-        // ── Carregar cargos no select ──
-        async function carregarCargosSelect() {
-            try {
-                const cargos = await apiRequest('cargos');
-                const select = document.getElementById('docente-cargo-select');
-                if (!select) return;
-                select.innerHTML = '<option value="">Selecione um cargo</option>';
-                cargos.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.cargo;
-                    opt.textContent = c.cargo + (c.nivel ? ` (Nível ${c.nivel})` : '');
-                    select.appendChild(opt);
-                });
-            } catch (e) {
-                console.error('Erro ao carregar cargos:', e);
-                const select = document.getElementById('docente-cargo-select');
-                if (select) select.innerHTML = '<option value="">Erro ao carregar</option>';
-            }
-        }
-
-        // ═══════════════════════════ GERENCIAR ═══════════════════════════
-        async function loadManagementContent() {
-            const container = document.getElementById('gerenciar');
-            container.innerHTML = '<div class="loader">A carregar...</div>';
-            const cols = [
-                { name: 'noticias', title: 'Notícias' },
-                { name: 'novidades', title: 'Novidades/Infraestrutura' },
-                { name: 'cursos', title: 'Cursos' },
-                { name: 'docente', title: 'Corpo Docente' },
-                { name: 'cargos', title: 'Cargos e Funções' },
-                { name: 'contato', title: 'Contactos' },
-                { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
-                { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
-                { name: 'alunosBib', title: 'Cadastros (Biblioteca)' },
-                { name: 'livros', title: 'Livros' }
-            ];
-            let html = '<div class="grid-lists">';
-            for (const col of cols) {
-                html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
-                try {
-                    if (col.isDocUnico) {
-                        const data = await apiRequest(col.name);
-                        const fields = fieldsByCollection[col.name] || [];
-                        if (fields.some(f => data[f.name])) {
-                            fields.forEach(f => {
-                                if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${escapeHtml(data[f.name])}</span></li>`;
-                            });
-                        } else {
-                            html += '<li class="empty">Nenhum dado cadastrado ainda.</li>';
-                        }
-                        html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
-                                    <span></span>
-                                    <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
-                                 </li>`;
-                    } else {
-                        const items = await apiRequest(col.name);
-                        if (items.length) {
-                            items.forEach(item => {
-                                const display = item.titulo || item.nome || item.cargo;
-                                let sub = '';
-                                if (item.matricula) {
-                                    sub = ` <small>(Mat: ${escapeHtml(item.matricula)})</small>`;
-                                    if (item.tipo) sub += ` <small>(${escapeHtml(item.tipo)})</small>`;
-                                } else if (item.autor) {
-                                    const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
-                                    const total = item.quantidade || 1;
-                                    const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
-                                    sub = ` <small>(${escapeHtml(item.autor)}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
-                                } else if (item.materia) {
-                                    sub = ` <small>(${escapeHtml(item.materia)})</small>`;
-                                } else if (item.nivel !== undefined) {
-                                    sub = ` <small>(Nível ${item.nivel})</small>`;
-                                }
-                                html += `<li data-id="${item.id}">
-                                           <span>${escapeHtml(display)}${sub}</span>
-                                           <div class="li-actions">
-                                               <button class="btn-edit" data-id="${item.id}" data-collection="${col.name}">Editar</button>
-                                               <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
-                                           </div>
-                                         </li>`;
-                            });
-                        } else {
-                            html += '<li class="empty">Nenhum item encontrado.</li>';
-                        }
-                    }
-                } catch {
-                    html += '<li class="error">Erro ao carregar.</li>';
-                }
-                html += '</ul></div>';
-            }
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // Handlers dos cliques no painel de gestão
-        document.getElementById('gerenciar').addEventListener('click', async (e) => {
-            const collection = e.target.dataset.collection;
-            if (e.target.classList.contains('btn-edit-docunico')) {
-                try {
-                    const data = await apiRequest(collection);
-                    const fields = fieldsByCollection[collection] || [];
-                    editFields.innerHTML = fields.map(f =>
-                        `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${escapeHtml(data[f.name] || '')}"></div>`
-                    ).join('');
-                    itemToEdit = { collection, isDocUnico: true };
-                    editModal.classList.add('active');
-                } catch {
-                    showMessage('Erro', 'Erro ao carregar dados para edição.');
-                }
+        // ── Função auxiliar para adicionar eventos com segurança ──
+        function safeOn(id, event, handler) {
+            const el = document.getElementById(id);
+            if (!el) {
+                console.warn('Elemento #' + id + ' não encontrado – a ignorar listener');
                 return;
             }
+            el.addEventListener(event, handler);
+        }
 
-            const id = e.target.dataset.id;
-            if (!id) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            // ═══ VARIÁVEIS E ELEMENTOS ═══
+            const tabs = document.querySelectorAll('.tab-btn');
+            const panes = document.querySelectorAll('.tab-pane');
+            const deleteModal = document.getElementById('delete-modal');
+            const deleteHistModal = document.getElementById('delete-history-modal');
+            const editModal = document.getElementById('edit-modal');
+            const acceptModal = document.getElementById('accept-modal');
+            const editFields = document.getElementById('edit-fields');
 
-            if (e.target.classList.contains('btn-delete')) {
-                const element = e.target.closest('li');
-                if (collection === 'livros') {
-                    e.target.disabled = true;
-                    e.target.textContent = '...';
+            let itemToDelete = null;
+            let itemToEdit = null;
+            let pendingAcceptUid = null;
+            let currentEditTarget = null;
+            let userInfo = { email: '', nivel: null, isSuperAdmin: false };
+
+            // ═══ MODAIS ═══
+            window.showMessage = function(title, text, callback) {
+                document.getElementById('msg-modal-title').textContent = title;
+                document.getElementById('msg-modal-text').textContent = text;
+                document.getElementById('message-modal').classList.add('active');
+                document.getElementById('msg-modal-btn').onclick = () => {
+                    document.getElementById('message-modal').classList.remove('active');
+                    if (callback) callback();
+                };
+            };
+
+            window.showConfirm = function(title, text, onYes, onNo) {
+                document.getElementById('confirm-modal-title').textContent = title;
+                document.getElementById('confirm-modal-text').textContent = text;
+                document.getElementById('confirm-modal').classList.add('active');
+                document.getElementById('confirm-modal-yes').onclick = () => {
+                    document.getElementById('confirm-modal').classList.remove('active');
+                    if (onYes) onYes();
+                };
+                document.getElementById('confirm-modal-no').onclick = () => {
+                    document.getElementById('confirm-modal').classList.remove('active');
+                    if (onNo) onNo();
+                };
+            };
+
+            window.alert = msg => showMessage('Aviso', msg);
+            window.confirm = msg => new Promise(resolve => {
+                showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
+            });
+
+            // ═══ UTILITÁRIOS ═══
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+
+            function formatTs(ts) {
+                if (!ts) return '—';
+                const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+                const d = ms !== null ? new Date(ms) : new Date(ts);
+                return isNaN(d.getTime()) ? '—' : d.toLocaleString('pt-BR');
+            }
+
+            async function apiRequest(endpoint, method = 'GET', body = null) {
+                const options = { method, headers: {} };
+                if (body) {
+                    if (body instanceof FormData) {
+                        options.body = body;
+                    } else {
+                        options.headers['Content-Type'] = 'application/json';
+                        options.body = JSON.stringify(body);
+                    }
+                }
+                const response = await fetch(`/api/${endpoint}`, options);
+                let data;
+                try { data = await response.json(); } catch { data = {}; }
+                if (!response.ok && response.status !== 202) {
+                    throw new Error(JSON.stringify(data));
+                }
+                return data;
+            }
+
+            // ═══ USER INFO ═══
+            async function carregarUserInfo() {
+                try {
+                    userInfo = await apiRequest('me');
+                    const badge = document.getElementById('user-nivel-info');
+                    const banner = document.getElementById('banner-nivel-limitado');
+                    const tabAdmins = document.getElementById('tab-admins');
+                    if (badge) {
+                        badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>Administrador nível Atual: ${userInfo.nivel ?? '?'}</strong>`;
+                    }
+                    if (banner && !userInfo.isSuperAdmin) banner.style.display = 'block';
+                    if (tabAdmins) tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
+                    const clearContainer = document.getElementById('clear-history-container');
+                    if (clearContainer) clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
+                } catch (e) {
+                    console.warn('Erro ao carregar informações do utilizador:', e);
+                }
+            }
+
+            // ═══ CAMPOS POR COLEÇÃO ═══
+            const fieldsByCollection = {
+                novidades: [
+                    { name: 'titulo', label: 'Título', type: 'text' },
+                    { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+                ],
+                cargos: [
+                    { name: 'cargo', label: 'Nome do Cargo', type: 'text' },
+                    { name: 'nivel', label: 'Nível Hierárquico', type: 'number' }
+                ],
+                docente: [
+                    { name: 'nome', label: 'Nome', type: 'text' },
+                    { name: 'cargo', label: 'Cargo/Função', type: 'text' },
+                    { name: 'materia', label: 'Matéria/Disciplina', type: 'text' },
+                    { name: 'foto', label: 'Nova Foto (opcional)', type: 'file' }
+                ],
+                cursos: [
+                    { name: 'nome', label: 'Nome', type: 'text' },
+                    { name: 'descricao', label: 'Descrição', type: 'textarea' },
+                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+                ],
+                contato: [
+                    { name: 'nome', label: 'Nome', type: 'text' },
+                    { name: 'email', label: 'Email', type: 'email' }
+                ],
+                noticias: [
+                    { name: 'titulo', label: 'Título', type: 'text' },
+                    { name: 'conteudo', label: 'Conteúdo', type: 'textarea' },
+                    { name: 'imagem', label: 'Nova Imagem (opcional)', type: 'file' }
+                ],
+                alunos: [
+                    { name: 'semanaProvas', label: 'Semana de Provas', type: 'text' },
+                    { name: 'gincana', label: 'Gincana', type: 'text' },
+                    { name: 'feiraCiencias', label: 'Feira de Ciências', type: 'text' },
+                    { name: 'semanaCultural', label: 'Semana Cultural', type: 'text' },
+                    { name: 'ferias', label: 'Férias', type: 'text' }
+                ],
+                responsaveis: [
+                    { name: 'reuniaoPais', label: 'Reunião de Pais', type: 'text' },
+                    { name: 'entregaBoletins', label: 'Entrega de Boletins', type: 'text' }
+                ],
+                alunosBib: [
+                    { name: 'nome', label: 'Nome', type: 'text' },
+                    { name: 'tipo', label: 'Tipo', type: 'select', options: ['aluno', 'professor'] }
+                ],
+                livros: [
+                    { name: 'codigo', label: 'Código', type: 'text' },
+                    { name: 'nome', label: 'Título', type: 'text' },
+                    { name: 'autor', label: 'Autor', type: 'text' },
+                    { name: 'quantidade', label: 'Quantidade Total', type: 'number' }
+                ]
+            };
+
+            // ═══ ABAS ═══
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panes.forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const pane = document.getElementById(tab.dataset.tab);
+                    if (pane) pane.classList.add('active');
+                    if (tab.dataset.tab === 'gerenciar') loadManagementContent();
+                    if (tab.dataset.tab === 'logs') loadLogsContent();
+                    if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+                    if (tab.dataset.tab === 'admins') {
+                        loadAdmins();
+                        loadAdminSolicitations();
+                    }
+                });
+            });
+
+            // ═══ CARREGAR CARGOS ═══
+            async function carregarCargosSelect() {
+                try {
+                    const cargos = await apiRequest('cargos');
+                    const select = document.getElementById('docente-cargo-select');
+                    if (!select) return;
+                    select.innerHTML = '<option value="">Selecione um cargo</option>';
+                    cargos.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.cargo;
+                        opt.textContent = c.cargo + (c.nivel ? ` (Nível ${c.nivel})` : '');
+                        select.appendChild(opt);
+                    });
+                } catch (e) {
+                    console.error('Erro ao carregar cargos:', e);
+                }
+            }
+
+            // ═══════════════ GERENCIAR ═══════════════
+            async function loadManagementContent() {
+                const container = document.getElementById('gerenciar');
+                if (!container) return;
+                container.innerHTML = '<div class="loader">A carregar...</div>';
+
+                const cols = [
+                    { name: 'noticias', title: 'Notícias' },
+                    { name: 'novidades', title: 'Novidades/Infraestrutura' },
+                    { name: 'cursos', title: 'Cursos' },
+                    { name: 'docente', title: 'Corpo Docente' },
+                    { name: 'cargos', title: 'Cargos e Funções' },
+                    { name: 'contato', title: 'Contactos' },
+                    { name: 'alunos', title: 'Calendário de Alunos', isDocUnico: true },
+                    { name: 'responsaveis', title: 'Calendário de Responsáveis', isDocUnico: true },
+                    { name: 'alunosBib', title: 'Cadastros (Biblioteca)' },
+                    { name: 'livros', title: 'Livros' }
+                ];
+
+                let html = '<div class="grid-lists">';
+                for (const col of cols) {
+                    html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
                     try {
-                        const hist = await apiRequest(`emprestimos/livro/${id}`);
-                        if (hist.length > 0) {
-                            itemToDelete = { id, collection, element };
-                            document.getElementById('delete-history-msg').innerHTML =
-                                `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
-                                 Para poder excluí-lo, o histórico precisa ser removido também.`;
-                            deleteHistModal.classList.add('active');
+                        if (col.isDocUnico) {
+                            const data = await apiRequest(col.name);
+                            const fields = fieldsByCollection[col.name] || [];
+                            if (fields.some(f => data[f.name])) {
+                                fields.forEach(f => {
+                                    if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${escapeHtml(data[f.name])}</span></li>`;
+                                });
+                            } else {
+                                html += '<li class="empty">Nenhum dado cadastrado ainda.</li>';
+                            }
+                            html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
+                                        <span></span>
+                                        <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
+                                     </li>`;
                         } else {
-                            itemToDelete = { id, collection, element };
-                            deleteModal.classList.add('active');
+                            const items = await apiRequest(col.name);
+                            if (items.length) {
+                                items.forEach(item => {
+                                    const display = item.titulo || item.nome || item.cargo;
+                                    let sub = '';
+                                    if (item.matricula) {
+                                        sub = ` <small>(Mat: ${escapeHtml(item.matricula)})</small>`;
+                                        if (item.tipo) sub += ` <small>(${escapeHtml(item.tipo)})</small>`;
+                                    } else if (item.autor) {
+                                        const disp = item.quantidadeDisponivel ?? (item.emprestado ? 0 : 1);
+                                        const total = item.quantidade || 1;
+                                        const cor = disp === 0 ? 'var(--red)' : disp < total ? 'var(--amber)' : 'var(--green)';
+                                        sub = ` <small>(${escapeHtml(item.autor)}) — <strong style="color:${cor}">${disp}/${total}</strong> disp.</small>`;
+                                    } else if (item.materia) {
+                                        sub = ` <small>(${escapeHtml(item.materia)})</small>`;
+                                    } else if (item.nivel !== undefined) {
+                                        sub = ` <small>(Nível ${item.nivel})</small>`;
+                                    }
+                                    html += `<li data-id="${item.id}">
+                                               <span>${escapeHtml(display)}${sub}</span>
+                                               <div class="li-actions">
+                                                   <button class="btn-edit" data-id="${item.id}" data-collection="${col.name}">Editar</button>
+                                                   <button class="btn-delete" data-id="${item.id}" data-collection="${col.name}">Excluir</button>
+                                               </div>
+                                             </li>`;
+                                });
+                            } else {
+                                html += '<li class="empty">Nenhum item encontrado.</li>';
+                            }
                         }
                     } catch {
-                        itemToDelete = { id, collection, element };
-                        deleteModal.classList.add('active');
-                    } finally {
-                        e.target.disabled = false;
-                        e.target.textContent = 'Excluir';
+                        html += '<li class="error">Erro ao carregar.</li>';
+                    }
+                    html += '</ul></div>';
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            // ═══ EVENTOS DE GESTÃO ═══
+            document.getElementById('gerenciar')?.addEventListener('click', async (e) => {
+                const collection = e.target.dataset.collection;
+                if (e.target.classList.contains('btn-edit-docunico')) {
+                    try {
+                        const data = await apiRequest(collection);
+                        const fields = fieldsByCollection[collection] || [];
+                        if (editFields) {
+                            editFields.innerHTML = fields.map(f =>
+                                `<div class="input-group"><label>${f.label}</label><input type="text" name="${f.name}" value="${escapeHtml(data[f.name] || '')}"></div>`
+                            ).join('');
+                        }
+                        itemToEdit = { collection, isDocUnico: true };
+                        editModal?.classList.add('active');
+                    } catch {
+                        showMessage('Erro', 'Erro ao carregar dados para edição.');
                     }
                     return;
                 }
-                itemToDelete = { id, collection, element };
-                deleteModal.classList.add('active');
-                return;
-            }
 
-            if (e.target.classList.contains('btn-edit')) {
-                try {
-                    const item = await apiRequest(`${collection}/${id}`);
-                    const fields = fieldsByCollection[collection] || [];
-                    editFields.innerHTML = fields.map(f => {
-                        if (f.type === 'textarea') {
-                            return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${escapeHtml(item[f.name] || '')}</textarea></div>`;
+                const id = e.target.dataset.id;
+                if (!id) return;
+
+                if (e.target.classList.contains('btn-delete')) {
+                    const element = e.target.closest('li');
+                    if (collection === 'livros') {
+                        e.target.disabled = true;
+                        e.target.textContent = '...';
+                        try {
+                            const hist = await apiRequest(`emprestimos/livro/${id}`);
+                            if (hist.length > 0) {
+                                itemToDelete = { id, collection, element };
+                                const msgEl = document.getElementById('delete-history-msg');
+                                if (msgEl) {
+                                    msgEl.innerHTML = `Este livro possui <strong>${hist.length}</strong> registro(s) de empréstimo no histórico.
+                                                     Para poder excluí-lo, o histórico precisa ser removido também.`;
+                                }
+                                deleteHistModal?.classList.add('active');
+                            } else {
+                                itemToDelete = { id, collection, element };
+                                deleteModal?.classList.add('active');
+                            }
+                        } catch {
+                            itemToDelete = { id, collection, element };
+                            deleteModal?.classList.add('active');
+                        } finally {
+                            e.target.disabled = false;
+                            e.target.textContent = 'Excluir';
                         }
-                        if (f.type === 'file') {
-                            return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
-                        }
-                        if (f.type === 'select') {
-                            const options = f.options.map(opt => 
-                                `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
-                            ).join('');
-                            return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
-                        }
-                        return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${escapeHtml(item[f.name] ?? '')}"></div>`;
-                    }).join('');
-                    itemToEdit = { id, collection, isDocUnico: false };
-                    editModal.classList.add('active');
-                } catch {
-                    showMessage('Erro', 'Erro ao carregar item para edição.');
-                }
-            }
-        });
-
-        document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
-            if (!itemToEdit) return;
-            const { collection, id, isDocUnico } = itemToEdit;
-            const semArquivo = ['alunosBib', 'livros'];
-            const btn = document.getElementById('btn-confirm-edit');
-            btn.disabled = true;
-            try {
-                let result;
-                if (isDocUnico) {
-                    const obj = {};
-                    editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
-                    result = await apiRequest(collection, 'POST', obj);
-                } else if (semArquivo.includes(collection)) {
-                    const obj = {};
-                    editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
-                    result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
-                } else {
-                    const fd = new FormData();
-                    editFields.querySelectorAll('input, textarea, select').forEach(inp => {
-                        if (inp.type === 'file') {
-                            if (inp.files[0]) fd.append(inp.name, inp.files[0]);
-                        } else {
-                            fd.append(inp.name, inp.value);
-                        }
-                    });
-                    result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
-                }
-                editModal.classList.remove('active');
-                itemToEdit = null;
-                if (result?.pending) {
-                    showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação.');
-                } else {
-                    showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
-                }
-                loadManagementContent();
-            } catch (err) {
-                let msg = 'Erro ao salvar alterações.';
-                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                showMessage('Erro', msg);
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-            editModal.classList.remove('active');
-            itemToEdit = null;
-        });
-
-        document.getElementById('btn-cancel-delete').addEventListener('click', () => {
-            deleteModal.classList.remove('active');
-            itemToDelete = null;
-        });
-
-        document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
-            if (!itemToDelete) return;
-            const { id, collection, element } = itemToDelete;
-            const btn = document.getElementById('btn-confirm-delete');
-            btn.disabled = true;
-            try {
-                const result = await apiRequest(`${collection}/${id}`, 'DELETE');
-                if (result?.pending) {
-                    showMessage('Aviso', '⏳ Solicitação de exclusão enviada para aprovação.');
-                } else {
-                    element?.remove();
-                    showMessage('Sucesso', 'Item excluído com sucesso.');
-                }
-            } catch (err) {
-                let msg = 'Erro ao excluir.';
-                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                showMessage('Erro', msg);
-            } finally {
-                deleteModal.classList.remove('active');
-                itemToDelete = null;
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('btn-delete-with-history').addEventListener('click', async () => {
-            if (!itemToDelete) return;
-            const { id, collection, element } = itemToDelete;
-            const btn = document.getElementById('btn-delete-with-history');
-            btn.disabled = true;
-            try {
-                const result = await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
-                if (result?.pending) {
-                    showMessage('Aviso', '⏳ Solicitação de exclusão (com histórico) enviada para aprovação.');
-                } else {
-                    showMessage('Sucesso', '✅ Livro e histórico excluídos com sucesso.');
-                    element?.remove();
-                    loadManagementContent();
-                }
-            } catch (err) {
-                let msg = 'Erro ao excluir.';
-                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                showMessage('Erro', msg);
-            } finally {
-                deleteHistModal.classList.remove('active');
-                itemToDelete = null;
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('btn-cancel-delete-history').addEventListener('click', () => {
-            deleteHistModal.classList.remove('active');
-            itemToDelete = null;
-        });
-
-        // Submissão dos formulários
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const container = form.closest('.form-container');
-                if (!container) return;
-                const section = container.dataset.section;
-
-                const isDocUnico = section === 'alunos' || section === 'responsaveis';
-                const semArquivo = ['alunosBib', 'livros'];
-                const useJson = isDocUnico || semArquivo.includes(section);
-
-                let body;
-                if (useJson) {
-                    const obj = {};
-                    new FormData(form).forEach((v, k) => { obj[k] = v; });
-                    body = obj;
-                } else {
-                    body = new FormData(form);
-                }
-
-                const btn = form.querySelector('button[type="submit"]');
-                const btnOrigText = btn ? btn.textContent : '';
-                if (btn) {
-                    btn.disabled = true;
-                    btn.textContent = 'Salvando...';
-                }
-
-                try {
-                    const result = await apiRequest(section, 'POST', body);
-                    if (result?.pending) {
-                        showMessage('Aviso', '⏳ Solicitação enviada para aprovação.');
-                    } else {
-                        showMessage('Sucesso', '✅ Dados salvos com sucesso!');
+                        return;
                     }
-                    if (!isDocUnico) form.reset();
-                    if (semArquivo.includes(section) && bibliotecaCarregada) {
-                        try { await recarregarDadosBiblioteca(); } catch {}
-                    }
-                } catch (err) {
-                    let msg = 'Erro ao salvar.';
-                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                    showMessage('Erro', msg);
-                } finally {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.textContent = btnOrigText;
+                    itemToDelete = { id, collection, element };
+                    deleteModal?.classList.add('active');
+                    return;
+                }
+
+                if (e.target.classList.contains('btn-edit')) {
+                    try {
+                        const item = await apiRequest(`${collection}/${id}`);
+                        const fields = fieldsByCollection[collection] || [];
+                        if (editFields) {
+                            editFields.innerHTML = fields.map(f => {
+                                if (f.type === 'textarea') {
+                                    return `<div class="input-group"><label>${f.label}</label><textarea name="${f.name}">${escapeHtml(item[f.name] || '')}</textarea></div>`;
+                                }
+                                if (f.type === 'file') {
+                                    return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
+                                }
+                                if (f.type === 'select') {
+                                    const options = f.options.map(opt => 
+                                        `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
+                                    ).join('');
+                                    return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
+                                }
+                                return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${escapeHtml(item[f.name] ?? '')}"></div>`;
+                            }).join('');
+                        }
+                        itemToEdit = { id, collection, isDocUnico: false };
+                        editModal?.classList.add('active');
+                    } catch {
+                        showMessage('Erro', 'Erro ao carregar item para edição.');
                     }
                 }
             });
-        });
 
-        // Inicialização de formulários fixos
-        async function loadInitialData(section) {
-            try {
-                const data = await apiRequest(section);
-                const form = document.querySelector(`.form-container[data-section="${section}"] form`);
-                if (form && data) {
-                    Object.keys(data).forEach(key => {
-                        if (form.elements[key]) form.elements[key].value = data[key];
-                    });
+            safeOn('btn-confirm-edit', 'click', async () => {
+                if (!itemToEdit) return;
+                const { collection, id, isDocUnico } = itemToEdit;
+                const semArquivo = ['alunosBib', 'livros'];
+                const btn = document.getElementById('btn-confirm-edit');
+                if (btn) btn.disabled = true;
+                try {
+                    let result;
+                    if (isDocUnico) {
+                        const obj = {};
+                        if (editFields) {
+                            editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
+                        }
+                        result = await apiRequest(collection, 'POST', obj);
+                    } else if (semArquivo.includes(collection)) {
+                        const obj = {};
+                        if (editFields) {
+                            editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
+                        }
+                        result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
+                    } else {
+                        const fd = new FormData();
+                        if (editFields) {
+                            editFields.querySelectorAll('input, textarea, select').forEach(inp => {
+                                if (inp.type === 'file') {
+                                    if (inp.files[0]) fd.append(inp.name, inp.files[0]);
+                                } else {
+                                    fd.append(inp.name, inp.value);
+                                }
+                            });
+                        }
+                        result = await apiRequest(`${collection}/${id}`, 'PUT', fd);
+                    }
+                    editModal?.classList.remove('active');
+                    itemToEdit = null;
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação.');
+                    } else {
+                        showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
+                    }
+                    loadManagementContent();
+                } catch (err) {
+                    let msg = 'Erro ao salvar alterações.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                } finally {
+                    if (btn) btn.disabled = false;
                 }
-            } catch {}
-        }
+            });
 
-        // ═══════════════════════════ LOGS ═══════════════════════════
-        async function loadLogsContent() {
-            const logsList = document.getElementById('logs-list');
-            logsList.innerHTML = '<li>A carregar logs...</li>';
-            try {
-                const logs = await apiRequest('logs');
-                if (!logs.length) {
-                    logsList.innerHTML = '<li>Nenhum registo de atividade encontrado.</li>';
-                    return;
+            safeOn('btn-cancel-edit', 'click', () => {
+                editModal?.classList.remove('active');
+                itemToEdit = null;
+            });
+
+            safeOn('btn-cancel-delete', 'click', () => {
+                deleteModal?.classList.remove('active');
+                itemToDelete = null;
+            });
+
+            safeOn('btn-confirm-delete', 'click', async () => {
+                if (!itemToDelete) return;
+                const { id, collection, element } = itemToDelete;
+                const btn = document.getElementById('btn-confirm-delete');
+                if (btn) btn.disabled = true;
+                try {
+                    const result = await apiRequest(`${collection}/${id}`, 'DELETE');
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação de exclusão enviada para aprovação.');
+                    } else {
+                        element?.remove();
+                        showMessage('Sucesso', 'Item excluído com sucesso.');
+                    }
+                } catch (err) {
+                    let msg = 'Erro ao excluir.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                } finally {
+                    deleteModal?.classList.remove('active');
+                    itemToDelete = null;
+                    if (btn) btn.disabled = false;
                 }
-                logsList.innerHTML = logs.map(log => {
-                    const isReversible = log.rollbackPossible === true;
-                    let actionsHtml = '';
-                    if (userInfo.isSuperAdmin) {
-                        if (isReversible) {
-                            actionsHtml = `
-                                <div class="li-actions" style="gap:6px;">
-                                    <button class="btn-confirm-log" data-logid="${log.id}">✓ Confirmar</button>
-                                    <button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>
-                                </div>`;
+            });
+
+            safeOn('btn-delete-with-history', 'click', async () => {
+                if (!itemToDelete) return;
+                const { id, collection, element } = itemToDelete;
+                const btn = document.getElementById('btn-delete-with-history');
+                if (btn) btn.disabled = true;
+                try {
+                    const result = await apiRequest(`${collection}/${id}?deleteHistory=true`, 'DELETE');
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação de exclusão (com histórico) enviada para aprovação.');
+                    } else {
+                        showMessage('Sucesso', '✅ Livro e histórico excluídos com sucesso.');
+                        element?.remove();
+                        loadManagementContent();
+                    }
+                } catch (err) {
+                    let msg = 'Erro ao excluir.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                } finally {
+                    deleteHistModal?.classList.remove('active');
+                    itemToDelete = null;
+                    if (btn) btn.disabled = false;
+                }
+            });
+
+            safeOn('btn-cancel-delete-history', 'click', () => {
+                deleteHistModal?.classList.remove('active');
+                itemToDelete = null;
+            });
+
+            // ═══ SUBMISSÃO DE FORMULÁRIOS ═══
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const container = form.closest('.form-container');
+                    if (!container) return;
+                    const section = container.dataset.section;
+
+                    const isDocUnico = section === 'alunos' || section === 'responsaveis';
+                    const semArquivo = ['alunosBib', 'livros'];
+                    const useJson = isDocUnico || semArquivo.includes(section);
+
+                    let body;
+                    if (useJson) {
+                        const obj = {};
+                        new FormData(form).forEach((v, k) => { obj[k] = v; });
+                        body = obj;
+                    } else {
+                        body = new FormData(form);
+                    }
+
+                    const btn = form.querySelector('button[type="submit"]');
+                    const btnOrigText = btn ? btn.textContent : '';
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = 'Salvando...';
+                    }
+
+                    try {
+                        const result = await apiRequest(section, 'POST', body);
+                        if (result?.pending) {
+                            showMessage('Aviso', '⏳ Solicitação enviada para aprovação.');
                         } else {
-                            actionsHtml = `
-                                <div class="li-actions" style="gap:6px;">
-                                    <button class="btn-delete-log" data-logid="${log.id}">🗑 Apagar</button>
-                                </div>`;
+                            showMessage('Sucesso', '✅ Dados salvos com sucesso!');
+                        }
+                        if (!isDocUnico) form.reset();
+                        if (semArquivo.includes(section) && typeof bibliotecaCarregada !== 'undefined' && bibliotecaCarregada) {
+                            try { await recarregarDadosBiblioteca(); } catch {}
+                        }
+                    } catch (err) {
+                        let msg = 'Erro ao salvar.';
+                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                        showMessage('Erro', msg);
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = btnOrigText;
                         }
                     }
-                    const details = log.details || 'Sem detalhes';
-                    return `<li>
-                                <div class="log-info">
-                                    <strong>${escapeHtml(log.adminEmail)}</strong>
-                                    <span class="log-action"> ${escapeHtml(log.action)}</span> em <em>${escapeHtml(log.collection)}</em>
-                                    <br><span class="log-detail">${escapeHtml(details)}</span>
-                                    <br><span class="log-meta">${formatTs(log.timestamp)}</span>
-                                </div>
-                                ${actionsHtml}
-                            </li>`;
-                }).join('');
-                logsList.scrollTop = 0;
-
-                // Handler para reverter
-                document.querySelectorAll('.btn-rollback').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        const logId = btn.dataset.logid;
-                        const confirmado = await confirm('Tem certeza que deseja reverter esta ação?');
-                        if (!confirmado) return;
-                        try {
-                            await apiRequest(`logs/${logId}/rollback`, 'POST');
-                            showMessage('Sucesso', '✅ Ação revertida com sucesso.');
-                            loadLogsContent();
-                            loadManagementContent();
-                        } catch (err) {
-                            let msg = 'Erro ao reverter.';
-                            try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                            showMessage('Erro', msg);
-                        }
-                    });
                 });
-            } catch {
-                logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
-            }
-        }
+            });
 
-        // Limpar histórico (apenas superadmins)
-        document.getElementById('btn-clear-history')?.addEventListener('click', async () => {
-            const confirmado = await confirm('Tem certeza que deseja apagar todos os logs não reversíveis? Esta ação é irreversível.');
-            if (!confirmado) return;
-            try {
-                const result = await apiRequest('logs/clear', 'DELETE');
-                showMessage('Sucesso', `${result.deleted} log(s) apagado(s) com sucesso.`);
-                loadLogsContent();
-            } catch (err) {
-                showMessage('Erro', 'Erro ao limpar histórico.');
-            }
-        });
-
-        // Delegação de eventos nos logs (apagar/confirmar)
-        document.getElementById('logs-list').addEventListener('click', async (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            if (btn.classList.contains('btn-delete-log')) {
-                const logId = btn.dataset.logid;
-                const confirmado = await confirm('Apagar este registro de log?');
-                if (!confirmado) return;
-                btn.disabled = true;
+            // ═══ INICIALIZAÇÃO DE CAMPOS ═══
+            async function loadInitialData(section) {
                 try {
-                    await apiRequest(`logs/${logId}`, 'DELETE');
-                    const li = btn.closest('li');
-                    if (li) li.remove();
-                    showMessage('Sucesso', 'Log apagado.');
-                } catch (err) {
-                    showMessage('Erro', 'Erro ao apagar log.');
-                    btn.disabled = false;
+                    const data = await apiRequest(section);
+                    const form = document.querySelector(`.form-container[data-section="${section}"] form`);
+                    if (form && data) {
+                        Object.keys(data).forEach(key => {
+                            if (form.elements[key]) form.elements[key].value = data[key];
+                        });
+                    }
+                } catch {}
+            }
+
+            // ═══════════════ LOGS ═══════════════
+            async function loadLogsContent() {
+                const logsList = document.getElementById('logs-list');
+                if (!logsList) return;
+                logsList.innerHTML = '<li>A carregar logs...</li>';
+                try {
+                    const logs = await apiRequest('logs');
+                    if (!logs.length) {
+                        logsList.innerHTML = '<li>Nenhum registo de atividade encontrado.</li>';
+                        return;
+                    }
+                    logsList.innerHTML = logs.map(log => {
+                        const isReversible = log.rollbackPossible === true;
+                        let actionsHtml = '';
+                        if (userInfo.isSuperAdmin) {
+                            if (isReversible) {
+                                actionsHtml = `
+                                    <div class="li-actions" style="gap:6px;">
+                                        <button class="btn-confirm-log" data-logid="${log.id}">✓ Confirmar</button>
+                                        <button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>
+                                    </div>`;
+                            } else {
+                                actionsHtml = `
+                                    <div class="li-actions" style="gap:6px;">
+                                        <button class="btn-delete-log" data-logid="${log.id}">🗑 Apagar</button>
+                                    </div>`;
+                            }
+                        }
+                        const details = log.details || 'Sem detalhes';
+                        return `<li>
+                                    <div class="log-info">
+                                        <strong>${escapeHtml(log.adminEmail)}</strong>
+                                        <span class="log-action"> ${escapeHtml(log.action)}</span> em <em>${escapeHtml(log.collection)}</em>
+                                        <br><span class="log-detail">${escapeHtml(details)}</span>
+                                        <br><span class="log-meta">${formatTs(log.timestamp)}</span>
+                                    </div>
+                                    ${actionsHtml}
+                                </li>`;
+                    }).join('');
+                    logsList.scrollTop = 0;
+
+                    document.querySelectorAll('.btn-rollback').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const logId = btn.dataset.logid;
+                            const confirmado = await confirm('Tem certeza que deseja reverter esta ação?');
+                            if (!confirmado) return;
+                            try {
+                                await apiRequest(`logs/${logId}/rollback`, 'POST');
+                                showMessage('Sucesso', '✅ Ação revertida com sucesso.');
+                                loadLogsContent();
+                                loadManagementContent();
+                            } catch (err) {
+                                let msg = 'Erro ao reverter.';
+                                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                                showMessage('Erro', msg);
+                            }
+                        });
+                    });
+                } catch {
+                    logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
                 }
-            } else if (btn.classList.contains('btn-confirm-log')) {
-                const logId = btn.dataset.logid;
-                const confirmado = await confirm('Confirmar este log? Ele perderá a capacidade de reversão e poderá ser apagado.');
+            }
+
+            safeOn('btn-clear-history', 'click', async () => {
+                const confirmado = await confirm('Tem certeza que deseja apagar todos os logs não reversíveis? Esta ação é irreversível.');
                 if (!confirmado) return;
-                btn.disabled = true;
                 try {
-                    await apiRequest(`logs/${logId}/confirm`, 'POST');
-                    showMessage('Sucesso', 'Log confirmado. Agora ele pode ser apagado.');
+                    const result = await apiRequest('logs/clear', 'DELETE');
+                    showMessage('Sucesso', `${result.deleted} log(s) apagado(s) com sucesso.`);
                     loadLogsContent();
                 } catch (err) {
-                    showMessage('Erro', 'Erro ao confirmar log.');
-                    btn.disabled = false;
+                    showMessage('Erro', 'Erro ao limpar histórico.');
                 }
-            }
-        });
+            });
 
-        // ═══════════════════════════ ADMINISTRADORES ═══════════════════════════
-        async function loadPendingAdmins() {
-            try {
-                const admins = await apiRequest('pendentes');
-                const container = document.getElementById('pending-admins-list');
-                if (!admins.length) {
-                    container.innerHTML = '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>';
-                    return;
+            document.getElementById('logs-list')?.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                if (btn.classList.contains('btn-delete-log')) {
+                    const logId = btn.dataset.logid;
+                    const confirmado = await confirm('Apagar este registro de log?');
+                    if (!confirmado) return;
+                    btn.disabled = true;
+                    try {
+                        await apiRequest(`logs/${logId}`, 'DELETE');
+                        btn.closest('li')?.remove();
+                        showMessage('Sucesso', 'Log apagado.');
+                    } catch (err) {
+                        showMessage('Erro', 'Erro ao apagar log.');
+                        btn.disabled = false;
+                    }
+                } else if (btn.classList.contains('btn-confirm-log')) {
+                    const logId = btn.dataset.logid;
+                    const confirmado = await confirm('Confirmar este log? Ele perderá a capacidade de reversão e poderá ser apagado.');
+                    if (!confirmado) return;
+                    btn.disabled = true;
+                    try {
+                        await apiRequest(`logs/${logId}/confirm`, 'POST');
+                        showMessage('Sucesso', 'Log confirmado. Agora ele pode ser apagado.');
+                        loadLogsContent();
+                    } catch (err) {
+                        showMessage('Erro', 'Erro ao confirmar log.');
+                        btn.disabled = false;
+                    }
                 }
-                container.innerHTML = admins.map(a => {
-                    const actionBtns = userInfo.isSuperAdmin
-                        ? `<button class="btn-aprovar" data-uid="${a.uid}" data-email="${a.username}">✓</button>
-                           <button class="btn-negar-sol" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
-                        : '<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>';
-                    return `<div class="pending-admin">
-                                <p><strong>${escapeHtml(a.username)}</strong></p>
-                                <div class="admin-actions">${actionBtns}</div>
-                            </div>`;
-                }).join('');
-            } catch (err) {
-                console.error('Erro ao carregar admins pendentes:', err);
-            }
-        }
+            });
 
-        document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
-            const uid = e.target.dataset.uid;
-            const email = e.target.dataset.email;
-            if (!uid) return;
-
-            if (e.target.classList.contains('btn-aprovar')) {
-                pendingAcceptUid = uid;
-                document.getElementById('accept-modal-email').textContent = email || uid;
-                document.getElementById('nivel-aceitar').value = '';
-                acceptModal.classList.add('active');
-            } else if (e.target.classList.contains('btn-negar-sol')) {
-                const negado = await confirm(`Negar acesso de ${email || uid}?`);
-                if (!negado) return;
+            // ═══════════════ ADMINISTRADORES ═══════════════
+            async function loadPendingAdmins() {
                 try {
-                    await apiRequest('pendentes/negar', 'POST', { uid });
-                    loadPendingAdmins();
-                } catch {
-                    showMessage('Erro', 'Não foi possível negar o administrador.');
-                }
-            }
-        });
-
-        document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
-            const nivel = parseInt(document.getElementById('nivel-aceitar').value, 10);
-            if (isNaN(nivel) || nivel < 1 || nivel > 8) {
-                showMessage('Erro', 'Informe um nível válido entre 1 (Diretor) e 8 (TI).');
-                return;
-            }
-            if (!pendingAcceptUid) return;
-            const btn = document.getElementById('btn-confirm-accept');
-            btn.disabled = true;
-            try {
-                await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
-                acceptModal.classList.remove('active');
-                pendingAcceptUid = null;
-                loadPendingAdmins();
-                showMessage('Sucesso', '✅ Administrador aceite com sucesso!');
-            } catch (err) {
-                let msg = 'Não foi possível aceitar o administrador.';
-                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                showMessage('Erro', msg);
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        document.getElementById('btn-cancel-accept').addEventListener('click', () => {
-            acceptModal.classList.remove('active');
-            pendingAcceptUid = null;
-        });
-
-        async function loadAdmins() {
-            if (!userInfo.isSuperAdmin) return;
-            try {
-                const admins = await apiRequest('admins');
-                const container = document.getElementById('admin-list');
-                if (!admins.length) {
-                    container.innerHTML = '<p style="color:var(--txt-muted)">Nenhum administrador encontrado.</p>';
-                    return;
-                }
-                container.innerHTML = admins.map(a => `
-                    <div class="admin-item" data-uid="${a.uid}">
-                        <div class="admin-info">
-                            <span class="admin-email">${escapeHtml(a.email)}</span>
-                            <span class="admin-level">Nível: ${a.nivel}</span>
-                        </div>
-                        <div class="admin-actions">
-                            <button class="btn-edit-level" data-uid="${a.uid}" data-email="${a.email}" data-current="${a.nivel}">Editar Nível</button>
-                            <button class="btn-delete-admin" data-uid="${a.uid}" data-email="${a.email}">Excluir</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                document.getElementById('admin-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar administradores.</p>';
-            }
-        }
-
-        async function loadAdminSolicitations() {
-            if (!userInfo.isSuperAdmin) return;
-            try {
-                const solicitations = await apiRequest('admin-solicitations');
-                const container = document.getElementById('admin-solicitations-list');
-                if (!solicitations.length) {
-                    container.innerHTML = '<p style="color:var(--txt-muted);font-style:italic;">Nenhuma solicitação pendente.</p>';
-                    return;
-                }
-                container.innerHTML = solicitations.map(s => {
-                    const alreadyApproved = s.approvals && s.approvals.includes(userInfo.email);
-                    const approvalCount = s.approvals ? s.approvals.length : 0;
-                    const reqCount = s.requiredApprovals || 2;
-                    const btnDisabled = alreadyApproved ? 'disabled' : '';
-                    const btnText = alreadyApproved ? '✓ Aprovado' : 'Aprovar';
-                    let descricao = '';
-                    if (s.type === 'edit') {
-                        descricao = `Alterar nível de ${escapeHtml(s.targetEmail)} para ${s.newNivel}`;
-                    } else if (s.type === 'delete') {
-                        descricao = `Excluir administrador ${escapeHtml(s.targetEmail)}`;
+                    const admins = await apiRequest('pendentes');
+                    const container = document.getElementById('pending-admins-list');
+                    if (!container) return;
+                    if (!admins.length) {
+                        container.innerHTML = '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>';
+                        return;
                     }
-                    return `
-                        <div class="solicitation-item" data-id="${s.id}">
-                            <div>
-                                <strong>${escapeHtml(s.requestedBy)}</strong> solicitou: ${descricao}
-                                <br><span class="approval-count">Aprovações: ${approvalCount}/${reqCount} ${s.approvals ? '— ' + s.approvals.join(', ') : ''}</span>
-                            </div>
-                            <button class="btn-approve-admin" data-id="${s.id}" ${btnDisabled}>${btnText}</button>
-                        </div>
-                    `;
-                }).join('');
-            } catch (e) {
-                document.getElementById('admin-solicitations-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar solicitações.</p>';
-            }
-        }
-
-        document.getElementById('admin-list').addEventListener('click', (e) => {
-            const uid = e.target.dataset.uid;
-            if (!uid) return;
-            if (e.target.classList.contains('btn-edit-level')) {
-                currentEditTarget = { uid, email: e.target.dataset.email };
-                document.getElementById('edit-level-email').textContent = e.target.dataset.email;
-                document.getElementById('new-level').value = e.target.dataset.current;
-                document.getElementById('edit-level-modal').classList.add('active');
-            } else if (e.target.classList.contains('btn-delete-admin')) {
-                const email = e.target.dataset.email;
-                showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`, 
-                    async () => {
-                        try {
-                            await apiRequest('admin-solicitations', 'POST', {
-                                type: 'delete',
-                                targetUid: uid,
-                                targetEmail: email
-                            });
-                            showMessage('Sucesso', 'Solicitação de exclusão enviada para aprovação.');
-                            await loadAdminSolicitations();
-                        } catch (err) {
-                            showMessage('Erro', 'Não foi possível criar a solicitação.');
-                        }
-                    }
-                );
-            }
-        });
-
-        document.getElementById('btn-confirm-edit-level').addEventListener('click', async () => {
-            if (!currentEditTarget) return;
-            const newNivel = parseInt(document.getElementById('new-level').value, 10);
-            if (isNaN(newNivel) || newNivel < 1 || newNivel > 8) {
-                showMessage('Erro', 'Nível inválido (1-8).');
-                return;
-            }
-            try {
-                await apiRequest('admin-solicitations', 'POST', {
-                    type: 'edit',
-                    targetUid: currentEditTarget.uid,
-                    targetEmail: currentEditTarget.email,
-                    newNivel
-                });
-                showMessage('Sucesso', 'Solicitação de alteração de nível enviada para aprovação.');
-                document.getElementById('edit-level-modal').classList.remove('active');
-                currentEditTarget = null;
-                await loadAdminSolicitations();
-            } catch (err) {
-                showMessage('Erro', 'Não foi possível criar a solicitação.');
-            }
-        });
-
-        document.getElementById('btn-cancel-edit-level').addEventListener('click', () => {
-            document.getElementById('edit-level-modal').classList.remove('active');
-            currentEditTarget = null;
-        });
-
-        document.getElementById('admin-solicitations-list').addEventListener('click', async (e) => {
-            const btn = e.target.closest('.btn-approve-admin');
-            if (!btn || btn.disabled) return;
-            const solicitationId = btn.dataset.id;
-            btn.disabled = true;
-            try {
-                await apiRequest(`admin-solicitations/${solicitationId}/approve`, 'POST');
-                showMessage('Sucesso', 'Aprovação registada. Se foi a segunda, a ação já foi executada!');
-                await loadAdminSolicitations();
-                await loadAdmins();
-            } catch (err) {
-                showMessage('Erro', 'Erro ao aprovar.');
-                btn.disabled = false;
-            }
-        });
-
-        // ═══════════════════════════ BIBLIOTECA ═══════════════════════════
-        let todosAlunos = [];
-        let todosLivros = [];
-        let bibliotecaCarregada = false;
-        let filtrosInicializados = false;
-        let tipoFiltroEmp = 'todos';
-        let tipoFiltroHist = 'todos';
-
-        function formatarData(ts) {
-            if (!ts) return '—';
-            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
-            const d = ms !== null ? new Date(ms) : new Date(ts);
-            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
-        }
-
-        function popularSelect(id, items, labelFn) {
-            const sel = document.getElementById(id);
-            if (!sel) return;
-            if (!items.length) {
-                sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
-                return;
-            }
-            sel.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(labelFn(i))}</option>`).join('');
-        }
-
-        async function recarregarDadosBiblioteca() {
-            [todosAlunos, todosLivros] = await Promise.all([
-                apiRequest('alunosBib'),
-                apiRequest('livros')
-            ]);
-            atualizarSelects();
-        }
-
-        function obterListaFiltrada(tipo) {
-            if (tipo === 'todos') return todosAlunos;
-            return todosAlunos.filter(a => a.tipo === tipo);
-        }
-
-        function atualizarSelects() {
-            const listaEmp = obterListaFiltrada(tipoFiltroEmp);
-            popularSelect('sel-aluno-emp', listaEmp, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-
-            const listaHist = obterListaFiltrada(tipoFiltroHist);
-            popularSelect('sel-aluno-hist', listaHist, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-
-            const livrosDisp = todosLivros.filter(l => {
-                const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
-                return disp > 0;
-            });
-            const labelLivroDisp = l => {
-                const disp = l.quantidadeDisponivel ?? 1;
-                const total = l.quantidade || 1;
-                return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
-            };
-            popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
-            popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
-        }
-
-        function inicializarFiltros() {
-            if (filtrosInicializados) return;
-            filtrosInicializados = true;
-
-            document.getElementById('filtro-tipo-emp').addEventListener('change', function() {
-                tipoFiltroEmp = this.value;
-                document.getElementById('filtro-aluno-emp').value = '';
-                atualizarSelects();
-            });
-
-            document.getElementById('filtro-tipo-hist').addEventListener('change', function() {
-                tipoFiltroHist = this.value;
-                document.getElementById('filtro-aluno-hist').value = '';
-                atualizarSelects();
-            });
-
-            document.getElementById('filtro-aluno-emp').addEventListener('input', function() {
-                const q = this.value.toLowerCase();
-                const base = obterListaFiltrada(tipoFiltroEmp);
-                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
-                popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-            });
-
-            document.getElementById('filtro-aluno-hist').addEventListener('input', function() {
-                const q = this.value.toLowerCase();
-                const base = obterListaFiltrada(tipoFiltroHist);
-                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
-                popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
-            });
-
-            document.getElementById('filtro-livro-emp').addEventListener('input', function() {
-                const q = this.value.toLowerCase();
-                const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
-                const list = q ? disp.filter(l =>
-                    l.nome.toLowerCase().includes(q) ||
-                    (l.autor || '').toLowerCase().includes(q) ||
-                    (l.codigo || '').toLowerCase().includes(q)
-                ) : disp;
-                const labelLivroDisp = l => {
-                    const d = l.quantidadeDisponivel ?? 1;
-                    const t = l.quantidade || 1;
-                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
-                };
-                popularSelect('sel-livro-emp', list, labelLivroDisp);
-            });
-
-            document.getElementById('filtro-livro-hist').addEventListener('input', function() {
-                const q = this.value.toLowerCase();
-                const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
-                popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
-            });
-
-            document.getElementById('sel-livro-emp').addEventListener('change', function() {
-                const livroId = this.value;
-                const grupoQtd = document.getElementById('grupo-qtd-emp');
-                const inputQtd = document.getElementById('qtd-emprestimo');
-                const aviso = document.getElementById('qtd-max-aviso');
-
-                if (!livroId) {
-                    grupoQtd.style.display = 'none';
-                    return;
-                }
-
-                const livro = todosLivros.find(l => l.id === livroId);
-                if (livro) {
-                    const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-                    grupoQtd.style.display = 'block';
-                    inputQtd.max = disp;
-                    inputQtd.value = 1;
-                    aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
-                }
-            });
-
-            document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
-                const selAluno = document.getElementById('sel-aluno-emp');
-                const selLivro = document.getElementById('sel-livro-emp');
-                const qtdInput = document.getElementById('qtd-emprestimo');
-
-                if (!selAluno.value || !selLivro.value) {
-                    showMessage('Aviso', 'Selecione um cadastrado e um livro.');
-                    return;
-                }
-
-                const aluno = todosAlunos.find(a => a.id === selAluno.value);
-                const livro = todosLivros.find(l => l.id === selLivro.value);
-                const quantidade = parseInt(qtdInput?.value || 1, 10);
-                const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
-
-                if (quantidade < 1) { showMessage('Erro', 'Quantidade inválida.'); return; }
-                if (quantidade > disponiveis) {
-                    showMessage('Erro', `Só existem ${disponiveis} exemplar(es) disponível(is).`);
-                    return;
-                }
-
-                const btn = document.getElementById('btn-registrar-emprestimo');
-                btn.disabled = true;
-                btn.textContent = 'Registrando...';
-
-                try {
-                    const result = await apiRequest('emprestimos', 'POST', {
-                        alunoId: aluno.id,
-                        livroId: livro.id,
-                        quantidade
-                    });
-                    if (result?.pending) {
-                        showMessage('Aviso', '⏳ Solicitação de empréstimo enviada para aprovação.');
-                    } else {
-                        showMessage('Sucesso', `✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
-                    }
-                    document.getElementById('filtro-aluno-emp').value = '';
-                    document.getElementById('filtro-livro-emp').value = '';
-                    document.getElementById('grupo-qtd-emp').style.display = 'none';
-                    await recarregarDadosBiblioteca();
-                    await carregarEmprestimosAtivos();
+                    container.innerHTML = admins.map(a => {
+                        const actionBtns = userInfo.isSuperAdmin
+                            ? `<button class="btn-aprovar" data-uid="${a.uid}" data-email="${a.username}">✓</button>
+                               <button class="btn-negar-sol" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
+                            : '<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>';
+                        return `<div class="pending-admin">
+                                    <p><strong>${escapeHtml(a.username)}</strong></p>
+                                    <div class="admin-actions">${actionBtns}</div>
+                                </div>`;
+                    }).join('');
                 } catch (err) {
-                    let msg = 'Erro ao registrar empréstimo.';
+                    console.error('Erro ao carregar admins pendentes:', err);
+                }
+            }
+
+            document.getElementById('pending-admins-list')?.addEventListener('click', async (e) => {
+                const uid = e.target.dataset.uid;
+                const email = e.target.dataset.email;
+                if (!uid) return;
+
+                if (e.target.classList.contains('btn-aprovar')) {
+                    pendingAcceptUid = uid;
+                    const emailEl = document.getElementById('accept-modal-email');
+                    if (emailEl) emailEl.textContent = email || uid;
+                    const nivelInput = document.getElementById('nivel-aceitar');
+                    if (nivelInput) nivelInput.value = '';
+                    acceptModal?.classList.add('active');
+                } else if (e.target.classList.contains('btn-negar-sol')) {
+                    const negado = await confirm(`Negar acesso de ${email || uid}?`);
+                    if (!negado) return;
+                    try {
+                        await apiRequest('pendentes/negar', 'POST', { uid });
+                        loadPendingAdmins();
+                    } catch {
+                        showMessage('Erro', 'Não foi possível negar o administrador.');
+                    }
+                }
+            });
+
+            safeOn('btn-confirm-accept', 'click', async () => {
+                const nivel = parseInt(document.getElementById('nivel-aceitar')?.value, 10);
+                if (isNaN(nivel) || nivel < 1 || nivel > 8) {
+                    showMessage('Erro', 'Informe um nível válido entre 1 (Diretor) e 8 (TI).');
+                    return;
+                }
+                if (!pendingAcceptUid) return;
+                const btn = document.getElementById('btn-confirm-accept');
+                if (btn) btn.disabled = true;
+                try {
+                    await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
+                    acceptModal?.classList.remove('active');
+                    pendingAcceptUid = null;
+                    loadPendingAdmins();
+                    showMessage('Sucesso', '✅ Administrador aceite com sucesso!');
+                } catch (err) {
+                    let msg = 'Não foi possível aceitar o administrador.';
                     try { msg = JSON.parse(err.message)?.error || msg; } catch {}
                     showMessage('Erro', msg);
                 } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Registrar Empréstimo';
+                    if (btn) btn.disabled = false;
                 }
             });
 
-            document.getElementById('tabela-emprestimos-container').addEventListener('click', async (e) => {
-                const btnDevolver = e.target.closest('.btn-devolver');
-                if (!btnDevolver) return;
+            safeOn('btn-cancel-accept', 'click', () => {
+                acceptModal?.classList.remove('active');
+                pendingAcceptUid = null;
+            });
 
-                const empId = btnDevolver.dataset.id;
-                const total = parseInt(btnDevolver.dataset.total, 10) || 1;
-                const qtdInput = document.getElementById(`qtd-dev-${empId}`);
-                if (!qtdInput) {
-                    showMessage('Erro', 'Campo de quantidade não encontrado.');
-                    return;
-                }
-                const qtd = parseInt(qtdInput.value, 10);
-                if (isNaN(qtd) || qtd < 1 || qtd > total) {
-                    showMessage('Erro', `Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
-                    return;
-                }
-
-                const mensagem = qtd < total
-                    ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
-                    : `Devolver todos os ${total} exemplar(es)?`;
-
-                const confirmado = await confirm(mensagem);
-                if (!confirmado) return;
-
-                btnDevolver.disabled = true;
-                btnDevolver.textContent = '...';
+            async function loadAdmins() {
+                if (!userInfo.isSuperAdmin) return;
                 try {
-                    await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
-                    showMessage('Sucesso', '✅ Devolução registrada com sucesso!');
+                    const admins = await apiRequest('admins');
+                    const container = document.getElementById('admin-list');
+                    if (!container) return;
+                    if (!admins.length) {
+                        container.innerHTML = '<p style="color:var(--txt-muted)">Nenhum administrador encontrado.</p>';
+                        return;
+                    }
+                    container.innerHTML = admins.map(a => `
+                        <div class="admin-item" data-uid="${a.uid}">
+                            <div class="admin-info">
+                                <span class="admin-email">${escapeHtml(a.email)}</span>
+                                <span class="admin-level">Nível: ${a.nivel}</span>
+                            </div>
+                            <div class="admin-actions">
+                                <button class="btn-edit-level" data-uid="${a.uid}" data-email="${a.email}" data-current="${a.nivel}">Editar Nível</button>
+                                <button class="btn-delete-admin" data-uid="${a.uid}" data-email="${a.email}">Excluir</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    const container = document.getElementById('admin-list');
+                    if (container) container.innerHTML = '<p style="color:var(--red)">Erro ao carregar administradores.</p>';
+                }
+            }
+
+            async function loadAdminSolicitations() {
+                if (!userInfo.isSuperAdmin) return;
+                try {
+                    const solicitations = await apiRequest('admin-solicitations');
+                    const container = document.getElementById('admin-solicitations-list');
+                    if (!container) return;
+                    if (!solicitations.length) {
+                        container.innerHTML = '<p style="color:var(--txt-muted);font-style:italic;">Nenhuma solicitação pendente.</p>';
+                        return;
+                    }
+                    container.innerHTML = solicitations.map(s => {
+                        const alreadyApproved = s.approvals && s.approvals.includes(userInfo.email);
+                        const approvalCount = s.approvals ? s.approvals.length : 0;
+                        const reqCount = s.requiredApprovals || 2;
+                        const btnDisabled = alreadyApproved ? 'disabled' : '';
+                        const btnText = alreadyApproved ? '✓ Aprovado' : 'Aprovar';
+                        let descricao = '';
+                        if (s.type === 'edit') {
+                            descricao = `Alterar nível de ${escapeHtml(s.targetEmail)} para ${s.newNivel}`;
+                        } else if (s.type === 'delete') {
+                            descricao = `Excluir administrador ${escapeHtml(s.targetEmail)}`;
+                        }
+                        return `
+                            <div class="solicitation-item" data-id="${s.id}">
+                                <div>
+                                    <strong>${escapeHtml(s.requestedBy)}</strong> solicitou: ${descricao}
+                                    <br><span class="approval-count">Aprovações: ${approvalCount}/${reqCount} ${s.approvals ? '— ' + s.approvals.join(', ') : ''}</span>
+                                </div>
+                                <button class="btn-approve-admin" data-id="${s.id}" ${btnDisabled}>${btnText}</button>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    const container = document.getElementById('admin-solicitations-list');
+                    if (container) container.innerHTML = '<p style="color:var(--red)">Erro ao carregar solicitações.</p>';
+                }
+            }
+
+            document.getElementById('admin-list')?.addEventListener('click', (e) => {
+                const uid = e.target.dataset.uid;
+                if (!uid) return;
+                if (e.target.classList.contains('btn-edit-level')) {
+                    currentEditTarget = { uid, email: e.target.dataset.email };
+                    const emailEl = document.getElementById('edit-level-email');
+                    if (emailEl) emailEl.textContent = e.target.dataset.email;
+                    const levelInput = document.getElementById('new-level');
+                    if (levelInput) levelInput.value = e.target.dataset.current;
+                    document.getElementById('edit-level-modal')?.classList.add('active');
+                } else if (e.target.classList.contains('btn-delete-admin')) {
+                    const email = e.target.dataset.email;
+                    showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`, 
+                        async () => {
+                            try {
+                                await apiRequest('admin-solicitations', 'POST', {
+                                    type: 'delete',
+                                    targetUid: uid,
+                                    targetEmail: email
+                                });
+                                showMessage('Sucesso', 'Solicitação de exclusão enviada para aprovação.');
+                                await loadAdminSolicitations();
+                            } catch (err) {
+                                showMessage('Erro', 'Não foi possível criar a solicitação.');
+                            }
+                        }
+                    );
+                }
+            });
+
+            safeOn('btn-confirm-edit-level', 'click', async () => {
+                if (!currentEditTarget) return;
+                const newNivel = parseInt(document.getElementById('new-level')?.value, 10);
+                if (isNaN(newNivel) || newNivel < 1 || newNivel > 8) {
+                    showMessage('Erro', 'Nível inválido (1-8).');
+                    return;
+                }
+                try {
+                    await apiRequest('admin-solicitations', 'POST', {
+                        type: 'edit',
+                        targetUid: currentEditTarget.uid,
+                        targetEmail: currentEditTarget.email,
+                        newNivel
+                    });
+                    showMessage('Sucesso', 'Solicitação de alteração de nível enviada para aprovação.');
+                    document.getElementById('edit-level-modal')?.classList.remove('active');
+                    currentEditTarget = null;
+                    await loadAdminSolicitations();
+                } catch (err) {
+                    showMessage('Erro', 'Não foi possível criar a solicitação.');
+                }
+            });
+
+            safeOn('btn-cancel-edit-level', 'click', () => {
+                document.getElementById('edit-level-modal')?.classList.remove('active');
+                currentEditTarget = null;
+            });
+
+            document.getElementById('admin-solicitations-list')?.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.btn-approve-admin');
+                if (!btn || btn.disabled) return;
+                const solicitationId = btn.dataset.id;
+                btn.disabled = true;
+                try {
+                    await apiRequest(`admin-solicitations/${solicitationId}/approve`, 'POST');
+                    showMessage('Sucesso', 'Aprovação registada. Se foi a segunda, a ação já foi executada!');
+                    await loadAdminSolicitations();
+                    await loadAdmins();
+                } catch (err) {
+                    showMessage('Erro', 'Erro ao aprovar.');
+                    btn.disabled = false;
+                }
+            });
+
+            // ═══════════════ BIBLIOTECA ═══════════════
+            let todosAlunos = [];
+            let todosLivros = [];
+            let bibliotecaCarregada = false;
+            let filtrosInicializados = false;
+            let tipoFiltroEmp = 'todos';
+            let tipoFiltroHist = 'todos';
+
+            function formatarData(ts) {
+                if (!ts) return '—';
+                const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+                const d = ms !== null ? new Date(ms) : new Date(ts);
+                return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
+            }
+
+            function popularSelect(id, items, labelFn) {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                if (!items.length) {
+                    sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+                    return;
+                }
+                sel.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(labelFn(i))}</option>`).join('');
+            }
+
+            async function recarregarDadosBiblioteca() {
+                [todosAlunos, todosLivros] = await Promise.all([
+                    apiRequest('alunosBib'),
+                    apiRequest('livros')
+                ]);
+                atualizarSelects();
+            }
+
+            function obterListaFiltrada(tipo) {
+                if (tipo === 'todos') return todosAlunos;
+                return todosAlunos.filter(a => a.tipo === tipo);
+            }
+
+            function atualizarSelects() {
+                const listaEmp = obterListaFiltrada(tipoFiltroEmp);
+                popularSelect('sel-aluno-emp', listaEmp, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+                const listaHist = obterListaFiltrada(tipoFiltroHist);
+                popularSelect('sel-aluno-hist', listaHist, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+                const livrosDisp = todosLivros.filter(l => {
+                    const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
+                    return disp > 0;
+                });
+                const labelLivroDisp = l => {
+                    const disp = l.quantidadeDisponivel ?? 1;
+                    const total = l.quantidade || 1;
+                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
+                };
+                popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
+                popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
+            }
+
+            function inicializarFiltros() {
+                if (filtrosInicializados) return;
+                filtrosInicializados = true;
+
+                document.getElementById('filtro-tipo-emp')?.addEventListener('change', function() {
+                    tipoFiltroEmp = this.value;
+                    const filtroAluno = document.getElementById('filtro-aluno-emp');
+                    if (filtroAluno) filtroAluno.value = '';
+                    atualizarSelects();
+                });
+
+                document.getElementById('filtro-tipo-hist')?.addEventListener('change', function() {
+                    tipoFiltroHist = this.value;
+                    const filtroAlunoHist = document.getElementById('filtro-aluno-hist');
+                    if (filtroAlunoHist) filtroAlunoHist.value = '';
+                    atualizarSelects();
+                });
+
+                document.getElementById('filtro-aluno-emp')?.addEventListener('input', function() {
+                    const q = this.value.toLowerCase();
+                    const base = obterListaFiltrada(tipoFiltroEmp);
+                    const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                    popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+                });
+
+                document.getElementById('filtro-aluno-hist')?.addEventListener('input', function() {
+                    const q = this.value.toLowerCase();
+                    const base = obterListaFiltrada(tipoFiltroHist);
+                    const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                    popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+                });
+
+                document.getElementById('filtro-livro-emp')?.addEventListener('input', function() {
+                    const q = this.value.toLowerCase();
+                    const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
+                    const list = q ? disp.filter(l =>
+                        l.nome.toLowerCase().includes(q) ||
+                        (l.autor || '').toLowerCase().includes(q) ||
+                        (l.codigo || '').toLowerCase().includes(q)
+                    ) : disp;
+                    const labelLivroDisp = l => {
+                        const d = l.quantidadeDisponivel ?? 1;
+                        const t = l.quantidade || 1;
+                        return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
+                    };
+                    popularSelect('sel-livro-emp', list, labelLivroDisp);
+                });
+
+                document.getElementById('filtro-livro-hist')?.addEventListener('input', function() {
+                    const q = this.value.toLowerCase();
+                    const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
+                    popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
+                });
+
+                document.getElementById('sel-livro-emp')?.addEventListener('change', function() {
+                    const livroId = this.value;
+                    const grupoQtd = document.getElementById('grupo-qtd-emp');
+                    const inputQtd = document.getElementById('qtd-emprestimo');
+                    const aviso = document.getElementById('qtd-max-aviso');
+
+                    if (!livroId) {
+                        if (grupoQtd) grupoQtd.style.display = 'none';
+                        return;
+                    }
+
+                    const livro = todosLivros.find(l => l.id === livroId);
+                    if (livro) {
+                        const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+                        if (grupoQtd) grupoQtd.style.display = 'block';
+                        if (inputQtd) {
+                            inputQtd.max = disp;
+                            inputQtd.value = 1;
+                        }
+                        if (aviso) aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
+                    }
+                });
+
+                safeOn('btn-registrar-emprestimo', 'click', async () => {
+                    const selAluno = document.getElementById('sel-aluno-emp');
+                    const selLivro = document.getElementById('sel-livro-emp');
+                    const qtdInput = document.getElementById('qtd-emprestimo');
+
+                    if (!selAluno?.value || !selLivro?.value) {
+                        showMessage('Aviso', 'Selecione um cadastrado e um livro.');
+                        return;
+                    }
+
+                    const aluno = todosAlunos.find(a => a.id === selAluno.value);
+                    const livro = todosLivros.find(l => l.id === selLivro.value);
+                    const quantidade = parseInt(qtdInput?.value || 1, 10);
+                    const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+
+                    if (quantidade < 1) { showMessage('Erro', 'Quantidade inválida.'); return; }
+                    if (quantidade > disponiveis) {
+                        showMessage('Erro', `Só existem ${disponiveis} exemplar(es) disponível(is).`);
+                        return;
+                    }
+
+                    const btn = document.getElementById('btn-registrar-emprestimo');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = 'Registrando...';
+                    }
+
+                    try {
+                        const result = await apiRequest('emprestimos', 'POST', {
+                            alunoId: aluno.id,
+                            livroId: livro.id,
+                            quantidade
+                        });
+                        if (result?.pending) {
+                            showMessage('Aviso', '⏳ Solicitação de empréstimo enviada para aprovação.');
+                        } else {
+                            showMessage('Sucesso', `✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
+                        }
+                        const filtroAluno = document.getElementById('filtro-aluno-emp');
+                        const filtroLivro = document.getElementById('filtro-livro-emp');
+                        if (filtroAluno) filtroAluno.value = '';
+                        if (filtroLivro) filtroLivro.value = '';
+                        const grupoQtd = document.getElementById('grupo-qtd-emp');
+                        if (grupoQtd) grupoQtd.style.display = 'none';
+                        await recarregarDadosBiblioteca();
+                        await carregarEmprestimosAtivos();
+                    } catch (err) {
+                        let msg = 'Erro ao registrar empréstimo.';
+                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                        showMessage('Erro', msg);
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = 'Registrar Empréstimo';
+                        }
+                    }
+                });
+
+                document.getElementById('tabela-emprestimos-container')?.addEventListener('click', async (e) => {
+                    const btnDevolver = e.target.closest('.btn-devolver');
+                    if (!btnDevolver) return;
+
+                    const empId = btnDevolver.dataset.id;
+                    const total = parseInt(btnDevolver.dataset.total, 10) || 1;
+                    const qtdInput = document.getElementById(`qtd-dev-${empId}`);
+                    if (!qtdInput) {
+                        showMessage('Erro', 'Campo de quantidade não encontrado.');
+                        return;
+                    }
+                    const qtd = parseInt(qtdInput.value, 10);
+                    if (isNaN(qtd) || qtd < 1 || qtd > total) {
+                        showMessage('Erro', `Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
+                        return;
+                    }
+
+                    const mensagem = qtd < total
+                        ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
+                        : `Devolver todos os ${total} exemplar(es)?`;
+
+                    const confirmado = await confirm(mensagem);
+                    if (!confirmado) return;
+
+                    btnDevolver.disabled = true;
+                    btnDevolver.textContent = '...';
+                    try {
+                        await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
+                        showMessage('Sucesso', '✅ Devolução registrada com sucesso!');
+                        await recarregarDadosBiblioteca();
+                        await carregarEmprestimosAtivos();
+                    } catch (err) {
+                        let msg = 'Erro ao registrar devolução.';
+                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                        showMessage('Erro', msg);
+                        btnDevolver.disabled = false;
+                        btnDevolver.textContent = 'Devolver';
+                    }
+                });
+
+                safeOn('btn-ver-aluno', 'click', async () => {
+                    const sel = document.getElementById('sel-aluno-hist');
+                    const lista = document.getElementById('lista-historico-aluno');
+                    if (!sel?.value) { showMessage('Aviso', 'Selecione um cadastrado.'); return; }
+                    if (lista) lista.innerHTML = '<li>Carregando...</li>';
+                    try {
+                        const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
+                        if (lista) {
+                            lista.innerHTML = emp.length
+                                ? emp.map(e => {
+                                    const badge = e.devolvido
+                                        ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                        : `<span class="badge-ativo">📚 Em andamento</span>`;
+                                    return `<li><span>${escapeHtml(e.livroNome)} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                                }).join('')
+                                : '<li>Nenhum empréstimo encontrado.</li>';
+                        }
+                    } catch {
+                        if (lista) lista.innerHTML = '<li>Erro ao buscar.</li>';
+                    }
+                });
+
+                safeOn('btn-ver-livro', 'click', async () => {
+                    const sel = document.getElementById('sel-livro-hist');
+                    const lista = document.getElementById('lista-historico-livro');
+                    if (!sel?.value) { showMessage('Aviso', 'Selecione um livro.'); return; }
+                    if (lista) lista.innerHTML = '<li>Carregando...</li>';
+                    try {
+                        const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
+                        if (lista) {
+                            lista.innerHTML = emp.length
+                                ? emp.map(e => {
+                                    const badge = e.devolvido
+                                        ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                        : `<span class="badge-ativo">📚 Em andamento</span>`;
+                                    return `<li><span>${escapeHtml(e.alunoNome)} (${escapeHtml(e.alunoMatricula)}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                                }).join('')
+                                : '<li>Nenhum empréstimo encontrado.</li>';
+                        }
+                    } catch {
+                        if (lista) lista.innerHTML = '<li>Erro ao buscar.</li>';
+                    }
+                });
+
+                safeOn('btn-reload-emprestimos', 'click', async () => {
                     await recarregarDadosBiblioteca();
                     await carregarEmprestimosAtivos();
-                } catch (err) {
-                    let msg = 'Erro ao registrar devolução.';
-                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                    showMessage('Erro', msg);
-                    btnDevolver.disabled = false;
-                    btnDevolver.textContent = 'Devolver';
-                }
-            });
+                });
+            }
 
-            document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
-                const sel = document.getElementById('sel-aluno-hist');
-                const lista = document.getElementById('lista-historico-aluno');
-                if (!sel.value) { showMessage('Aviso', 'Selecione um cadastrado.'); return; }
-                lista.innerHTML = '<li>Carregando...</li>';
+            async function carregarEmprestimosAtivos() {
+                const container = document.getElementById('tabela-emprestimos-container');
+                if (!container) return;
+                container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
                 try {
-                    const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
-                    lista.innerHTML = emp.length
-                        ? emp.map(e => {
-                            const badge = e.devolvido
-                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                                : `<span class="badge-ativo">📚 Em andamento</span>`;
-                            return `<li><span>${escapeHtml(e.livroNome)} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-                        }).join('')
-                        : '<li>Nenhum empréstimo encontrado.</li>';
-                } catch {
-                    lista.innerHTML = '<li>Erro ao buscar.</li>';
-                }
-            });
-
-            document.getElementById('btn-ver-livro').addEventListener('click', async () => {
-                const sel = document.getElementById('sel-livro-hist');
-                const lista = document.getElementById('lista-historico-livro');
-                if (!sel.value) { showMessage('Aviso', 'Selecione um livro.'); return; }
-                lista.innerHTML = '<li>Carregando...</li>';
-                try {
-                    const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
-                    lista.innerHTML = emp.length
-                        ? emp.map(e => {
-                            const badge = e.devolvido
-                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
-                                : `<span class="badge-ativo">📚 Em andamento</span>`;
-                            return `<li><span>${escapeHtml(e.alunoNome)} (${escapeHtml(e.alunoMatricula)}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
-                        }).join('')
-                        : '<li>Nenhum empréstimo encontrado.</li>';
-                } catch {
-                    lista.innerHTML = '<li>Erro ao buscar.</li>';
-                }
-            });
-
-            document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
-                await recarregarDadosBiblioteca();
-                await carregarEmprestimosAtivos();
-            });
-        }
-
-        async function carregarEmprestimosAtivos() {
-            const container = document.getElementById('tabela-emprestimos-container');
-            container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
-            try {
-                const lista = await apiRequest('emprestimos?ativos=true');
-                if (!lista.length) {
-                    container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
-                    return;
-                }
-                container.innerHTML = `
-                    <table class="tabela-bib">
-                        <thead>
-                            <tr>
-                                <th>Cadastrado</th>
-                                <th>Livro</th>
-                                <th>Código</th>
-                                <th>Qtd.</th>
-                                <th>Data</th>
-                                <th>Devolver</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${lista.map(e => `
+                    const lista = await apiRequest('emprestimos?ativos=true');
+                    if (!lista.length) {
+                        container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+                        return;
+                    }
+                    container.innerHTML = `
+                        <table class="tabela-bib">
+                            <thead>
                                 <tr>
-                                    <td>${escapeHtml(e.alunoNome)} <small style="color:var(--txt-muted)">(${escapeHtml(e.alunoMatricula)})</small></td>
-                                    <td>${escapeHtml(e.livroNome)}</td>
-                                    <td><small>${escapeHtml(e.livroCodigo || '—')}</small></td>
-                                    <td>${e.quantidade || 1}</td>
-                                    <td>${formatarData(e.dataEmprestimo)}</td>
-                                    <td style="display:flex; gap:4px; align-items:center;">
-                                        <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
-                                        <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
-                                    </td>
+                                    <th>Cadastrado</th>
+                                    <th>Livro</th>
+                                    <th>Código</th>
+                                    <th>Qtd.</th>
+                                    <th>Data</th>
+                                    <th>Devolver</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>`;
-            } catch {
-                container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
-            }
-        }
-
-        async function carregarBiblioteca() {
-            try {
-                await recarregarDadosBiblioteca();
-                inicializarFiltros();
-                await carregarEmprestimosAtivos();
-                bibliotecaCarregada = true;
-            } catch (err) {
-                console.error('Erro ao carregar biblioteca:', err);
-            }
-        }
-
-        // ═══════════════════════════ INICIALIZAÇÃO ═══════════════════════════
-        async function init() {
-            await carregarUserInfo();
-            loadInitialData('alunos');
-            loadInitialData('responsaveis');
-            loadPendingAdmins();
-            carregarCargosSelect();
-
-            // Atualizar a cada 10 segundos
-            setInterval(() => {
-                loadPendingAdmins();
-                if (document.getElementById('admins').classList.contains('active')) {
-                    loadAdmins();
-                    loadAdminSolicitations();
+                            </thead>
+                            <tbody>
+                                ${lista.map(e => `
+                                    <tr>
+                                        <td>${escapeHtml(e.alunoNome)} <small style="color:var(--txt-muted)">(${escapeHtml(e.alunoMatricula)})</small></td>
+                                        <td>${escapeHtml(e.livroNome)}</td>
+                                        <td><small>${escapeHtml(e.livroCodigo || '—')}</small></td>
+                                        <td>${e.quantidade || 1}</td>
+                                        <td>${formatarData(e.dataEmprestimo)}</td>
+                                        <td style="display:flex; gap:4px; align-items:center;">
+                                            <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
+                                            <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>`;
+                } catch {
+                    container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
                 }
-            }, 10000);
-        }
+            }
 
-        init();
-    });
+            async function carregarBiblioteca() {
+                try {
+                    await recarregarDadosBiblioteca();
+                    inicializarFiltros();
+                    await carregarEmprestimosAtivos();
+                    bibliotecaCarregada = true;
+                } catch (err) {
+                    console.error('Erro ao carregar biblioteca:', err);
+                }
+            }
+
+            // ═══════════════ INICIALIZAÇÃO ═══════════════
+            async function init() {
+                await carregarUserInfo();
+                loadInitialData('alunos');
+                loadInitialData('responsaveis');
+                loadPendingAdmins();
+                carregarCargosSelect();
+
+                setInterval(() => {
+                    loadPendingAdmins();
+                    if (document.getElementById('admins')?.classList.contains('active')) {
+                        loadAdmins();
+                        loadAdminSolicitations();
+                    }
+                }, 10000);
+            }
+
+            init();
+        });
+    })();
     </script>
 </body>
 </html>
