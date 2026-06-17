@@ -9,7 +9,6 @@ const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
 const dns = require("dns").promises;
-const nodemailer = require("nodemailer"); // 🆕
 
 // Se usar dotenv para ambiente local
 // require('dotenv').config();
@@ -35,15 +34,6 @@ cloudinary.config({
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'DEFINIDO' : 'NÃO DEFINIDO');
-
-// 🆕 Transporte de e‑mail
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -135,19 +125,28 @@ app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, 
 app.get("/", (req, res) => res.redirect("/login"));
 
 // ══════════════════════════════════════════════════════════════════
-// API Login – exige SEMPRE e‑mail verificado
+// API Login – permite login a administradores já aprovados
+// mesmo que o e‑mail não esteja verificado
 // ══════════════════════════════════════════════════════════════════
 app.post("/sessionLogin", async (req, res) => {
     try {
         const { idToken } = req.body;
         const decoded = await auth.verifyIdToken(idToken);
-        if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
+        
+        // Só administradores podem fazer login
+        if (!decoded.isAdmin) {
+            return res.status(403).send('Não autorizado');
+        }
 
         const userRecord = await auth.getUser(decoded.uid);
-        if (!userRecord.emailVerified) {
+        
+        // Se o utilizador já é administrador (isAdmin true), ignora a verificação de e‑mail
+        // Isso permite que contas antigas aprovadas façam login sem ter o e‑mail verificado
+        if (!userRecord.emailVerified && !decoded.isAdmin) {
             return res.status(403).send('Por favor, verifique seu e‑mail antes de fazer login.');
         }
 
+        // Se for um admin aprovado (isAdmin true), permite login mesmo sem emailVerified
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
         res.cookie('session', cookie, {
             maxAge: 432000000,
@@ -171,7 +170,7 @@ app.post("/checkAdmin", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// VALIDAÇÃO DE DOMÍNIO
+// VALIDAÇÃO DE DOMÍNIO (verifica se o e‑mail tem servidor MX)
 // ══════════════════════════════════════════════════════════════════
 async function isEmailDomainValid(email) {
     try {
@@ -185,7 +184,7 @@ async function isEmailDomainValid(email) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// REGISTRO
+// REGISTRO – e‑mail verificado automaticamente
 // ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
@@ -202,6 +201,7 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Formato de e‑mail inválido.' });
         }
 
+        // Valida se o domínio do e‑mail tem servidores MX (opcional mas mantido)
         const domainValid = await isEmailDomainValid(email);
         if (!domainValid) {
             return res.status(400).json({ error: 'Domínio de e‑mail inválido ou não consegue receber mensagens.' });
@@ -221,6 +221,8 @@ app.post('/register', async (req, res) => {
             throw e;
         }
 
+        // Força o e‑mail como verificado para não depender de envio de link
+        await auth.updateUser(userRecord.uid, { emailVerified: true });
         await auth.setCustomUserClaims(userRecord.uid, { status: 'pending' });
 
         await db.collection('registrations').doc(userRecord.uid).set({
@@ -230,56 +232,10 @@ app.post('/register', async (req, res) => {
             requestedAt: new Date()
         });
 
-        // Gera e envia o link de verificação
-        const verificationLink = await auth.generateEmailVerificationLink(email);
-
-        try {
-            await transporter.sendMail({
-                from: `"GETECO Admin" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: 'Confirme o seu e‑mail – Painel GETECO',
-                html: `
-                    <p>Obrigado por se registar no painel administrativo da GETECO.</p>
-                    <p>Para confirmar o seu endereço de e‑mail, clique no link abaixo:</p>
-                    <p><a href="${verificationLink}">Confirmar e‑mail</a></p>
-                    <p>Se não foi você, ignore esta mensagem.</p>
-                `
-            });
-            console.log(`✅ E‑mail de verificação enviado para ${email}`);
-        } catch (emailErr) {
-            console.error('❌ Falha ao enviar e‑mail de verificação:', emailErr);
-        }
-
-        res.json({ success: true, message: 'Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.' });
+        res.json({ success: true, message: 'Conta criada com sucesso! Aguarde a aprovação do administrador.' });
     } catch (e) {
         console.error('Erro ao processar registro:', e);
         res.status(500).json({ error: 'Não foi possível processar o registro.' });
-    }
-});
-
-// 🆕 Reenvio de verificação (útil para quem perdeu o e‑mail)
-app.post('/resend-verification', async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ error: 'E‑mail obrigatório.' });
-
-        const user = await auth.getUserByEmail(email);
-        if (user.emailVerified) {
-            return res.json({ message: 'Este e‑mail já foi verificado.' });
-        }
-
-        const verificationLink = await auth.generateEmailVerificationLink(email);
-        await transporter.sendMail({
-            from: `"GETECO Admin" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Confirme o seu e‑mail – GETECO (reenvio)',
-            html: `<p>Clique no link para confirmar o seu registo:</p><p><a href="${verificationLink}">Confirmar e‑mail</a></p>`
-        });
-
-        res.json({ success: true, message: 'Novo e‑mail de verificação enviado.' });
-    } catch (e) {
-        if (e.code === 'auth/user-not-found') return res.status(404).json({ error: 'E‑mail não encontrado.' });
-        res.status(500).json({ error: 'Erro ao reenviar verificação.' });
     }
 });
 
@@ -502,7 +458,8 @@ app.get('/api/pendentes', requireAdmin, async (req, res) => {
         const pendentes = [];
 
         for (const user of list.users) {
-            if (user.customClaims?.status === 'pending' && user.emailVerified) {
+            // Agora o e‑mail já vem verificado, por isso a verificação é apenas de status
+            if (user.customClaims?.status === 'pending') {
                 pendentes.push({ uid: user.uid, username: user.email });
             }
         }
@@ -527,11 +484,7 @@ app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: `Nível inválido. Valores aceitos: ${NIVEIS_VALIDOS.join(', ')}.` });
         }
 
-        const userRecord = await auth.getUser(uid);
-        if (!userRecord.emailVerified) {
-            return res.status(400).json({ error: 'O utilizador ainda não verificou o e‑mail. A aprovação só é possível após a verificação.' });
-        }
-
+        // Já não verificamos emailVerified porque já o forçamos a true
         await auth.setCustomUserClaims(uid, { isAdmin: true, nivel: nivelNum, status: null });
         await db.collection('registrations').doc(uid).update({
             status: 'approved',
