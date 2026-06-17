@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/logo.png">
     <style>
-        /* ... (todos os estilos originais permanecem idênticos) ... */
         /* ===== ESTILOS BASE (VISUAL ORIGINAL) ===== */
         .btn-edit { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(58,130,246,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); margin-right: 4px; }
         .btn-edit:hover { background: var(--blue); color: white; border-color: var(--blue); }
@@ -179,7 +178,6 @@
         <!-- ── ABA: CADASTRAR ── -->
         <div id="cadastrar" class="tab-pane active">
             <div class="grid-forms">
-                <!-- ... (todos os formulários permanecem iguais, exceto o de alunosBib) ... -->
                 <div class="form-container" data-section="noticias">
                     <h3>Nova Notícia</h3>
                     <form>
@@ -238,7 +236,7 @@
                         <button type="submit" class="btn-submit">Salvar Contacto</button>
                     </form>
                 </div>
-                <!-- ⚡️ FORMULÁRIO MODIFICADO: campo matrícula adicionado -->
+                <!-- ⚡️ FORMULÁRIO MODIFICADO -->
                 <div class="form-container" data-section="alunosBib">
                     <h3>Novo Cadastro (Biblioteca)</h3>
                     <form>
@@ -254,9 +252,9 @@
                             <input type="text" name="nome" required>
                         </div>
                         <div class="input-group" id="grupo-matricula">
-                            <label>Matrícula (obrigatória para Aluno)</label>
-                            <input type="text" name="matricula" id="cad-matricula" placeholder="Para professor, deixe em branco para gerar SGBGP...">
-                            <small style="color:var(--txt-muted);font-size:0.75rem;">Professor: matrícula automática (ex: SGBGP001)</small>
+                            <label>Matrícula</label>
+                            <input type="text" name="matricula" id="cad-matricula" placeholder="Digite a matrícula do aluno">
+                            <small style="color:var(--txt-muted);font-size:0.75rem;">Obrigatório para alunos</small>
                         </div>
                         <button type="submit" class="btn-submit">Salvar</button>
                     </form>
@@ -307,21 +305,108 @@
 
         <!-- ── ABA: BIBLIOTECA ── -->
         <div id="biblioteca" class="tab-pane">
-            <!-- ... (todo o conteúdo original permanece igual) ... -->
+            <div class="grid-forms">
+                <div class="form-container">
+                    <h3>Registrar Empréstimo</h3>
+                    <div class="input-group">
+                        <label>Filtrar Cadastrados</label>
+                        <select id="filtro-tipo-emp" class="filtro-tipo-select">
+                            <option value="todos">Todos</option>
+                            <option value="aluno">Apenas Alunos</option>
+                            <option value="professor">Apenas Professores</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Cadastrado (Aluno/Professor)</label>
+                        <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
+                        <select id="sel-aluno-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Livro disponível</label>
+                        <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
+                        <select id="sel-livro-emp" class="bib-select" size="5"></select>
+                    </div>
+                    <div class="input-group" id="grupo-qtd-emp" style="display:none;">
+                        <label>Quantidade de exemplares</label>
+                        <input type="number" id="qtd-emprestimo" min="1" value="1">
+                        <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
+                    </div>
+                    <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Cadastrado</h3>
+                    <div class="input-group">
+                        <label>Filtrar Cadastrados</label>
+                        <select id="filtro-tipo-hist" class="filtro-tipo-select">
+                            <option value="todos">Todos</option>
+                            <option value="aluno">Apenas Alunos</option>
+                            <option value="professor">Apenas Professores</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Selecionar cadastrado</label>
+                        <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar...">
+                        <select id="sel-aluno-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+                <div class="form-container">
+                    <h3>Histórico por Livro</h3>
+                    <div class="input-group">
+                        <label>Selecionar livro</label>
+                        <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
+                        <select id="sel-livro-hist" class="bib-select" size="5"></select>
+                    </div>
+                    <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
+                    <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
+                </div>
+            </div>
+            <div class="list-container" style="margin-top:1.5rem">
+                <div class="bib-header">
+                    <h3>Empréstimos em Andamento</h3>
+                    <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
+                </div>
+                <div id="tabela-emprestimos-container">
+                    <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
+                </div>
+            </div>
         </div>
 
         <!-- ═══════════════ ABA: ADMINISTRADORES ═══════════════ -->
         <div id="admins" class="tab-pane">
-            <!-- ... igual ... -->
+            <div class="admin-list-container">
+                <h3>Administradores Aprovados</h3>
+                <div id="admin-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
+
+            <div class="admin-list-container pending-admin-solicitations">
+                <h3>⏳ Solicitações de Administradores Pendentes</h3>
+                <div id="admin-solicitations-list" class="admin-list">
+                    <p style="color: var(--txt-muted);">Carregando...</p>
+                </div>
+            </div>
         </div>
 
         <!-- ── ABA: LOGS ── -->
         <div id="logs" class="tab-pane">
-            <!-- ... igual ... -->
+            <div class="list-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="margin:0;">Histórico de Atividades</h3>
+                    <div class="mass-actions" id="mass-actions" style="display:none;">
+                        <button id="btn-confirm-all" class="btn-reload" title="Confirmar todos os logs reversíveis">✓ Confirmar todos</button>
+                        <button id="btn-rollback-all" class="btn-reload" title="Reverter todos os logs reversíveis">↩ Reverter todos</button>
+                        <button id="btn-clear-history" class="btn-reload" title="Apagar todos os logs não reversíveis">🗑 Limpar histórico</button>
+                    </div>
+                </div>
+                <ul id="logs-list" class="item-list"></ul>
+            </div>
         </div>
     </main>
 
-    <!-- Modais (iguais ao original) -->
+    <!-- Modal: Mensagem -->
     <div id="message-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="msg-modal-title">Mensagem</h2>
@@ -332,6 +417,7 @@
         </div>
     </div>
 
+    <!-- Modal: Confirmação -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="confirm-modal-title">Confirmar</h2>
@@ -343,6 +429,7 @@
         </div>
     </div>
 
+    <!-- Modal: Confirmar Exclusão genérica -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
@@ -354,6 +441,7 @@
         </div>
     </div>
 
+    <!-- Modal: Exclusão de livro COM histórico -->
     <div id="delete-history-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="warning-icon">⚠️</span>
@@ -370,6 +458,7 @@
         </div>
     </div>
 
+    <!-- Modal: Edição -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Item</h2>
@@ -381,6 +470,7 @@
         </div>
     </div>
 
+    <!-- Modal: Aceitar administrador pendente -->
     <div id="accept-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Aceitar Administrador</h2>
@@ -399,6 +489,7 @@
         </div>
     </div>
 
+    <!-- Modal: Editar nível de admin -->
     <div id="edit-level-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Nível do Administrador</h2>
@@ -613,6 +704,27 @@
                 if (select) select.innerHTML = '<option value="">Erro ao carregar</option>';
             }
         }
+
+        // ===== LÓGICA DINÂMICA DO CAMPO MATRÍCULA =====
+        const tipoSelect = document.getElementById('cad-tipo');
+        const matriculaInput = document.getElementById('cad-matricula');
+        const grupoMatricula = document.getElementById('grupo-matricula');
+
+        function atualizarMatricula() {
+            if (tipoSelect.value === 'aluno') {
+                matriculaInput.required = true;
+                matriculaInput.placeholder = 'Digite a matrícula do aluno';
+                grupoMatricula.querySelector('small').textContent = 'Obrigatório para alunos';
+            } else {
+                matriculaInput.required = false;
+                matriculaInput.value = '';
+                matriculaInput.placeholder = 'Deixe em branco para gerar automaticamente';
+                grupoMatricula.querySelector('small').textContent = 'Será gerado automaticamente (ex: SGBGP001)';
+            }
+        }
+
+        tipoSelect.addEventListener('change', atualizarMatricula);
+        atualizarMatricula();
 
         async function loadManagementContent() {
             const container = document.getElementById('gerenciar');
@@ -988,10 +1100,8 @@
                             </li>`;
                 }).join('');
 
-                // Scroll reset após carregar
                 logsList.scrollTop = 0;
 
-                // Eventos para rollback individuais
                 document.querySelectorAll('.btn-rollback').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const logId = btn.dataset.logid;
@@ -1014,7 +1124,6 @@
             }
         }
 
-        // Eventos para ações em massa
         document.getElementById('btn-confirm-all')?.addEventListener('click', async () => {
             const confirmado = await confirm('Tem certeza que deseja CONFIRMAR todos os logs reversíveis? Eles perderão a capacidade de reversão.');
             if (!confirmado) return;
@@ -1052,7 +1161,6 @@
             }
         });
 
-        // Delegação de eventos nos logs individuais
         document.getElementById('logs-list').addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
