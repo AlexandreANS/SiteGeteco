@@ -7,579 +7,98 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/logo.png">
     <style>
-        /* ===== ESTILOS GERAIS ===== */
-        :root {
-            --blue: #2563eb;
-            --blue-dim: rgba(37, 99, 235, 0.1);
-            --blue-dark: #1d4ed8;
-            --green: #16a34a;
-            --green-dim: rgba(22, 163, 74, 0.1);
-            --red: #dc2626;
-            --red-dim: rgba(220, 38, 38, 0.1);
-            --amber: #d97706;
-            --amber-dim: rgba(217, 119, 6, 0.1);
-            --bg-body: #f3f4f6;
-            --bg-card: #ffffff;
-            --bg-input: #f9fafb;
-            --border: #e5e7eb;
-            --border-focus: #3b82f6;
-            --txt-primary: #111827;
-            --txt-secondary: #4b5563;
-            --txt-muted: #9ca3af;
-            --radius: 12px;
-            --radius-sm: 6px;
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.08);
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
+        /* ===== ESTILOS EXCLUSIVOS PARA OS NOVOS COMPONENTES ===== */
+        /* (todos os estilos de layout, cores e fontes já estão no style.css) */
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body.dashboard-body {
-            font-family: var(--font);
-            background: var(--bg-body);
-            color: var(--txt-primary);
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: 260px;
-            background: #1e293b;
-            color: #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 1rem;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-        }
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-        .sidebar-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: white;
-            padding: 4px;
-        }
-        .sidebar-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: white;
-        }
-        #user-nivel-info {
-            padding: 0.5rem 0.75rem;
-            background: rgba(255,255,255,0.08);
-            border-radius: var(--radius-sm);
-            font-size: 0.78rem;
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
-            line-height: 1.4;
-        }
-        #user-nivel-info strong {
-            color: white;
-        }
-        .sidebar-menu h3 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #94a3b8;
-            margin-bottom: 0.75rem;
-        }
-        .logout-btn {
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1rem;
-            background: rgba(255,255,255,0.08);
-            border-radius: var(--radius-sm);
-            color: #e2e8f0;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: background 0.15s ease;
-        }
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.16);
-        }
-        .logout-btn svg {
-            flex-shrink: 0;
-        }
-
-        /* ===== MAIN CONTENT ===== */
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-x: auto;
-        }
-        .main-content header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }
-
-        /* ===== TABS ===== */
-        .tabs {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-        .tab-btn {
-            padding: 0.5rem 1.2rem;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--txt-secondary);
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-family: var(--font);
-        }
-        .tab-btn:hover {
-            background: var(--bg-input);
-        }
-        .tab-btn.active {
-            background: var(--blue);
-            color: white;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-
-        /* ===== GRID DE FORMULÁRIOS ===== */
-        .grid-forms {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-        .form-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.25rem;
-        }
-        .form-container h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--txt-primary);
-        }
-        .form-container .input-group {
-            margin-bottom: 0.75rem;
-        }
-        .form-container label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--txt-secondary);
-            margin-bottom: 3px;
-        }
-        .form-container input,
-        .form-container textarea,
-        .form-container select {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .form-container input:focus,
-        .form-container textarea:focus,
-        .form-container select:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .form-container textarea {
-            min-height: 60px;
-            resize: vertical;
-        }
-        .btn-submit {
-            padding: 0.5rem 1.2rem;
-            background: var(--blue);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s ease;
-            font-family: var(--font);
-            width: 100%;
-        }
-        .btn-submit:hover {
-            background: var(--blue-dark);
-        }
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* ===== LISTAS (GERIR) ===== */
-        .grid-lists {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-        .list-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.25rem;
-        }
-        .list-container h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-        }
-        .item-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .item-list li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-        .item-list li:last-child {
-            border-bottom: none;
-        }
-        .item-list li span {
-            flex: 1;
-            word-break: break-word;
-        }
-        .item-list .empty {
-            color: var(--txt-muted);
-            font-style: italic;
-            justify-content: center;
-        }
-        .item-list .error {
-            color: var(--red);
-        }
-
-        /* ===== BOTÕES DE AÇÃO ===== */
+        /* Botões de ação */
         .btn-edit {
-            background: var(--blue-dim);
-            color: var(--blue);
+            background: var(--blue-dim, rgba(37, 99, 235, 0.1));
+            color: var(--blue, #2563eb);
             border: 1px solid rgba(37, 99, 235, 0.2);
-            padding: 3px 10px;
-            border-radius: var(--radius-sm);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm, 6px);
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
             margin-right: 4px;
         }
         .btn-edit:hover {
-            background: var(--blue);
+            background: var(--blue, #2563eb);
             color: white;
-            border-color: var(--blue);
+            border-color: var(--blue, #2563eb);
         }
         .btn-delete {
-            background: var(--red-dim);
-            color: var(--red);
+            background: var(--red-dim, rgba(220, 38, 38, 0.1));
+            color: var(--red, #dc2626);
             border: 1px solid rgba(220, 38, 38, 0.2);
-            padding: 3px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-        }
-        .btn-delete:hover {
-            background: var(--red);
-            color: white;
-            border-color: var(--red);
-        }
-        .btn-rollback {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(217, 119, 6, 0.25);
-            padding: 2px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-        }
-        .btn-rollback:hover {
-            background: var(--amber);
-            color: #1a1000;
-            border-color: var(--amber);
-        }
-        .btn-aprovar {
-            background: var(--green-dim);
-            color: var(--green);
-            border: 1px solid rgba(22, 163, 74, 0.2);
-            padding: 3px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-        }
-        .btn-aprovar:hover {
-            background: var(--green);
-            color: white;
-            border-color: var(--green);
-        }
-        .btn-negar-sol {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            padding: 3px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-        }
-        .btn-negar-sol:hover {
-            background: var(--red);
-            color: white;
-            border-color: var(--red);
-        }
-        .li-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        /* ===== BIBLIOTECA ===== */
-        .bib-filtro {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            margin-bottom: 4px;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .bib-filtro::placeholder {
-            color: var(--txt-muted);
-        }
-        .bib-filtro:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .bib-select {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            box-sizing: border-box;
-            padding: 4px;
-            min-height: 100px;
-            outline: none;
-        }
-        .bib-select option {
-            background: var(--bg-card);
-            color: var(--txt-primary);
-        }
-        .bib-select option:checked {
-            background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%);
-            color: white;
-        }
-        .bib-select:focus {
-            border-color: var(--border-focus);
-        }
-        .filtro-tipo-select {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
-        .filtro-tipo-select:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        #qtd-emprestimo {
-            width: 100%;
-            padding: 0.5rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--txt-primary);
-            font-family: var(--font);
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        #qtd-emprestimo:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .input-qtd-dev {
-            width: 50px;
-            padding: 4px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--txt-primary);
-            text-align: center;
-            font-family: var(--font);
-        }
-
-        /* ===== TABELA DE EMPRÉSTIMOS ===== */
-        .tabela-bib {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .tabela-bib thead tr {
-            background: var(--bg-input);
-        }
-        .tabela-bib th {
-            padding: 10px 14px;
-            text-align: left;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.9px;
-            color: var(--txt-muted);
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        .tabela-bib td {
-            padding: 11px 14px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            color: var(--txt-secondary);
-        }
-        .tabela-bib td:first-child {
-            color: var(--txt-primary);
-            font-weight: 500;
-        }
-        .tabela-bib tbody tr:last-child td {
-            border-bottom: none;
-        }
-        .tabela-bib tbody tr:hover td {
-            background: rgba(37, 99, 235, 0.04);
-        }
-        .btn-devolver {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(217, 119, 6, 0.25);
-            padding: 4px 12px;
-            border-radius: var(--radius-sm);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm, 6px);
             cursor: pointer;
             font-size: 0.78rem;
             font-weight: 600;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-            white-space: nowrap;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
         }
-        .btn-devolver:hover {
-            background: var(--amber);
-            color: #1a1000;
-            border-color: var(--amber);
+        .btn-delete:hover {
+            background: var(--red, #dc2626);
+            color: white;
+            border-color: var(--red, #dc2626);
         }
-        .btn-reload {
-            background: rgba(255, 255, 255, 0.10);
-            color: var(--txt-secondary);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 5px 12px;
-            border-radius: var(--radius-sm);
+        .btn-rollback {
+            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
+            color: var(--amber, #d97706);
+            border: 1px solid rgba(217, 119, 6, 0.25);
+            padding: 2px 10px;
+            border-radius: var(--radius-sm, 6px);
             cursor: pointer;
-            font-size: 0.82rem;
-            font-family: var(--font);
-            transition: background 0.15s ease;
-        }
-        .btn-reload:hover {
-            background: rgba(255, 255, 255, 0.16);
-            color: var(--txt-primary);
-        }
-        .bib-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        /* ===== BADGES ===== */
-        .badge-ativo {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(217, 119, 6, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            white-space: nowrap;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
         }
-        .badge-devolvido {
-            background: var(--green-dim);
-            color: var(--green);
+        .btn-rollback:hover {
+            background: var(--amber, #d97706);
+            color: #1a1000;
+            border-color: var(--amber, #d97706);
+        }
+        .btn-aprovar {
+            background: var(--green-dim, rgba(22, 163, 74, 0.1));
+            color: var(--green, #16a34a);
             border: 1px solid rgba(22, 163, 74, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm, 6px);
+            cursor: pointer;
+            font-size: 0.78rem;
             font-weight: 600;
-            white-space: nowrap;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
         }
-        .badge-pendente {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(217, 119, 6, 0.2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
+        .btn-aprovar:hover {
+            background: var(--green, #16a34a);
+            color: white;
+            border-color: var(--green, #16a34a);
+        }
+        .btn-negar-sol {
+            background: var(--red-dim, rgba(220, 38, 38, 0.1));
+            color: var(--red, #dc2626);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm, 6px);
+            cursor: pointer;
+            font-size: 0.78rem;
             font-weight: 600;
-            white-space: nowrap;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
+        }
+        .btn-negar-sol:hover {
+            background: var(--red, #dc2626);
+            color: white;
+            border-color: var(--red, #dc2626);
         }
 
-        /* ===== MODAIS ===== */
+        /* Modais */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -594,24 +113,24 @@
             display: flex;
         }
         .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: var(--radius, 12px);
             padding: 2rem;
             width: 100%;
             max-width: 520px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.08));
         }
         .modal-content h2 {
             margin-bottom: 1rem;
-            color: var(--txt-primary);
+            color: var(--txt-primary, #111827);
             font-size: 1.05rem;
             font-weight: 600;
         }
         .modal-content p {
-            color: var(--txt-secondary);
+            color: var(--txt-secondary, #4b5563);
             font-size: 0.9rem;
         }
         .modal-content .input-group {
@@ -622,19 +141,19 @@
             margin-bottom: 4px;
             font-weight: 600;
             font-size: 0.8rem;
-            color: var(--txt-secondary);
+            color: var(--txt-secondary, #4b5563);
         }
         .modal-content input,
         .modal-content textarea,
         .modal-content select {
             width: 100%;
             padding: 0.65rem 0.9rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
             font-size: 0.9rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
+            color: var(--txt-primary, #111827);
+            font-family: var(--font, inherit);
             box-sizing: border-box;
             outline: none;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -642,7 +161,7 @@
         .modal-content input:focus,
         .modal-content textarea:focus,
         .modal-content select:focus {
-            border-color: var(--border-focus);
+            border-color: var(--border-focus, #3b82f6);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         .modal-content textarea {
@@ -656,53 +175,53 @@
             flex-wrap: wrap;
         }
         .btn-confirm {
-            background: var(--blue);
+            background: var(--blue, #2563eb);
             color: white;
             border: none;
             padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-sm, 6px);
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            font-family: var(--font);
+            font-family: var(--font, inherit);
             transition: background 0.15s ease;
             flex: 1;
             min-width: 80px;
         }
         .btn-confirm:hover {
-            background: var(--blue-dark);
+            background: var(--blue-dark, #1d4ed8);
         }
         .btn-cancel {
-            background: var(--bg-input);
-            color: var(--txt-secondary);
-            border: 1px solid var(--border);
+            background: var(--bg-input, #f9fafb);
+            color: var(--txt-secondary, #4b5563);
+            border: 1px solid var(--border, #d1d5db);
             padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-sm, 6px);
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            font-family: var(--font);
+            font-family: var(--font, inherit);
             transition: all 0.15s ease;
             flex: 1;
             min-width: 80px;
         }
         .btn-cancel:hover {
-            background: var(--border);
+            background: var(--border, #e5e7eb);
         }
         .btn-danger {
-            background: var(--red-dim);
-            color: var(--red);
+            background: var(--red-dim, rgba(220, 38, 38, 0.1));
+            color: var(--red, #dc2626);
             border: 1px solid rgba(220, 38, 38, 0.25);
             padding: 0.65rem 1.2rem;
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius-sm, 6px);
             cursor: pointer;
             font-size: 0.88rem;
             font-weight: 600;
-            font-family: var(--font);
+            font-family: var(--font, inherit);
             transition: all 0.15s ease;
         }
         .btn-danger:hover {
-            background: var(--red);
+            background: var(--red, #dc2626);
             color: white;
         }
         .warning-icon {
@@ -711,7 +230,206 @@
             display: block;
         }
 
-        /* ===== LOGS ===== */
+        /* Badges */
+        .badge-ativo {
+            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
+            color: var(--amber, #d97706);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-devolvido {
+            background: var(--green-dim, rgba(22, 163, 74, 0.1));
+            color: var(--green, #16a34a);
+            border: 1px solid rgba(22, 163, 74, 0.2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-pendente {
+            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
+            color: var(--amber, #d97706);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Biblioteca - filtros e selects */
+        .bib-filtro {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            font-size: 0.875rem;
+            color: var(--txt-primary, #111827);
+            font-family: var(--font, inherit);
+            margin-bottom: 4px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .bib-filtro::placeholder {
+            color: var(--txt-muted, #9ca3af);
+        }
+        .bib-filtro:focus {
+            border-color: var(--border-focus, #3b82f6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .bib-select {
+            width: 100%;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            font-size: 0.875rem;
+            color: var(--txt-primary, #111827);
+            font-family: var(--font, inherit);
+            box-sizing: border-box;
+            padding: 4px;
+            min-height: 100px;
+            outline: none;
+        }
+        .bib-select option {
+            background: var(--bg-card, #ffffff);
+            color: var(--txt-primary, #111827);
+        }
+        .bib-select option:checked {
+            background: var(--blue, #2563eb) linear-gradient(0deg, var(--blue, #2563eb) 0%, var(--blue, #2563eb) 100%);
+            color: white;
+        }
+        .bib-select:focus {
+            border-color: var(--border-focus, #3b82f6);
+        }
+        .filtro-tipo-select {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            font-size: 0.875rem;
+            color: var(--txt-primary, #111827);
+            font-family: var(--font, inherit);
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+        .filtro-tipo-select:focus {
+            border-color: var(--border-focus, #3b82f6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        #qtd-emprestimo {
+            width: 100%;
+            padding: 0.65rem;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            color: var(--txt-primary, #111827);
+            font-family: var(--font, inherit);
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        #qtd-emprestimo:focus {
+            border-color: var(--border-focus, #3b82f6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .input-qtd-dev {
+            width: 50px;
+            padding: 4px;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            color: var(--txt-primary, #111827);
+            text-align: center;
+            font-family: var(--font, inherit);
+        }
+
+        /* Tabela de empréstimos */
+        .tabela-bib {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .tabela-bib thead tr {
+            background: var(--bg-input, #f9fafb);
+        }
+        .tabela-bib th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            color: var(--txt-muted, #9ca3af);
+            border-bottom: 1px solid var(--border, #e5e7eb);
+            white-space: nowrap;
+        }
+        .tabela-bib td {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+            vertical-align: middle;
+            color: var(--txt-secondary, #4b5563);
+        }
+        .tabela-bib td:first-child {
+            color: var(--txt-primary, #111827);
+            font-weight: 500;
+        }
+        .tabela-bib tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .tabela-bib tbody tr:hover td {
+            background: rgba(37, 99, 235, 0.04);
+        }
+        .btn-devolver {
+            background: var(--amber-dim, rgba(217, 119, 6, 0.1));
+            color: var(--amber, #d97706);
+            border: 1px solid rgba(217, 119, 6, 0.25);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm, 6px);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: var(--font, inherit);
+            transition: var(--trans-fast, 0.15s ease);
+            white-space: nowrap;
+        }
+        .btn-devolver:hover {
+            background: var(--amber, #d97706);
+            color: #1a1000;
+            border-color: var(--amber, #d97706);
+        }
+        .btn-reload {
+            background: rgba(255, 255, 255, 0.10);
+            color: var(--txt-secondary, #4b5563);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: var(--radius-sm, 6px);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-family: var(--font, inherit);
+            transition: background 0.15s ease;
+        }
+        .btn-reload:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: var(--txt-primary, #111827);
+        }
+        .bib-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Logs */
         .log-info {
             flex: 1;
         }
@@ -723,20 +441,37 @@
         }
         .log-meta {
             font-size: 0.7rem;
-            color: var(--txt-muted);
+            color: var(--txt-muted, #9ca3af);
         }
 
-        /* ===== OUTROS ===== */
+        /* Listas de itens (gerir) */
+        .item-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+        }
+        .item-list li span {
+            flex: 1;
+        }
+        .li-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        /* Mensagem de carregamento */
         .loader {
             text-align: center;
-            color: var(--txt-muted);
+            color: var(--txt-muted, #9ca3af);
             padding: 2rem 0;
         }
     </style>
 </head>
 <body class="dashboard-body">
 
-    <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
@@ -745,7 +480,6 @@
         <div id="user-nivel-info">Carregando...</div>
         <div class="sidebar-menu">
             <h3>Navegação</h3>
-            <!-- Removido bloco de aprovações pendentes da sidebar -->
         </div>
         <a href="/logout" class="logout-btn">
             <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg">
@@ -755,11 +489,9 @@
         </a>
     </aside>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <main class="main-content">
         <header><h1>Painel de Gestão</h1></header>
 
-        <!-- ===== TABS ===== -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
             <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
@@ -768,10 +500,9 @@
             <button class="tab-btn" data-tab="logs">Logs</button>
         </div>
 
-        <!-- ===== ABA: CADASTRAR ===== -->
+        <!-- ABA: CADASTRAR -->
         <div id="cadastrar" class="tab-pane active">
             <div class="grid-forms">
-                <!-- Notícias -->
                 <div class="form-container" data-section="noticias">
                     <h3>Nova Notícia</h3>
                     <form>
@@ -781,8 +512,6 @@
                         <button type="submit" class="btn-submit">Salvar Notícia</button>
                     </form>
                 </div>
-
-                <!-- Novidades -->
                 <div class="form-container" data-section="novidades">
                     <h3>Nova Novidade/Infraestrutura</h3>
                     <form>
@@ -792,8 +521,6 @@
                         <button type="submit" class="btn-submit">Salvar Novidade</button>
                     </form>
                 </div>
-
-                <!-- Cargos -->
                 <div class="form-container" data-section="cargos">
                     <h3>Novo Cargo/Função</h3>
                     <form>
@@ -802,8 +529,6 @@
                         <button type="submit" class="btn-submit">Salvar Cargo</button>
                     </form>
                 </div>
-
-                <!-- Docente -->
                 <div class="form-container" data-section="docente">
                     <h3>Novo Docente</h3>
                     <form>
@@ -819,8 +544,6 @@
                         <button type="submit" class="btn-submit">Salvar Docente</button>
                     </form>
                 </div>
-
-                <!-- Cursos -->
                 <div class="form-container" data-section="cursos">
                     <h3>Novo Curso</h3>
                     <form>
@@ -830,8 +553,6 @@
                         <button type="submit" class="btn-submit">Salvar Curso</button>
                     </form>
                 </div>
-
-                <!-- Contato -->
                 <div class="form-container" data-section="contato">
                     <h3>Novo Contacto</h3>
                     <form>
@@ -840,8 +561,6 @@
                         <button type="submit" class="btn-submit">Salvar Contacto</button>
                     </form>
                 </div>
-
-                <!-- Alunos/Professores (Biblioteca) -->
                 <div class="form-container" data-section="alunosBib">
                     <h3>Novo Cadastro (Biblioteca)</h3>
                     <form>
@@ -856,8 +575,6 @@
                         <button type="submit" class="btn-submit">Salvar</button>
                     </form>
                 </div>
-
-                <!-- Livros -->
                 <div class="form-container" data-section="livros">
                     <h3>Novo Livro</h3>
                     <form>
@@ -874,10 +591,10 @@
             </div>
         </div>
 
-        <!-- ===== ABA: GERIR ===== -->
+        <!-- ABA: GERIR -->
         <div id="gerenciar" class="tab-pane"></div>
 
-        <!-- ===== ABA: INFORMAÇÕES ===== -->
+        <!-- ABA: INFORMAÇÕES -->
         <div id="informacoes" class="tab-pane">
             <div class="grid-forms">
                 <div class="form-container" data-section="alunos">
@@ -902,10 +619,9 @@
             </div>
         </div>
 
-        <!-- ===== ABA: BIBLIOTECA ===== -->
+        <!-- ABA: BIBLIOTECA -->
         <div id="biblioteca" class="tab-pane">
             <div class="grid-forms">
-                <!-- Registrar Empréstimo -->
                 <div class="form-container">
                     <h3>Registrar Empréstimo</h3>
                     <div class="input-group">
@@ -933,8 +649,6 @@
                     </div>
                     <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
                 </div>
-
-                <!-- Histórico por Cadastrado -->
                 <div class="form-container">
                     <h3>Histórico por Cadastrado</h3>
                     <div class="input-group">
@@ -953,8 +667,6 @@
                     <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
                     <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
                 </div>
-
-                <!-- Histórico por Livro -->
                 <div class="form-container">
                     <h3>Histórico por Livro</h3>
                     <div class="input-group">
@@ -966,8 +678,6 @@
                     <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
                 </div>
             </div>
-
-            <!-- Empréstimos em Andamento -->
             <div class="list-container" style="margin-top:1.5rem">
                 <div class="bib-header">
                     <h3>Empréstimos em Andamento</h3>
@@ -979,7 +689,7 @@
             </div>
         </div>
 
-        <!-- ===== ABA: LOGS ===== -->
+        <!-- ABA: LOGS -->
         <div id="logs" class="tab-pane">
             <div class="list-container">
                 <h3>Histórico de Atividades</h3>
@@ -988,8 +698,7 @@
         </div>
     </main>
 
-    <!-- ===== MODAIS ===== -->
-    <!-- Modal de Mensagem -->
+    <!-- MODAIS -->
     <div id="message-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="msg-modal-title">Mensagem</h2>
@@ -1000,7 +709,6 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmar -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="confirm-modal-title">Confirmar</h2>
@@ -1012,7 +720,6 @@
         </div>
     </div>
 
-    <!-- Modal de Exclusão Genérica -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Confirmar Exclusão</h2>
@@ -1024,7 +731,6 @@
         </div>
     </div>
 
-    <!-- Modal de Exclusão com Histórico -->
     <div id="delete-history-modal" class="modal-overlay">
         <div class="modal-content">
             <span class="warning-icon">⚠️</span>
@@ -1041,7 +747,6 @@
         </div>
     </div>
 
-    <!-- Modal de Edição -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Item</h2>
@@ -1053,7 +758,6 @@
         </div>
     </div>
 
-    <!-- Modal de Aceitar Admin -->
     <div id="accept-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Aceitar Administrador</h2>
@@ -1072,7 +776,6 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT ===== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // ============================================================
@@ -1105,7 +808,6 @@
                 };
             }
 
-            // Substituir alert e confirm nativos
             window.alert = function(msg) {
                 showMessage('Aviso', msg);
             };
@@ -1232,7 +934,7 @@
                 alunosBib: [
                     { name: 'matricula', label: 'Matrícula', type: 'text' },
                     { name: 'nome', label: 'Nome', type: 'text' },
-                    { name: 'tipo', label: 'Tipo', type: 'text' }
+                    { name: 'tipo', label: 'Tipo', type: 'select', options: ['aluno', 'professor'] }
                 ],
                 livros: [
                     { name: 'codigo', label: 'Código', type: 'text' },
@@ -1414,6 +1116,12 @@
                             if (f.type === 'file') {
                                 return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
                             }
+                            if (f.type === 'select') {
+                                const options = f.options.map(opt => 
+                                    `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
+                                ).join('');
+                                return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
+                            }
                             return `<div class="input-group"><label>${f.label}</label><input type="${f.type}" name="${f.name}" value="${item[f.name] ?? ''}"></div>`;
                         }).join('');
                         itemToEdit = { id, collection, isDocUnico: false };
@@ -1436,15 +1144,15 @@
                     let result;
                     if (isDocUnico) {
                         const obj = {};
-                        editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
+                        editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
                         result = await apiRequest(collection, 'POST', obj);
                     } else if (semArquivo.includes(collection)) {
                         const obj = {};
-                        editFields.querySelectorAll('input, textarea').forEach(inp => { obj[inp.name] = inp.value; });
+                        editFields.querySelectorAll('input, textarea, select').forEach(inp => { obj[inp.name] = inp.value; });
                         result = await apiRequest(`${collection}/${id}`, 'PUT', obj);
                     } else {
                         const fd = new FormData();
-                        editFields.querySelectorAll('input, textarea').forEach(inp => {
+                        editFields.querySelectorAll('input, textarea, select').forEach(inp => {
                             if (inp.type === 'file') {
                                 if (inp.files[0]) fd.append(inp.name, inp.files[0]);
                             } else {
@@ -1708,21 +1416,18 @@
                 if (filtrosInicializados) return;
                 filtrosInicializados = true;
 
-                // Filtro de tipo no empréstimo
                 document.getElementById('filtro-tipo-emp').addEventListener('change', function() {
                     tipoFiltroEmp = this.value;
                     document.getElementById('filtro-aluno-emp').value = '';
                     atualizarSelects();
                 });
 
-                // Filtro de tipo no histórico
                 document.getElementById('filtro-tipo-hist').addEventListener('change', function() {
                     tipoFiltroHist = this.value;
                     document.getElementById('filtro-aluno-hist').value = '';
                     atualizarSelects();
                 });
 
-                // Filtro por nome no empréstimo
                 document.getElementById('filtro-aluno-emp').addEventListener('input', function() {
                     const q = this.value.toLowerCase();
                     const base = obterListaFiltrada(tipoFiltroEmp);
@@ -1730,7 +1435,6 @@
                     popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
                 });
 
-                // Filtro por nome no histórico
                 document.getElementById('filtro-aluno-hist').addEventListener('input', function() {
                     const q = this.value.toLowerCase();
                     const base = obterListaFiltrada(tipoFiltroHist);
@@ -1738,7 +1442,6 @@
                     popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
                 });
 
-                // Filtro de livros para empréstimo
                 document.getElementById('filtro-livro-emp').addEventListener('input', function() {
                     const q = this.value.toLowerCase();
                     const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
@@ -1755,14 +1458,12 @@
                     popularSelect('sel-livro-emp', list, labelLivroDisp);
                 });
 
-                // Filtro de livros para histórico
                 document.getElementById('filtro-livro-hist').addEventListener('input', function() {
                     const q = this.value.toLowerCase();
                     const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
                     popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
                 });
 
-                // Mostrar campo de quantidade quando livro é selecionado
                 document.getElementById('sel-livro-emp').addEventListener('change', function() {
                     const livroId = this.value;
                     const grupoQtd = document.getElementById('grupo-qtd-emp');
@@ -1784,7 +1485,6 @@
                     }
                 });
 
-                // Registrar empréstimo
                 document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
                     const selAluno = document.getElementById('sel-aluno-emp');
                     const selLivro = document.getElementById('sel-livro-emp');
@@ -1832,7 +1532,6 @@
                     }
                 });
 
-                // Devolução
                 document.getElementById('tabela-emprestimos-container').addEventListener('click', async (e) => {
                     const btnDevolver = e.target.closest('.btn-devolver');
                     if (!btnDevolver) return;
@@ -1872,7 +1571,6 @@
                     });
                 });
 
-                // Ver histórico por cadastrado
                 document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
                     const sel = document.getElementById('sel-aluno-hist');
                     const lista = document.getElementById('lista-historico-aluno');
@@ -1893,7 +1591,6 @@
                     }
                 });
 
-                // Ver histórico por livro
                 document.getElementById('btn-ver-livro').addEventListener('click', async () => {
                     const sel = document.getElementById('sel-livro-hist');
                     const lista = document.getElementById('lista-historico-livro');

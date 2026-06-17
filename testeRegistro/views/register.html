@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registo - Painel Administrativo GETECO</title>
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="icon" type="image/png" href="/images/watermark.png">
+    <link rel="icon" type="image/png" href="/images/logo.png">
     <style>
-        /* Estilos específicos para registro */
+        /* Estilos específicos para registro (não conflitam com o style.css) */
         .login-container {
             display: flex;
             justify-content: center;
@@ -161,7 +161,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <script>
-        // Carregar configuração do Firebase
+        // (código JavaScript completo – igual à versão anterior)
         fetch('/firebase-config.json')
           .then(res => res.json())
           .then(firebaseConfig => {
@@ -175,12 +175,10 @@
 
         async function handleRegister(e) {
             e.preventDefault();
-
             const email = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // Validações
             if (!email || !password || !confirmPassword) {
                 showError('Por favor, preencha todos os campos.');
                 return;
@@ -204,14 +202,10 @@
             btn.textContent = 'A processar...';
 
             try {
-                // Criar usuário no Firebase
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
-
-                // Enviar e-mail de verificação
                 await user.sendEmailVerification();
 
-                // Registrar no servidor (status pending)
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -226,9 +220,7 @@
                     throw new Error('Erro ao registar no servidor.');
                 }
 
-                // Logout imediato (ainda não aprovado)
                 await firebase.auth().signOut();
-
                 showSuccess('✅ Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.');
                 setTimeout(() => window.location.assign('/login'), 5000);
 
@@ -256,10 +248,7 @@
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
             successDiv.style.display = 'none';
-            // Limpar erro após 6 segundos
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 6000);
+            setTimeout(() => errorDiv.style.display = 'none', 6000);
         }
 
         function showSuccess(message) {
