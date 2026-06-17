@@ -518,6 +518,7 @@
 
         let userInfo = { email: '', nivel: null, isSuperAdmin: false };
 
+        // ═══════════════ UTILITÁRIOS DE MODAIS ═══════════════
         function showMessage(title, text, callback) {
             document.getElementById('msg-modal-title').textContent = title;
             document.getElementById('msg-modal-text').textContent = text;
@@ -700,6 +701,7 @@
             }
         }
 
+        // ──────────────── GERENCIAR CONTEÚDO ────────────────
         async function loadManagementContent() {
             const container = document.getElementById('gerenciar');
             container.innerHTML = '<div class="loader">A carregar...</div>';
@@ -778,6 +780,7 @@
 
         document.getElementById('gerenciar').addEventListener('click', async (e) => {
             const collection = e.target.dataset.collection;
+
             if (e.target.classList.contains('btn-edit-docunico')) {
                 try {
                     const data = await apiRequest(collection);
@@ -1026,6 +1029,7 @@
             } catch {}
         }
 
+        // ──────────────── LOGS ────────────────
         async function loadLogsContent() {
             const logsList = document.getElementById('logs-list');
             logsList.innerHTML = '<li>A carregar logs...</li>';
@@ -1132,10 +1136,537 @@
             }
         });
 
-        // ... restante do código da biblioteca, admins, etc. (mantido igual ao original, sem alterações)
-        // Inclua aqui as funções: loadPendingAdmins, loadAdmins, loadAdminSolicitations, carregarBiblioteca, etc.
-        // Como são idênticas às do código original completo, não repetirei por brevidade, mas devem ser mantidas.
+        // ──────────────── ADMINISTRADORES ────────────────
+        async function loadPendingAdmins() {
+            try {
+                const admins = await apiRequest('pendentes');
+                document.getElementById('pending-admins-list').innerHTML = admins.length === 0
+                    ? '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>'
+                    : admins.map(a => {
+                        const actionBtns = userInfo.isSuperAdmin
+                            ? `<button class="btn-aprovar" data-uid="${a.uid}" data-email="${a.username}">✓</button>
+                               <button class="btn-negar-sol" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
+                            : `<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>`;
+                        return `<div class="pending-admin">
+                                   <p><strong>${escapeHtml(a.username)}</strong></p>
+                                   <div class="admin-actions">${actionBtns}</div>
+                                 </div>`;
+                    }).join('');
+            } catch (err) {
+                console.error('Erro ao carregar admins pendentes:', err);
+            }
+        }
 
+        document.getElementById('pending-admins-list').addEventListener('click', async (e) => {
+            const uid = e.target.dataset.uid;
+            const email = e.target.dataset.email;
+            if (!uid) return;
+
+            if (e.target.classList.contains('btn-aprovar')) {
+                pendingAcceptUid = uid;
+                document.getElementById('accept-modal-email').textContent = email || uid;
+                document.getElementById('nivel-aceitar').value = '';
+                acceptModal.classList.add('active');
+                return;
+            }
+
+            if (e.target.classList.contains('btn-negar-sol')) {
+                const negado = await confirm(`Negar acesso de ${email || uid}?`);
+                if (!negado) return;
+                try {
+                    await apiRequest('pendentes/negar', 'POST', { uid });
+                    loadPendingAdmins();
+                } catch {
+                    showMessage('Erro', 'Não foi possível negar o administrador.');
+                }
+            }
+        });
+
+        document.getElementById('btn-confirm-accept').addEventListener('click', async () => {
+            const nivel = parseInt(document.getElementById('nivel-aceitar').value, 10);
+            if (isNaN(nivel) || nivel < 1 || nivel > 8) {
+                showMessage('Erro', 'Informe um nível válido entre 1 (Diretor) e 8 (TI).');
+                return;
+            }
+            if (!pendingAcceptUid) return;
+            const btn = document.getElementById('btn-confirm-accept');
+            btn.disabled = true;
+            try {
+                await apiRequest('pendentes/aceitar', 'POST', { uid: pendingAcceptUid, nivel });
+                acceptModal.classList.remove('active');
+                pendingAcceptUid = null;
+                loadPendingAdmins();
+                showMessage('Sucesso', '✅ Administrador aceito com sucesso!');
+            } catch (err) {
+                let msg = 'Não foi possível aceitar o administrador.';
+                try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                showMessage('Erro', msg);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-cancel-accept').addEventListener('click', () => {
+            acceptModal.classList.remove('active');
+            pendingAcceptUid = null;
+        });
+
+        async function loadAdmins() {
+            if (!userInfo.isSuperAdmin) return;
+            try {
+                const admins = await apiRequest('admins');
+                const container = document.getElementById('admin-list');
+                if (!admins.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted)">Nenhum administrador encontrado.</p>';
+                    return;
+                }
+                container.innerHTML = admins.map(a => `
+                    <div class="admin-item" data-uid="${a.uid}">
+                        <div class="admin-info">
+                            <span class="admin-email">${escapeHtml(a.email)}</span>
+                            <span class="admin-level">Nível: ${a.nivel}</span>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn-edit-level" data-uid="${a.uid}" data-email="${a.email}" data-current="${a.nivel}">Editar Nível</button>
+                            <button class="btn-delete-admin" data-uid="${a.uid}" data-email="${a.email}">Excluir</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('admin-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar administradores.</p>';
+            }
+        }
+
+        async function loadAdminSolicitations() {
+            if (!userInfo.isSuperAdmin) return;
+            try {
+                const solicitations = await apiRequest('admin-solicitations');
+                const container = document.getElementById('admin-solicitations-list');
+                if (!solicitations.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted);font-style:italic;">Nenhuma solicitação pendente.</p>';
+                    return;
+                }
+                container.innerHTML = solicitations.map(s => {
+                    const alreadyApproved = s.approvals && s.approvals.includes(userInfo.email);
+                    const approvalCount = s.approvals ? s.approvals.length : 0;
+                    const reqCount = s.requiredApprovals || 2;
+                    const btnDisabled = alreadyApproved ? 'disabled' : '';
+                    const btnText = alreadyApproved ? '✓ Aprovado' : 'Aprovar';
+                    let descricao = '';
+                    if (s.type === 'edit') {
+                        descricao = `Alterar nível de ${escapeHtml(s.targetEmail)} para ${s.newNivel}`;
+                    } else if (s.type === 'delete') {
+                        descricao = `Excluir administrador ${escapeHtml(s.targetEmail)}`;
+                    }
+                    return `
+                        <div class="solicitation-item" data-id="${s.id}">
+                            <div>
+                                <strong>${escapeHtml(s.requestedBy)}</strong> solicitou: ${descricao}
+                                <br><span class="approval-count">Aprovações: ${approvalCount}/${reqCount} ${s.approvals ? '— ' + s.approvals.join(', ') : ''}</span>
+                            </div>
+                            <button class="btn-approve-admin" data-id="${s.id}" ${btnDisabled}>${btnText}</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                document.getElementById('admin-solicitations-list').innerHTML = '<p style="color:var(--red)">Erro ao carregar solicitações.</p>';
+            }
+        }
+
+        document.getElementById('admin-list').addEventListener('click', (e) => {
+            const uid = e.target.dataset.uid;
+            if (!uid) return;
+            if (e.target.classList.contains('btn-edit-level')) {
+                currentEditTarget = { uid, email: e.target.dataset.email };
+                document.getElementById('edit-level-email').textContent = e.target.dataset.email;
+                document.getElementById('new-level').value = e.target.dataset.current;
+                document.getElementById('edit-level-modal').classList.add('active');
+            } else if (e.target.classList.contains('btn-delete-admin')) {
+                const email = e.target.dataset.email;
+                showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`, 
+                    async () => {
+                        try {
+                            await apiRequest('admin-solicitations', 'POST', {
+                                type: 'delete',
+                                targetUid: uid,
+                                targetEmail: email
+                            });
+                            showMessage('Sucesso', 'Solicitação de exclusão enviada para aprovação.');
+                            await loadAdminSolicitations();
+                        } catch (err) {
+                            showMessage('Erro', 'Não foi possível criar a solicitação.');
+                        }
+                    }
+                );
+            }
+        });
+
+        document.getElementById('btn-confirm-edit-level').addEventListener('click', async () => {
+            if (!currentEditTarget) return;
+            const newNivel = parseInt(document.getElementById('new-level').value, 10);
+            if (isNaN(newNivel) || newNivel < 1 || newNivel > 8) {
+                showMessage('Erro', 'Nível inválido (1-8).');
+                return;
+            }
+            try {
+                await apiRequest('admin-solicitations', 'POST', {
+                    type: 'edit',
+                    targetUid: currentEditTarget.uid,
+                    targetEmail: currentEditTarget.email,
+                    newNivel
+                });
+                showMessage('Sucesso', 'Solicitação de alteração de nível enviada para aprovação.');
+                document.getElementById('edit-level-modal').classList.remove('active');
+                currentEditTarget = null;
+                await loadAdminSolicitations();
+            } catch (err) {
+                showMessage('Erro', 'Não foi possível criar a solicitação.');
+            }
+        });
+
+        document.getElementById('btn-cancel-edit-level').addEventListener('click', () => {
+            document.getElementById('edit-level-modal').classList.remove('active');
+            currentEditTarget = null;
+        });
+
+        document.getElementById('admin-solicitations-list').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.btn-approve-admin');
+            if (!btn || btn.disabled) return;
+            const solicitationId = btn.dataset.id;
+            btn.disabled = true;
+            try {
+                await apiRequest(`admin-solicitations/${solicitationId}/approve`, 'POST');
+                showMessage('Sucesso', 'Aprovação registrada. Se foi a segunda, a ação já foi executada!');
+                await loadAdminSolicitations();
+                await loadAdmins();
+            } catch (err) {
+                showMessage('Erro', 'Erro ao aprovar.');
+                btn.disabled = false;
+            }
+        });
+
+        // ──────────────── BIBLIOTECA ────────────────
+        let todosAlunos = [];
+        let todosLivros = [];
+        let bibliotecaCarregada = false;
+        let filtrosInicializados = false;
+        let tipoFiltroEmp = 'todos';
+        let tipoFiltroHist = 'todos';
+
+        function formatarData(ts) {
+            if (!ts) return '—';
+            const ms = ts.seconds ? ts.seconds * 1000 : ts._seconds ? ts._seconds * 1000 : null;
+            const d = ms !== null ? new Date(ms) : new Date(ts);
+            return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('pt-BR');
+        }
+
+        function popularSelect(id, items, labelFn) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            if (!items.length) {
+                sel.innerHTML = '<option value="" disabled>Nenhum item cadastrado</option>';
+                return;
+            }
+            sel.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(labelFn(i))}</option>`).join('');
+        }
+
+        async function recarregarDadosBiblioteca() {
+            [todosAlunos, todosLivros] = await Promise.all([
+                apiRequest('alunosBib'),
+                apiRequest('livros')
+            ]);
+            atualizarSelects();
+        }
+
+        function obterListaFiltrada(tipo) {
+            if (tipo === 'todos') return todosAlunos;
+            return todosAlunos.filter(a => a.tipo === tipo);
+        }
+
+        function atualizarSelects() {
+            const listaEmp = obterListaFiltrada(tipoFiltroEmp);
+            popularSelect('sel-aluno-emp', listaEmp, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+            const listaHist = obterListaFiltrada(tipoFiltroHist);
+            popularSelect('sel-aluno-hist', listaHist, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+
+            const livrosDisp = todosLivros.filter(l => {
+                const disp = l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1);
+                return disp > 0;
+            });
+            const labelLivroDisp = l => {
+                const disp = l.quantidadeDisponivel ?? 1;
+                const total = l.quantidade || 1;
+                return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${disp}/${total} disp.]`;
+            };
+            popularSelect('sel-livro-emp', livrosDisp, labelLivroDisp);
+            popularSelect('sel-livro-hist', todosLivros, l => `${l.nome} — ${l.autor}`);
+        }
+
+        function inicializarFiltros() {
+            if (filtrosInicializados) return;
+            filtrosInicializados = true;
+
+            document.getElementById('filtro-tipo-emp').addEventListener('change', function() {
+                tipoFiltroEmp = this.value;
+                document.getElementById('filtro-aluno-emp').value = '';
+                atualizarSelects();
+            });
+
+            document.getElementById('filtro-tipo-hist').addEventListener('change', function() {
+                tipoFiltroHist = this.value;
+                document.getElementById('filtro-aluno-hist').value = '';
+                atualizarSelects();
+            });
+
+            document.getElementById('filtro-aluno-emp').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const base = obterListaFiltrada(tipoFiltroEmp);
+                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                popularSelect('sel-aluno-emp', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+            });
+
+            document.getElementById('filtro-aluno-hist').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const base = obterListaFiltrada(tipoFiltroHist);
+                const list = q ? base.filter(a => a.nome.toLowerCase().includes(q) || (a.matricula || '').toLowerCase().includes(q)) : base;
+                popularSelect('sel-aluno-hist', list, a => `${a.nome} (${a.matricula}) [${a.tipo}]`);
+            });
+
+            document.getElementById('filtro-livro-emp').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const disp = todosLivros.filter(l => (l.quantidadeDisponivel ?? (l.emprestado ? 0 : 1)) > 0);
+                const list = q ? disp.filter(l =>
+                    l.nome.toLowerCase().includes(q) ||
+                    (l.autor || '').toLowerCase().includes(q) ||
+                    (l.codigo || '').toLowerCase().includes(q)
+                ) : disp;
+                const labelLivroDisp = l => {
+                    const d = l.quantidadeDisponivel ?? 1;
+                    const t = l.quantidade || 1;
+                    return `${l.nome} — ${l.autor} (Cód: ${l.codigo}) [${d}/${t} disp.]`;
+                };
+                popularSelect('sel-livro-emp', list, labelLivroDisp);
+            });
+
+            document.getElementById('filtro-livro-hist').addEventListener('input', function() {
+                const q = this.value.toLowerCase();
+                const list = q ? todosLivros.filter(l => l.nome.toLowerCase().includes(q) || (l.codigo || '').toLowerCase().includes(q)) : todosLivros;
+                popularSelect('sel-livro-hist', list, l => `${l.nome} — ${l.autor}`);
+            });
+
+            document.getElementById('sel-livro-emp').addEventListener('change', function() {
+                const livroId = this.value;
+                const grupoQtd = document.getElementById('grupo-qtd-emp');
+                const inputQtd = document.getElementById('qtd-emprestimo');
+                const aviso = document.getElementById('qtd-max-aviso');
+
+                if (!livroId) {
+                    grupoQtd.style.display = 'none';
+                    return;
+                }
+
+                const livro = todosLivros.find(l => l.id === livroId);
+                if (livro) {
+                    const disp = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+                    grupoQtd.style.display = 'block';
+                    inputQtd.max = disp;
+                    inputQtd.value = 1;
+                    aviso.textContent = `Máximo disponível: ${disp} exemplar(es)`;
+                }
+            });
+
+            document.getElementById('btn-registrar-emprestimo').addEventListener('click', async () => {
+                const selAluno = document.getElementById('sel-aluno-emp');
+                const selLivro = document.getElementById('sel-livro-emp');
+                const qtdInput = document.getElementById('qtd-emprestimo');
+
+                if (!selAluno.value || !selLivro.value) {
+                    showMessage('Aviso', 'Selecione um cadastrado e um livro.');
+                    return;
+                }
+
+                const aluno = todosAlunos.find(a => a.id === selAluno.value);
+                const livro = todosLivros.find(l => l.id === selLivro.value);
+                const quantidade = parseInt(qtdInput?.value || 1, 10);
+                const disponiveis = livro.quantidadeDisponivel ?? (livro.emprestado ? 0 : 1);
+
+                if (quantidade < 1) { showMessage('Erro', 'Quantidade inválida.'); return; }
+                if (quantidade > disponiveis) {
+                    showMessage('Erro', `Só existem ${disponiveis} exemplar(es) disponível(is).`);
+                    return;
+                }
+
+                const btn = document.getElementById('btn-registrar-emprestimo');
+                btn.disabled = true;
+                btn.textContent = 'Registrando...';
+
+                try {
+                    const result = await apiRequest('emprestimos', 'POST', {
+                        alunoId: aluno.id,
+                        livroId: livro.id,
+                        quantidade
+                    });
+                    if (result?.pending) {
+                        showMessage('Aviso', '⏳ Solicitação de empréstimo enviada para aprovação.');
+                    } else {
+                        showMessage('Sucesso', `✅ ${quantidade} exemplar(es) emprestado(s) com sucesso!`);
+                    }
+                    document.getElementById('filtro-aluno-emp').value = '';
+                    document.getElementById('filtro-livro-emp').value = '';
+                    document.getElementById('grupo-qtd-emp').style.display = 'none';
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar empréstimo.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Registrar Empréstimo';
+                }
+            });
+
+            document.getElementById('tabela-emprestimos-container').addEventListener('click', async (e) => {
+                const btnDevolver = e.target.closest('.btn-devolver');
+                if (!btnDevolver) return;
+
+                const empId = btnDevolver.dataset.id;
+                const total = parseInt(btnDevolver.dataset.total, 10) || 1;
+                const qtdInput = document.getElementById(`qtd-dev-${empId}`);
+                if (!qtdInput) {
+                    showMessage('Erro', 'Campo de quantidade não encontrado.');
+                    return;
+                }
+                const qtd = parseInt(qtdInput.value, 10);
+                if (isNaN(qtd) || qtd < 1 || qtd > total) {
+                    showMessage('Erro', `Quantidade inválida. O empréstimo tem ${total} exemplar(es).`);
+                    return;
+                }
+
+                const mensagem = qtd < total
+                    ? `Devolver ${qtd} de ${total} exemplar(es)? O restante (${total - qtd}) continuará emprestado.`
+                    : `Devolver todos os ${total} exemplar(es)?`;
+
+                const confirmado = await confirm(mensagem);
+                if (!confirmado) return;
+
+                btnDevolver.disabled = true;
+                btnDevolver.textContent = '...';
+                try {
+                    await apiRequest(`emprestimos/${empId}/devolver`, 'PUT', { quantidade: qtd });
+                    showMessage('Sucesso', '✅ Devolução registrada com sucesso!');
+                    await recarregarDadosBiblioteca();
+                    await carregarEmprestimosAtivos();
+                } catch (err) {
+                    let msg = 'Erro ao registrar devolução.';
+                    try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                    showMessage('Erro', msg);
+                    btnDevolver.disabled = false;
+                    btnDevolver.textContent = 'Devolver';
+                }
+            });
+
+            document.getElementById('btn-ver-aluno').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-aluno-hist');
+                const lista = document.getElementById('lista-historico-aluno');
+                if (!sel.value) { showMessage('Aviso', 'Selecione um cadastrado.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/aluno/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${escapeHtml(e.livroNome)} — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-ver-livro').addEventListener('click', async () => {
+                const sel = document.getElementById('sel-livro-hist');
+                const lista = document.getElementById('lista-historico-livro');
+                if (!sel.value) { showMessage('Aviso', 'Selecione um livro.'); return; }
+                lista.innerHTML = '<li>Carregando...</li>';
+                try {
+                    const emp = await apiRequest(`emprestimos/livro/${sel.value}`);
+                    lista.innerHTML = emp.length
+                        ? emp.map(e => {
+                            const badge = e.devolvido
+                                ? `<span class="badge-devolvido">✓ ${formatarData(e.dataDevolucao)}</span>`
+                                : `<span class="badge-ativo">📚 Em andamento</span>`;
+                            return `<li><span>${escapeHtml(e.alunoNome)} (${escapeHtml(e.alunoMatricula)}) — ${formatarData(e.dataEmprestimo)}</span>${badge}</li>`;
+                        }).join('')
+                        : '<li>Nenhum empréstimo encontrado.</li>';
+                } catch {
+                    lista.innerHTML = '<li>Erro ao buscar.</li>';
+                }
+            });
+
+            document.getElementById('btn-reload-emprestimos').addEventListener('click', async () => {
+                await recarregarDadosBiblioteca();
+                await carregarEmprestimosAtivos();
+            });
+        }
+
+        async function carregarEmprestimosAtivos() {
+            const container = document.getElementById('tabela-emprestimos-container');
+            container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Carregando...</p>';
+            try {
+                const lista = await apiRequest('emprestimos?ativos=true');
+                if (!lista.length) {
+                    container.innerHTML = '<p style="color:var(--txt-muted);text-align:center;padding:1rem">Nenhum empréstimo em andamento.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <table class="tabela-bib">
+                        <thead>
+                            <tr>
+                                <th>Cadastrado</th>
+                                <th>Livro</th>
+                                <th>Código</th>
+                                <th>Qtd.</th>
+                                <th>Data</th>
+                                <th>Devolver</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lista.map(e => `
+                                <tr>
+                                    <td>${escapeHtml(e.alunoNome)} <small style="color:var(--txt-muted)">(${escapeHtml(e.alunoMatricula)})</small></td>
+                                    <td>${escapeHtml(e.livroNome)}</td>
+                                    <td><small>${escapeHtml(e.livroCodigo || '—')}</small></td>
+                                    <td>${e.quantidade || 1}</td>
+                                    <td>${formatarData(e.dataEmprestimo)}</td>
+                                    <td style="display:flex; gap:4px; align-items:center;">
+                                        <input type="number" id="qtd-dev-${e.id}" min="1" max="${e.quantidade || 1}" value="${e.quantidade || 1}" class="input-qtd-dev">
+                                        <button class="btn-devolver" data-id="${e.id}" data-total="${e.quantidade || 1}">Devolver</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>`;
+            } catch {
+                container.innerHTML = '<p style="color:var(--red);text-align:center;padding:1rem">Erro ao carregar empréstimos.</p>';
+            }
+        }
+
+        async function carregarBiblioteca() {
+            try {
+                await recarregarDadosBiblioteca();
+                inicializarFiltros();
+                await carregarEmprestimosAtivos();
+                bibliotecaCarregada = true;
+            } catch (err) {
+                console.error('Erro ao carregar biblioteca:', err);
+            }
+        }
+
+        // Inicialização
         async function init() {
             await carregarUserInfo();
             loadInitialData('alunos');
