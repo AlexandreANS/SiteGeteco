@@ -9,6 +9,10 @@ const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
 const dns = require("dns").promises;
+const nodemailer = require("nodemailer"); // 🆕
+
+// Se usar dotenv para ambiente local
+// require('dotenv').config();
 
 // --- INICIALIZAÇÃO DO FIREBASE ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -31,6 +35,15 @@ cloudinary.config({
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY || 'NÃO DEFINIDO');
 console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? 'DEFINIDO' : 'NÃO DEFINIDO');
+
+// 🆕 Transporte de e‑mail
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -80,7 +93,6 @@ function isSuperAdmin(claims) {
     return claims && SUPER_NIVEIS.includes(Number(claims.nivel));
 }
 
-// Auth Middleware — qualquer admin aprovado
 async function requireAdmin(req, res, next) {
     const sessionCookie = req.cookies.session || '';
     try {
@@ -105,7 +117,6 @@ app.get('/api/ping', async (req, res) => {
     }
 });
 
-// Retorna informações do usuário logado
 app.get('/api/me', requireAdmin, (req, res) => {
     res.json({
         email: req.user.email,
@@ -124,7 +135,7 @@ app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, 
 app.get("/", (req, res) => res.redirect("/login"));
 
 // ══════════════════════════════════════════════════════════════════
-// API Login — exige verificação de e‑mail apenas para contas pendentes
+// API Login – exige SEMPRE e‑mail verificado
 // ══════════════════════════════════════════════════════════════════
 app.post("/sessionLogin", async (req, res) => {
     try {
@@ -133,9 +144,8 @@ app.post("/sessionLogin", async (req, res) => {
         if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
 
         const userRecord = await auth.getUser(decoded.uid);
-        const isAdminApproved = decoded.isAdmin === true && decoded.status !== 'pending';
-        if (!userRecord.emailVerified && !isAdminApproved) {
-            return res.status(403).send('Por favor, verifique seu e-mail antes de fazer login.');
+        if (!userRecord.emailVerified) {
+            return res.status(403).send('Por favor, verifique seu e‑mail antes de fazer login.');
         }
 
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
@@ -175,7 +185,7 @@ async function isEmailDomainValid(email) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// Registro
+// REGISTRO
 // ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
@@ -220,13 +230,56 @@ app.post('/register', async (req, res) => {
             requestedAt: new Date()
         });
 
+        // Gera e envia o link de verificação
         const verificationLink = await auth.generateEmailVerificationLink(email);
-        console.log('Link de verificação:', verificationLink);
 
-        res.json({ success: true, message: 'Conta criada com sucesso. Verifique seu e‑mail para confirmar.' });
+        try {
+            await transporter.sendMail({
+                from: `"GETECO Admin" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Confirme o seu e‑mail – Painel GETECO',
+                html: `
+                    <p>Obrigado por se registar no painel administrativo da GETECO.</p>
+                    <p>Para confirmar o seu endereço de e‑mail, clique no link abaixo:</p>
+                    <p><a href="${verificationLink}">Confirmar e‑mail</a></p>
+                    <p>Se não foi você, ignore esta mensagem.</p>
+                `
+            });
+            console.log(`✅ E‑mail de verificação enviado para ${email}`);
+        } catch (emailErr) {
+            console.error('❌ Falha ao enviar e‑mail de verificação:', emailErr);
+        }
+
+        res.json({ success: true, message: 'Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.' });
     } catch (e) {
         console.error('Erro ao processar registro:', e);
         res.status(500).json({ error: 'Não foi possível processar o registro.' });
+    }
+});
+
+// 🆕 Reenvio de verificação (útil para quem perdeu o e‑mail)
+app.post('/resend-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'E‑mail obrigatório.' });
+
+        const user = await auth.getUserByEmail(email);
+        if (user.emailVerified) {
+            return res.json({ message: 'Este e‑mail já foi verificado.' });
+        }
+
+        const verificationLink = await auth.generateEmailVerificationLink(email);
+        await transporter.sendMail({
+            from: `"GETECO Admin" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Confirme o seu e‑mail – GETECO (reenvio)',
+            html: `<p>Clique no link para confirmar o seu registo:</p><p><a href="${verificationLink}">Confirmar e‑mail</a></p>`
+        });
+
+        res.json({ success: true, message: 'Novo e‑mail de verificação enviado.' });
+    } catch (e) {
+        if (e.code === 'auth/user-not-found') return res.status(404).json({ error: 'E‑mail não encontrado.' });
+        res.status(500).json({ error: 'Erro ao reenviar verificação.' });
     }
 });
 
@@ -258,7 +311,7 @@ async function registrarLog(adminEmail, action, collection, docId, previousData,
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CRUD GENÉRICO
+// CRUD GENÉRICO (noticias, novidades, cursos, contato, cargos)
 // ══════════════════════════════════════════════════════════════════
 const collections = ['noticias', 'novidades', 'cursos', 'contato', 'cargos'];
 
@@ -413,7 +466,7 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// DADOS ÚNICOS
+// DADOS ÚNICOS (alunos, responsaveis)
 // ══════════════════════════════════════════════════════════════════
 ['alunos', 'responsaveis'].forEach(col => {
     app.get(`/api/${col}`, async (req, res) => {
@@ -446,10 +499,15 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 app.get('/api/pendentes', requireAdmin, async (req, res) => {
     try {
         const list = await auth.listUsers(100);
-        res.json(list.users
-            .filter(u => u.customClaims?.status === 'pending')
-            .map(u => ({ uid: u.uid, username: u.email }))
-        );
+        const pendentes = [];
+
+        for (const user of list.users) {
+            if (user.customClaims?.status === 'pending' && user.emailVerified) {
+                pendentes.push({ uid: user.uid, username: user.email });
+            }
+        }
+
+        res.json(pendentes);
     } catch (e) {
         res.status(500).json({ error: 'Erro ao listar pendentes.' });
     }
@@ -467,6 +525,11 @@ app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
         if (!uid) return res.status(400).json({ error: 'UID obrigatório.' });
         if (isNaN(nivelNum) || !NIVEIS_VALIDOS.includes(nivelNum)) {
             return res.status(400).json({ error: `Nível inválido. Valores aceitos: ${NIVEIS_VALIDOS.join(', ')}.` });
+        }
+
+        const userRecord = await auth.getUser(uid);
+        if (!userRecord.emailVerified) {
+            return res.status(400).json({ error: 'O utilizador ainda não verificou o e‑mail. A aprovação só é possível após a verificação.' });
         }
 
         await auth.setCustomUserClaims(uid, { isAdmin: true, nivel: nivelNum, status: null });
@@ -501,7 +564,7 @@ app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// LOGS E ROLLBACK (com novas ações em massa e individuais)
+// LOGS E ROLLBACK
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
@@ -516,7 +579,6 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     }
 });
 
-// Rollback individual
 app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -554,7 +616,6 @@ app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     }
 });
 
-// Confirmar log individual (torna não reversível)
 app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -580,9 +641,7 @@ app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
     }
 });
 
-// Apagar log individual (apenas se não reversível)
 app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
-    // Rota fixa: limpar histórico (precisa vir antes de :id)
     try {
         if (!isSuperAdmin(req.user)) {
             return res.status(403).json({ error: 'Apenas superadministradores podem limpar o histórico.' });
@@ -621,7 +680,6 @@ app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
     }
 });
 
-// Confirmar todos os logs reversíveis (em massa)
 app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -646,7 +704,6 @@ app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
     }
 });
 
-// Reverter todos os logs reversíveis (em massa)
 app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1102,8 +1159,6 @@ app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
 // ══════════════════════════════════════════════════════════════════
 // NOVA ABA: ADMINISTRADORES (apenas super admins)
 // ══════════════════════════════════════════════════════════════════
-
-// Lista todos os admins aprovados
 app.get('/api/admins', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1165,7 +1220,6 @@ app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
     }
 });
 
-// Listar solicitações pendentes de admin
 app.get('/api/admin-solicitations', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1184,7 +1238,6 @@ app.get('/api/admin-solicitations', requireAdmin, async (req, res) => {
     }
 });
 
-// Aprovar solicitação de admin (ao atingir 2 aprovações, executa a ação)
 app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1245,6 +1298,38 @@ app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) 
         res.status(500).json({ error: 'Erro interno.' });
     }
 });
+
+// ══════════════════════════════════════════════════════════════════
+// 🧹 LIMPEZA AUTOMÁTICA DE CONTAS NÃO VERIFICADAS (PENDENTES)
+// ══════════════════════════════════════════════════════════════════
+const LIMPEZA_INTERVALO = 60 * 60 * 1000; // 1 hora
+const TEMPO_EXPIRACAO = 24; // horas
+
+setInterval(async () => {
+    try {
+        const corte = new Date(Date.now() - TEMPO_EXPIRACAO * 60 * 60 * 1000);
+        const snap = await db.collection('registrations')
+            .where('status', '==', 'pending')
+            .where('requestedAt', '<=', corte)
+            .get();
+
+        for (const doc of snap.docs) {
+            const uid = doc.id;
+            try {
+                await auth.deleteUser(uid);
+            } catch (e) {
+                if (e.code !== 'auth/user-not-found') console.error('Erro ao deletar user:', e);
+            }
+            await doc.ref.delete();
+        }
+
+        if (snap.size > 0) {
+            console.log(`🧹 Limpeza automática: ${snap.size} contas pendentes removidas.`);
+        }
+    } catch (e) {
+        console.error('Erro na limpeza automática:', e);
+    }
+}, LIMPEZA_INTERVALO);
 
 // ══════════════════════════════════════════════════════════════════
 // START
