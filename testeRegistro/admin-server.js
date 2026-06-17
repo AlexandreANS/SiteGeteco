@@ -38,14 +38,20 @@ async function validarEmail(email) {
         const res = await fetch(url);
         const data = await res.json();
 
+        console.log(`[AbstractAPI] ${emailLimpo} → deliverability=${data.deliverability} is_disposable=${data.is_disposable_email?.value} is_valid_format=${data.is_valid_format?.value}`);
+
         // E-mail descartável (Mailinator, Guerrilla Mail, etc.)
         if (data.is_disposable_email?.value === true) {
             return { valid: false, reason: 'E-mails temporários ou descartáveis não são permitidos.' };
         }
 
-        // Domínio ou caixa não entregável
-        if (data.deliverability !== 'DELIVERABLE') {
-            return { valid: false, reason: 'Este e-mail não parece válido ou não pode receber mensagens.' };
+        // Rejeitar APENAS se a API confirmar explicitamente que é inválido.
+        // UNKNOWN é comum em Gmail, Hotmail, iCloud — esses provedores bloqueiam
+        // verificações SMTP por segurança, então a AbstractAPI não consegue confirmar
+        // a caixa mas o e-mail pode ser perfeitamente real.
+        // Só rejeitar se deliverability === 'UNDELIVERABLE'.
+        if (data.deliverability === 'UNDELIVERABLE') {
+            return { valid: false, reason: 'Este e-mail não existe ou não pode receber mensagens.' };
         }
 
         return { valid: true };
@@ -219,29 +225,34 @@ app.post('/register', async (req, res) => {
         const { uid, email, timestamp } = req.body;
         if (!uid || !email) return res.status(400).json({ error: 'Dados de registro incompletos.' });
 
-        // ✅ VALIDAÇÃO DE E-MAIL REAL via AbstractAPI
-        // O Firebase já criou o utilizador antes deste ponto, por isso em caso de
-        // falha apenas marcamos o utilizador como inválido via custom claim —
-        // não o apagamos, para preservar o comportamento original do Firebase Auth.
+        // Verificar se o utilizador existe no Firebase
+        let firebaseUser;
+        try {
+            firebaseUser = await auth.getUser(uid);
+        } catch (e) {
+            return res.status(400).json({ error: 'Utilizador não encontrado. Por favor, tente criar a conta novamente.' });
+        }
+
+        if (firebaseUser.email !== email) {
+            return res.status(400).json({ error: 'Dados de utilizador inválidos.' });
+        }
+
+        // Verificar se já existe registo no Firestore para este UID
+        const existingDoc = await db.collection('registrations').doc(uid).get();
+        if (existingDoc.exists) {
+            const st = existingDoc.data().status;
+            if (st === 'pending') return res.status(400).json({ error: 'Já existe um pedido de registo pendente para este e-mail.' });
+            if (st === 'approved') return res.status(400).json({ error: 'Este e-mail já está aprovado como administrador.' });
+        }
+
+        // ✅ VALIDAÇÃO DE E-MAIL via AbstractAPI
+        // Se a API rejeitar o e-mail → apaga o utilizador do Firebase para que
+        // o utilizador possa tentar novamente com um e-mail válido.
+        // Se a API falhar (timeout, limite atingido) → deixa passar.
         const emailCheck = await validarEmail(email);
         if (!emailCheck.valid) {
-            // Marcar no Firebase que este registo foi rejeitado por e-mail inválido,
-            // impedindo o login sem destruir a conta (o utilizador pode tentar
-            // novamente com um e-mail diferente via reset ou novo registo).
-            await auth.setCustomUserClaims(uid, { status: 'email_invalido' }).catch(() => {});
+            await auth.deleteUser(uid).catch(() => {});
             return res.status(400).json({ error: emailCheck.reason });
-        }
-
-        const user = await auth.getUser(uid);
-        if (user.email !== email) return res.status(400).json({ error: 'Dados de usuário inválidos.' });
-
-        // Verificar se já existe um registo pendente ou aprovado para este UID
-        const existingDoc = await db.collection('registrations').doc(uid).get();
-        if (existingDoc.exists && existingDoc.data().status === 'pending') {
-            return res.status(400).json({ error: 'Já existe um pedido de registo pendente para este utilizador.' });
-        }
-        if (existingDoc.exists && existingDoc.data().status === 'approved') {
-            return res.status(400).json({ error: 'Este utilizador já está aprovado como administrador.' });
         }
 
         await auth.setCustomUserClaims(uid, { status: 'pending' });
@@ -629,13 +640,21 @@ app.get('/api/admins', requireSuperAdmin, async (req, res) => {
 });
 
 // GET /api/admin-solicitations — lista solicitações de edição/exclusão de admins pendentes
+// Nota: usa apenas .where() sem .orderBy() para evitar precisar de índice composto no Firestore.
 app.get('/api/admin-solicitations', requireSuperAdmin, async (req, res) => {
     try {
         const snap = await db.collection('admin_solicitations')
             .where('status', '==', 'pending')
-            .orderBy('requestedAt', 'desc')
             .get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        // Ordenar no servidor por requestedAt descendente
+        const docs = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => {
+                const ta = a.requestedAt?.toMillis ? a.requestedAt.toMillis() : 0;
+                const tb = b.requestedAt?.toMillis ? b.requestedAt.toMillis() : 0;
+                return tb - ta;
+            });
+        res.json(docs);
     } catch (e) {
         res.status(500).json({ error: 'Erro ao listar solicitações de admin.' });
     }
@@ -653,11 +672,11 @@ app.post('/api/admin-solicitations', requireSuperAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Nível inválido (1-8).' });
         }
         // Não permitir criar solicitação duplicada pendente para o mesmo alvo
-        const existing = await db.collection('admin_solicitations')
+        const existingSnap = await db.collection('admin_solicitations')
             .where('targetUid', '==', targetUid)
-            .where('status', '==', 'pending')
             .get();
-        if (!existing.empty) {
+        const hasPending = existingSnap.docs.some(d => d.data().status === 'pending');
+        if (hasPending) {
             return res.status(400).json({ error: 'Já existe uma solicitação pendente para este administrador.' });
         }
 
