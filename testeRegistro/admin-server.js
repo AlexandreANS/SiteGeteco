@@ -219,14 +219,31 @@ app.post('/register', async (req, res) => {
         const { uid, email, timestamp } = req.body;
         if (!uid || !email) return res.status(400).json({ error: 'Dados de registro incompletos.' });
 
-        // ✅ VALIDAÇÃO DE E-MAIL REAL: formato + existência do domínio via DNS
+        // ✅ VALIDAÇÃO DE E-MAIL REAL via AbstractAPI
+        // O Firebase já criou o utilizador antes deste ponto, por isso em caso de
+        // falha apenas marcamos o utilizador como inválido via custom claim —
+        // não o apagamos, para preservar o comportamento original do Firebase Auth.
         const emailCheck = await validarEmail(email);
         if (!emailCheck.valid) {
+            // Marcar no Firebase que este registo foi rejeitado por e-mail inválido,
+            // impedindo o login sem destruir a conta (o utilizador pode tentar
+            // novamente com um e-mail diferente via reset ou novo registo).
+            await auth.setCustomUserClaims(uid, { status: 'email_invalido' }).catch(() => {});
             return res.status(400).json({ error: emailCheck.reason });
         }
 
         const user = await auth.getUser(uid);
         if (user.email !== email) return res.status(400).json({ error: 'Dados de usuário inválidos.' });
+
+        // Verificar se já existe um registo pendente ou aprovado para este UID
+        const existingDoc = await db.collection('registrations').doc(uid).get();
+        if (existingDoc.exists && existingDoc.data().status === 'pending') {
+            return res.status(400).json({ error: 'Já existe um pedido de registo pendente para este utilizador.' });
+        }
+        if (existingDoc.exists && existingDoc.data().status === 'approved') {
+            return res.status(400).json({ error: 'Este utilizador já está aprovado como administrador.' });
+        }
+
         await auth.setCustomUserClaims(uid, { status: 'pending' });
         await db.collection('registrations').doc(uid).set({
             email,
@@ -587,6 +604,134 @@ app.post('/api/pendentes/negar', requireSuperAdmin, async (req, res) => {
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao negar.' });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// GESTÃO DE ADMINISTRADORES (aba Administradores do dashboard)
+// ══════════════════════════════════════════════════════════════════
+
+// GET /api/admins — lista todos os utilizadores aprovados com isAdmin:true
+app.get('/api/admins', requireSuperAdmin, async (req, res) => {
+    try {
+        const list = await auth.listUsers(1000);
+        const admins = list.users
+            .filter(u => u.customClaims?.isAdmin === true)
+            .map(u => ({
+                uid: u.uid,
+                email: u.email,
+                nivel: u.customClaims?.nivel ?? null
+            }));
+        res.json(admins);
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar administradores.' });
+    }
+});
+
+// GET /api/admin-solicitations — lista solicitações de edição/exclusão de admins pendentes
+app.get('/api/admin-solicitations', requireSuperAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('admin_solicitations')
+            .where('status', '==', 'pending')
+            .orderBy('requestedAt', 'desc')
+            .get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao listar solicitações de admin.' });
+    }
+});
+
+// POST /api/admin-solicitations — cria solicitação de edição de nível ou exclusão
+// Requer 2 aprovações de super-admins para ser executada
+app.post('/api/admin-solicitations', requireSuperAdmin, async (req, res) => {
+    try {
+        const { type, targetUid, targetEmail, newNivel } = req.body;
+        if (!type || !targetUid || !targetEmail) {
+            return res.status(400).json({ error: 'Dados incompletos.' });
+        }
+        if (type === 'edit' && (isNaN(parseInt(newNivel)) || newNivel < 1 || newNivel > 8)) {
+            return res.status(400).json({ error: 'Nível inválido (1-8).' });
+        }
+        // Não permitir criar solicitação duplicada pendente para o mesmo alvo
+        const existing = await db.collection('admin_solicitations')
+            .where('targetUid', '==', targetUid)
+            .where('status', '==', 'pending')
+            .get();
+        if (!existing.empty) {
+            return res.status(400).json({ error: 'Já existe uma solicitação pendente para este administrador.' });
+        }
+
+        const doc = {
+            type,
+            targetUid,
+            targetEmail,
+            newNivel: newNivel ?? null,
+            requestedBy: req.user.email,
+            requestedAt: new Date(),
+            approvals: [req.user.email], // solicitante já aprova automaticamente
+            requiredApprovals: 2,
+            status: 'pending'
+        };
+        const ref = await db.collection('admin_solicitations').add(doc);
+        res.json({ success: true, id: ref.id });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao criar solicitação.' });
+    }
+});
+
+// POST /api/admin-solicitations/:id/approve — super-admin aprova a solicitação
+// Quando atingir 2 aprovações, executa a ação automaticamente
+app.post('/api/admin-solicitations/:id/approve', requireSuperAdmin, async (req, res) => {
+    try {
+        const solRef = db.collection('admin_solicitations').doc(req.params.id);
+        const solSnap = await solRef.get();
+        if (!solSnap.exists) return res.status(404).json({ error: 'Solicitação não encontrada.' });
+        const sol = solSnap.data();
+        if (sol.status !== 'pending') return res.status(400).json({ error: 'Solicitação já resolvida.' });
+
+        // Adicionar aprovação (sem duplicar o mesmo admin)
+        const approvals = sol.approvals || [];
+        if (!approvals.includes(req.user.email)) {
+            approvals.push(req.user.email);
+        }
+        await solRef.update({ approvals });
+
+        // Se atingiu o número necessário de aprovações, executa a ação
+        if (approvals.length >= (sol.requiredApprovals || 2)) {
+            if (sol.type === 'edit') {
+                await auth.setCustomUserClaims(sol.targetUid, {
+                    isAdmin: true,
+                    nivel: parseInt(sol.newNivel),
+                    status: null
+                });
+                await db.collection('registrations').doc(sol.targetUid).update({
+                    nivel: parseInt(sol.newNivel),
+                    updatedAt: new Date(),
+                    updatedBy: req.user.email
+                }).catch(() => {});
+            } else if (sol.type === 'delete') {
+                await auth.deleteUser(sol.targetUid);
+                await db.collection('registrations').doc(sol.targetUid).update({
+                    status: 'deleted',
+                    deletedAt: new Date(),
+                    deletedBy: req.user.email
+                }).catch(() => {});
+            }
+            await solRef.update({
+                status: 'approved',
+                resolvedAt: new Date(),
+                resolvedBy: req.user.email
+            });
+            db.collection('logs').add({
+                adminEmail: req.user.email,
+                action: `admin-solicitation/${sol.type} executada`,
+                details: `Alvo: ${sol.targetEmail}`,
+                timestamp: new Date()
+            }).catch(() => {});
+        }
+        res.json({ success: true, approvals });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao aprovar solicitação.' });
     }
 });
 
