@@ -40,21 +40,13 @@
         </div>
     </div>
 
+    <!-- Apenas o SDK do Firebase, mas NÃO será usado para criar usuário -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <script>
-        // Carrega a configuração do Firebase e inicializa o formulário
-        fetch('/firebase-config.json')
-          .then(res => res.json())
-          .then(firebaseConfig => {
-            firebase.initializeApp(firebaseConfig);
-            document.getElementById('registerForm').addEventListener('submit', handleRegister);
-          })
-          .catch(err => {
-            console.error('Erro ao carregar configuração Firebase:', err);
-            showError('Erro ao carregar configuração do sistema.');
-          });
+        // O formulário envia e‑mail e senha diretamente para o servidor
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
 
         async function handleRegister(e) {
             e.preventDefault();
@@ -62,7 +54,7 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // Validações
+            // Validações básicas no cliente
             if (!email || !password || !confirmPassword) {
                 showError('Por favor, preencha todos os campos.');
                 return;
@@ -77,7 +69,7 @@
             }
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                showError('Por favor, insira um e-mail válido.');
+                showError('Por favor, insira um e‑mail válido.');
                 return;
             }
 
@@ -86,51 +78,22 @@
             btn.textContent = 'A processar...';
 
             try {
-                // Criar usuário no Firebase
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-
-                // Enviar e-mail de verificação
-                await user.sendEmailVerification();
-
-                // Enviar dados para o servidor
                 const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: email,
-                        uid: user.uid,
-                        timestamp: new Date().toISOString()
-                    })
+                    body: JSON.stringify({ email, password })
                 });
 
+                const data = await response.json();
                 if (!response.ok) {
-                    throw new Error('Erro ao registar no servidor.');
+                    throw new Error(data.error || 'Erro ao registar.');
                 }
-
-                // Logout após registro
-                await firebase.auth().signOut();
 
                 showSuccess('✅ Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.');
-                
-                // Redirecionar após 5 segundos
                 setTimeout(() => window.location.assign('/login'), 5000);
-
             } catch (error) {
                 console.error('❌ Erro de registro:', error);
-                
-                let mensagem = 'Erro ao criar a conta. Tente novamente.';
-                if (error.code === 'auth/email-already-in-use') {
-                    mensagem = 'Este e-mail já está registado.';
-                } else if (error.code === 'auth/invalid-email') {
-                    mensagem = 'E-mail inválido.';
-                } else if (error.code === 'auth/weak-password') {
-                    mensagem = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-                } else if (error.message) {
-                    mensagem = error.message;
-                }
-                
-                showError(mensagem);
+                showError(error.message || 'Erro ao criar a conta. Tente novamente.');
                 btn.disabled = false;
                 btn.textContent = 'Registar';
             }

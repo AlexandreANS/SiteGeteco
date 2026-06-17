@@ -8,6 +8,7 @@ const fs = require("fs");
 const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
+const dns = require("dns").promises;  // <-- NOVO: para validar registros MX
 
 // --- INICIALIZAÇÃO DO FIREBASE ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -123,7 +124,7 @@ app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, 
 app.get("/", (req, res) => res.redirect("/login"));
 
 // ══════════════════════════════════════════════════════════════════
-// API Login — AGORA EXIGE VERIFICAÇÃO DE E‑MAIL APENAS PARA CONTAS PENDENTES
+// API Login — exige verificação de e‑mail apenas para contas pendentes
 // ══════════════════════════════════════════════════════════════════
 app.post("/sessionLogin", async (req, res) => {
     try {
@@ -131,7 +132,6 @@ app.post("/sessionLogin", async (req, res) => {
         const decoded = await auth.verifyIdToken(idToken);
         if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
 
-        // Só exige e‑mail verificado se o usuário NÃO for admin aprovado
         const userRecord = await auth.getUser(decoded.uid);
         const isAdminApproved = decoded.isAdmin === true && decoded.status !== 'pending';
         if (!userRecord.emailVerified && !isAdminApproved) {
@@ -160,21 +160,76 @@ app.post("/checkAdmin", async (req, res) => {
     }
 });
 
-// Registro — marca como pendente e aguarda verificação de email
+// ══════════════════════════════════════════════════════════════════
+// NOVA FUNÇÃO: valida se domínio do e‑mail possui registros MX
+// ══════════════════════════════════════════════════════════════════
+async function isEmailDomainValid(email) {
+    try {
+        const domain = email.split('@')[1];
+        if (!domain) return false;
+        const addresses = await dns.resolveMx(domain);
+        return addresses && addresses.length > 0;
+    } catch (err) {
+        return false; // sem MX = domínio inválido
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Registro — agora valida domínio e cria usuário via Admin SDK
+// ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
-        const { uid, email, timestamp } = req.body;
-        if (!uid || !email) return res.status(400).json({ error: 'Dados de registro incompletos.' });
-        const user = await auth.getUser(uid);
-        if (user.email !== email) return res.status(400).json({ error: 'Dados de usuário inválidos.' });
-        await auth.setCustomUserClaims(uid, { status: 'pending' });
-        await db.collection('registrations').doc(uid).set({
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'E‑mail e senha são obrigatórios.' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Formato de e‑mail inválido.' });
+        }
+
+        // Valida domínio (MX)
+        const domainValid = await isEmailDomainValid(email);
+        if (!domainValid) {
+            return res.status(400).json({ error: 'Domínio de e‑mail inválido ou não consegue receber mensagens.' });
+        }
+
+        // Cria usuário no Firebase Auth via Admin SDK
+        let userRecord;
+        try {
+            userRecord = await auth.createUser({
+                email,
+                password,
+                emailVerified: false
+            });
+        } catch (e) {
+            if (e.code === 'auth/email-already-exists') {
+                return res.status(409).json({ error: 'Este e‑mail já está registado.' });
+            }
+            throw e;
+        }
+
+        // Define claims como pendente
+        await auth.setCustomUserClaims(userRecord.uid, { status: 'pending' });
+
+        // Salva registro no Firestore
+        await db.collection('registrations').doc(userRecord.uid).set({
             email,
-            uid,
+            uid: userRecord.uid,
             status: 'pending',
-            requestedAt: timestamp ? new Date(timestamp) : new Date()
+            requestedAt: new Date()
         });
-        res.json({ success: true });
+
+        // Gera link de verificação (em produção enviar por e‑mail com nodemailer)
+        const verificationLink = await auth.generateEmailVerificationLink(email);
+        console.log('Link de verificação:', verificationLink);
+        // TODO: integrar envio real de e‑mail com nodemailer ou outro serviço
+
+        res.json({ success: true, message: 'Conta criada com sucesso. Verifique seu e‑mail para confirmar.' });
     } catch (e) {
         console.error('Erro ao processar registro:', e);
         res.status(500).json({ error: 'Não foi possível processar o registro.' });
@@ -489,19 +544,14 @@ app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
         }
 
         if (action === 'excluiu' || action === 'editou') {
-            // Restaura previousData
             await db.collection(collection).doc(docId).set(previousData);
         } else if (action === 'criou') {
-            // Remove o documento criado
             await db.collection(collection).doc(docId).delete();
         } else {
             return res.status(400).json({ error: 'Ação não suportada para rollback.' });
         }
 
-        // Marca o log como revertido (opcional)
         await logRef.update({ revertedAt: new Date(), revertedBy: req.user.email });
-
-        // Registra um novo log para a reversão
         await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback do log ${req.params.id}`);
 
         res.json({ success: true });
@@ -533,7 +583,6 @@ app.get('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     }
 });
 
-// Geração automática de matrícula SEPARADA por tipo
 async function gerarMatricula(tipo) {
     const prefixo = tipo === 'professor' ? 'SGBGP' : 'SGBG';
     const query = await db.collection('alunosBib')
@@ -553,7 +602,6 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
         }
 
         const matricula = await gerarMatricula(tipo);
-
         const ref = await db.collection('alunosBib').add({
             matricula,
             nome,
