@@ -141,12 +141,10 @@ app.post("/sessionLogin", async (req, res) => {
         const userRecord = await auth.getUser(decoded.uid);
         
         // Se o utilizador já é administrador (isAdmin true), ignora a verificação de e‑mail
-        // Isso permite que contas antigas aprovadas façam login sem ter o e‑mail verificado
         if (!userRecord.emailVerified && !decoded.isAdmin) {
             return res.status(403).send('Por favor, verifique seu e‑mail antes de fazer login.');
         }
 
-        // Se for um admin aprovado (isAdmin true), permite login mesmo sem emailVerified
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
         res.cookie('session', cookie, {
             maxAge: 432000000,
@@ -519,15 +517,25 @@ app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
 // ══════════════════════════════════════════════════════════════════
 // LOGS E ROLLBACK
 // ══════════════════════════════════════════════════════════════════
+
+// 🔧 CORREÇÃO: busca sem orderBy para evitar a necessidade de índice composto
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
-        const snap = await db.collection('logs')
-            .orderBy('timestamp', 'desc')
-            .limit(100)
-            .get();
-        const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const snap = await db.collection('logs').get();
+        let logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Ordenar em memória (mais recente primeiro)
+        logs.sort((a, b) => {
+            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
+            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
+            return tb - ta;
+        });
+
+        // Limitar a 100 registos
+        logs = logs.slice(0, 100);
         res.json(logs);
     } catch (e) {
+        console.error('Erro ao buscar logs:', e);
         res.status(500).json({ error: 'Erro ao buscar logs.' });
     }
 });
@@ -1135,6 +1143,7 @@ app.get('/api/admins', requireAdmin, async (req, res) => {
     }
 });
 
+// 🔧 CORREÇÃO: o criador já é incluído como aprovador automático
 app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1158,7 +1167,7 @@ app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
             requestedBy: req.user.email,
             requestedAt: new Date(),
             status: 'pending',
-            approvals: [],
+            approvals: [req.user.email],          // ✅ auto-aprovação do criador
             requiredApprovals: 2
         };
         if (type === 'edit') {
@@ -1191,6 +1200,7 @@ app.get('/api/admin-solicitations', requireAdmin, async (req, res) => {
     }
 });
 
+// 🔧 MELHORIA: log detalhado com nível anterior e e-mail do afetado
 app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1220,6 +1230,18 @@ app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) 
 
         if (newStatus === 'approved') {
             const { type, targetUid, newNivel } = solicitation;
+
+            // 🔍 Obter dados antigos para log
+            let oldNivel = null;
+            let targetEmailLog = solicitation.targetEmail;
+            try {
+                const targetUser = await auth.getUser(targetUid);
+                oldNivel = targetUser.customClaims?.nivel ?? null;
+                targetEmailLog = targetUser.email || targetEmailLog;
+            } catch (e) {
+                // utilizador pode não existir (caso de delete)
+            }
+
             try {
                 if (type === 'edit') {
                     await auth.setCustomUserClaims(targetUid, { nivel: newNivel, isAdmin: true });
@@ -1229,6 +1251,12 @@ app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) 
                     await db.collection('registrations').doc(targetUid).delete();
                 }
                 await docRef.update({ executedAt: new Date() });
+
+                // 📝 Log detalhado
+                const detalhe = type === 'edit'
+                    ? `Nível de ${targetEmailLog} alterado de ${oldNivel ?? '?'} para ${newNivel}. Solicitado por ${solicitation.requestedBy}, aprovado por ${newApprovals.join(', ')}`
+                    : `Administrador ${targetEmailLog} excluído. Solicitado por ${solicitation.requestedBy}, aprovado por ${newApprovals.join(', ')}`;
+
                 await registrarLog(
                     req.user.email,
                     `executou ação admin (${type})`,
@@ -1236,7 +1264,7 @@ app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) 
                     targetUid,
                     null,
                     null,
-                    `Ação solicitada por ${solicitation.requestedBy} aprovada por ${newApprovals.join(', ')}`
+                    detalhe
                 );
             } catch (execError) {
                 console.error('Erro ao executar ação admin:', execError);
