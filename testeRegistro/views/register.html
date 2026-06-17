@@ -1,5 +1,3 @@
-<!-- ✅ ARQUIVO CORRIGIDO PARA: testeRegistro/views/register.html -->
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -8,6 +6,123 @@
     <title>Registo - Painel Administrativo GETECO</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/watermark.png">
+    <style>
+        /* Estilos específicos para registro */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg-body, #f3f4f6);
+            padding: 20px;
+        }
+        .login-box {
+            background: var(--bg-card, #ffffff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: var(--radius, 12px);
+            padding: 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-lg, 0 10px 25px rgba(0,0,0,0.08));
+            text-align: center;
+        }
+        .login-logo {
+            max-width: 80px;
+            margin-bottom: 1rem;
+        }
+        .login-box h2 {
+            margin-bottom: 0.5rem;
+            color: var(--txt-primary, #111827);
+        }
+        .login-box p {
+            color: var(--txt-secondary, #6b7280);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--txt-secondary, #4b5563);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            background: var(--bg-input, #f9fafb);
+            border: 1px solid var(--border, #d1d5db);
+            border-radius: var(--radius-sm, 6px);
+            font-size: 0.95rem;
+            color: var(--txt-primary, #111827);
+            font-family: inherit;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .input-group input:focus {
+            border-color: var(--border-focus, #3b82f6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .input-group small {
+            display: block;
+            color: var(--txt-muted, #9ca3af);
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--blue, #2563eb);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm, 6px);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-family: inherit;
+        }
+        .btn-submit:hover {
+            background: var(--blue-dark, #1d4ed8);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .login-footer {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--txt-secondary, #6b7280);
+        }
+        .login-footer a {
+            color: var(--blue, #2563eb);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        #errorMessage, #successMessage {
+            padding: 0.75rem;
+            border-radius: var(--radius-sm, 6px);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        #errorMessage {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        #successMessage {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -16,8 +131,8 @@
             <h2>Criar Nova Conta</h2>
             <p>Preencha os dados para solicitar acesso ao painel.</p>
             
-            <div id="errorMessage" style="color: red; display: none; margin-bottom: 1rem;"></div>
-            <div id="successMessage" style="color: green; display: none; margin-bottom: 1rem;"></div>
+            <div id="errorMessage" style="display: none;"></div>
+            <div id="successMessage" style="display: none;"></div>
             
             <form id="registerForm">
                 <div class="input-group">
@@ -46,136 +161,113 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <script>
-        // ====================================================================
-        // ✅ CORREÇÃO 1: Carregar config do Firebase de um arquivo externo
-        // ====================================================================
-        
+        // Carregar configuração do Firebase
         fetch('/firebase-config.json')
           .then(res => res.json())
           .then(firebaseConfig => {
-            initializeRegisterForm(firebaseConfig);
+            firebase.initializeApp(firebaseConfig);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
           })
           .catch(err => {
             console.error('Erro ao carregar configuração Firebase:', err);
             showError('Erro ao carregar configuração do sistema.');
           });
 
-        function initializeRegisterForm(firebaseConfig) {
-          firebase.initializeApp(firebaseConfig);
-
-          const registerForm = document.getElementById('registerForm');
-
-          registerForm.addEventListener('submit', async function (e) {
+        async function handleRegister(e) {
             e.preventDefault();
 
             const email = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
-            // ✅ CORREÇÃO 2: Validação robusta no cliente
+            // Validações
             if (!email || !password || !confirmPassword) {
-              showError('Por favor, preencha todos os campos.');
-              return;
+                showError('Por favor, preencha todos os campos.');
+                return;
             }
-
             if (password.length < 6) {
-              showError('A senha deve ter pelo menos 6 caracteres.');
-              return;
+                showError('A senha deve ter pelo menos 6 caracteres.');
+                return;
             }
-
             if (password !== confirmPassword) {
-              showError('As senhas não coincidem!');
-              return;
+                showError('As senhas não coincidem!');
+                return;
             }
-
-            // ✅ CORREÇÃO 3: Validação de e-mail
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-              showError('Por favor, insira um e-mail válido.');
-              return;
+                showError('Por favor, insira um e-mail válido.');
+                return;
             }
+
+            const btn = document.querySelector('#registerForm button');
+            btn.disabled = true;
+            btn.textContent = 'A processar...';
 
             try {
-              // Desabilitar botão enquanto processa
-              const btn = registerForm.querySelector('button');
-              btn.disabled = true;
-              btn.textContent = 'A processar...';
+                // Criar usuário no Firebase
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
 
-              // ✅ CORREÇÃO 4: Criar usuário no Firebase
-              const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                // Enviar e-mail de verificação
+                await user.sendEmailVerification();
 
-              // ✅ CORREÇÃO 5: Enviar para o servidor (com validação no servidor também!)
-              const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  email: email,
-                  uid: userCredential.user.uid,
-                  timestamp: new Date().toISOString()
-                })
-              });
+                // Registrar no servidor (status pending)
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        uid: user.uid,
+                        timestamp: new Date().toISOString()
+                    })
+                });
 
-              if (!response.ok) {
-                throw new Error('Erro ao registar no servidor.');
-              }
+                if (!response.ok) {
+                    throw new Error('Erro ao registar no servidor.');
+                }
 
-              // ✅ CORREÇÃO 6: Fazer logout após registar (precisa de aprovação)
-              await firebase.auth().signOut();
+                // Logout imediato (ainda não aprovado)
+                await firebase.auth().signOut();
 
-              // Mostrar mensagem de sucesso
-              showSuccess('✅ Conta criada com sucesso! Aguarde a aprovação do administrador para fazer login.');
-              
-              // Redirecionar após 3 segundos
-              setTimeout(() => {
-                window.location.assign('/login');
-              }, 3000);
+                showSuccess('✅ Conta criada com sucesso! Verifique seu e‑mail para confirmar o endereço. Após a verificação, aguarde a aprovação do administrador.');
+                setTimeout(() => window.location.assign('/login'), 5000);
 
             } catch (error) {
-              console.error('❌ Erro de registro:', error);
-              
-              let mensagem = 'Erro ao criar a conta. Tente novamente.';
-              
-              if (error.code === 'auth/email-already-in-use') {
-                mensagem = 'Este e-mail já está registado.';
-              } else if (error.code === 'auth/invalid-email') {
-                mensagem = 'E-mail inválido.';
-              } else if (error.code === 'auth/weak-password') {
-                mensagem = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-              } else if (error.message) {
-                mensagem = error.message;
-              }
-              
-              showError(mensagem);
-              
-              // Reabilitar botão
-              const btn = registerForm.querySelector('button');
-              btn.disabled = false;
-              btn.textContent = 'Registar';
+                console.error('❌ Erro de registro:', error);
+                let mensagem = 'Erro ao criar a conta. Tente novamente.';
+                if (error.code === 'auth/email-already-in-use') {
+                    mensagem = 'Este e-mail já está registado.';
+                } else if (error.code === 'auth/invalid-email') {
+                    mensagem = 'E-mail inválido.';
+                } else if (error.code === 'auth/weak-password') {
+                    mensagem = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+                } else if (error.message) {
+                    mensagem = error.message;
+                }
+                showError(mensagem);
+                btn.disabled = false;
+                btn.textContent = 'Registar';
             }
-          });
         }
 
         function showError(message) {
-          const errorDiv = document.getElementById('errorMessage');
-          const successDiv = document.getElementById('successMessage');
-          
-          errorDiv.textContent = message;
-          errorDiv.style.display = 'block';
-          successDiv.style.display = 'none';
-          
-          // Limpar erro após 5 segundos
-          setTimeout(() => {
-            errorDiv.style.display = 'none';
-          }, 5000);
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+            // Limpar erro após 6 segundos
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 6000);
         }
 
         function showSuccess(message) {
-          const successDiv = document.getElementById('successMessage');
-          const errorDiv = document.getElementById('errorMessage');
-          
-          successDiv.textContent = message;
-          successDiv.style.display = 'block';
-          errorDiv.style.display = 'none';
+            const successDiv = document.getElementById('successMessage');
+            const errorDiv = document.getElementById('errorMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
         }
     </script>
 </body>
