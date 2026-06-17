@@ -469,7 +469,6 @@
             font-family: var(--font);
         }
 
-        /* Estilos para logs com rollback */
         .log-info {
             flex: 1;
         }
@@ -482,6 +481,37 @@
         .log-meta {
             font-size: 0.7rem;
             color: var(--txt-muted);
+        }
+
+        /* ===== CORREÇÃO DOS SELECTS (texto branco em fundo branco) ===== */
+        select,
+        .bib-select,
+        .filtro-tipo-select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-color: var(--bg-input) !important;
+            color: var(--txt-primary) !important;
+            /* seta customizada para dropdown */
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.7em center !important;
+            background-size: 1em !important;
+            padding-right: 2.5rem !important;
+        }
+
+        /* Remove a seta em selects que são listas abertas (size > 1) */
+        select[size],
+        .bib-select[size] {
+            background-image: none !important;
+            padding-right: 4px !important;
+        }
+
+        /* Estilização das opções dentro de qualquer select */
+        option,
+        .bib-select option {
+            background-color: var(--bg-card) !important;
+            color: var(--txt-primary) !important;
         }
     </style>
 </head>
@@ -862,9 +892,7 @@
                 const badge = document.getElementById('user-nivel-info');
                 const banner = document.getElementById('banner-nivel-limitado');
                 if (badge) {
-                    const nivelLabel = userInfo.isSuperAdmin
-                        ? '⭐ Super Admin (acesso total)'
-                        : `Nível ${userInfo.nivel ?? '?'}`;
+                    const nivelLabel = `Administrador nível Atual: ${userInfo.nivel ?? '?'}`;
                     badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
                 }
                 if (banner && !userInfo.isSuperAdmin) {
@@ -1322,7 +1350,6 @@
             } catch {}
         }
 
-        // ═══════════════ LOGS (com rollback) ═══════════════
         async function loadLogsContent() {
             const logsList = document.getElementById('logs-list');
             const solList = document.getElementById('solicitacoes-list');

@@ -122,17 +122,22 @@ app.get("/aguardando", (req, res) => res.sendFile(path.join(views, "aguardando.h
 app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, "edit-post.html")));
 app.get("/", (req, res) => res.redirect("/login"));
 
-// API Login — agora verifica se email foi verificado
+// ══════════════════════════════════════════════════════════════════
+// API Login — AGORA EXIGE VERIFICAÇÃO DE E‑MAIL APENAS PARA CONTAS PENDENTES
+// ══════════════════════════════════════════════════════════════════
 app.post("/sessionLogin", async (req, res) => {
     try {
         const { idToken } = req.body;
         const decoded = await auth.verifyIdToken(idToken);
         if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
-        // Verifica se o email foi verificado
-        const user = await auth.getUser(decoded.uid);
-        if (!user.emailVerified) {
+
+        // Só exige e‑mail verificado se o usuário NÃO for admin aprovado
+        const userRecord = await auth.getUser(decoded.uid);
+        const isAdminApproved = decoded.isAdmin === true && decoded.status !== 'pending';
+        if (!userRecord.emailVerified && !isAdminApproved) {
             return res.status(403).send('Por favor, verifique seu e-mail antes de fazer login.');
         }
+
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
         res.cookie('session', cookie, {
             maxAge: 432000000,
