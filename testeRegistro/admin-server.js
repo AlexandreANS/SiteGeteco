@@ -8,10 +8,14 @@ const fs = require("fs");
 const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
+
 // ══════════════════════════════════════════════════════════════════
 // VALIDAÇÃO DE E-MAIL — AbstractAPI
 // ══════════════════════════════════════════════════════════════════
+<<<<<<< HEAD
 
+=======
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 const ABSTRACT_EMAIL_API_KEY = "16dafc1181bc4ee98d8da4206b21fca6";
 
@@ -27,7 +31,11 @@ async function validarEmail(email) {
         const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${ABSTRACT_EMAIL_API_KEY}&email=${encodeURIComponent(emailLimpo)}`;
         const res = await fetch(url);
         const data = await res.json();
+<<<<<<< HEAD
         console.log(`[AbstractAPI] ${emailLimpo} → deliverability=${data.deliverability} is_disposable=${data.is_disposable_email?.value}`);
+=======
+        console.log(`[AbstractAPI] ${emailLimpo} → deliverability=${data.deliverability} is_disposable=${data.is_disposable_email?.value} is_valid_format=${data.is_valid_format?.value}`);
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
         if (data.is_disposable_email?.value === true) {
             return { valid: false, reason: 'E-mails temporários ou descartáveis não são permitidos.' };
         }
@@ -264,6 +272,28 @@ async function criarSolicitacao({ user, collection, method, itemId = null, data,
         details,
         timestamp: new Date()
     });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HELPER: REGISTRAR LOG COM SNAPSHOT PARA ROLLBACK
+// ══════════════════════════════════════════════════════════════════
+async function registrarLog(adminEmail, action, collection, docId, previousData, newData, details) {
+    const logData = {
+        adminEmail,
+        action,
+        collection,
+        docId,
+        timestamp: new Date(),
+        details: details || '',
+        rollbackPossible: false
+    };
+    if (previousData) {
+        logData.previousData = previousData;
+        logData.rollbackPossible = true;
+    }
+    if (newData) logData.newData = newData;
+    const ref = await db.collection('logs').add(logData);
+    return ref.id;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -721,6 +751,209 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
+=======
+app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações.' });
+        }
+
+        const logRef = db.collection('logs').doc(req.params.id);
+        const logSnap = await logRef.get();
+        if (!logSnap.exists) return res.status(404).json({ error: 'Log não encontrado.' });
+        const log = logSnap.data();
+        if (!log.rollbackPossible) {
+            return res.status(400).json({ error: 'Este log não pode ser revertido.' });
+        }
+
+        const { collection, docId, previousData, action } = log;
+        if (!previousData && action !== 'criou') {
+            return res.status(400).json({ error: 'Dados anteriores não disponíveis para rollback.' });
+        }
+
+        if (action === 'excluiu' || action === 'editou') {
+            await db.collection(collection).doc(docId).set(previousData);
+        } else if (action === 'criou') {
+            await db.collection(collection).doc(docId).delete();
+        } else {
+            return res.status(400).json({ error: 'Ação não suportada para rollback.' });
+        }
+
+        await logRef.update({ revertedAt: new Date(), revertedBy: req.user.email });
+        await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback do log ${req.params.id}`);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('Erro no rollback:', e);
+        res.status(500).json({ error: 'Erro ao executar rollback.' });
+    }
+});
+
+app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (!log.rollbackPossible) {
+            return res.status(400).json({ error: 'Este log já está confirmado.' });
+        }
+        await docRef.update({
+            previousData: admin.firestore.FieldValue.delete(),
+            newData: admin.firestore.FieldValue.delete(),
+            rollbackPossible: false
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao confirmar log.' });
+    }
+});
+
+app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (log.rollbackPossible === true) {
+            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
+        }
+        await docRef.delete();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao apagar log.' });
+    }
+});
+
+app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs em massa.' });
+        }
+
+        const snap = await db.collection('logs').get();
+        let logs = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(log => log.rollbackPossible === true);
+
+        logs.sort((a, b) => {
+            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
+            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
+            return tb - ta;
+        });
+
+        if (logs.length === 0) {
+            return res.json({ success: true, confirmed: 0 });
+        }
+
+        const batchSize = 500;
+        for (let i = 0; i < logs.length; i += batchSize) {
+            const batch = db.batch();
+            const slice = logs.slice(i, i + batchSize);
+            slice.forEach(log => {
+                batch.update(db.collection('logs').doc(log.id), {
+                    previousData: admin.firestore.FieldValue.delete(),
+                    newData: admin.firestore.FieldValue.delete(),
+                    rollbackPossible: false
+                });
+            });
+            await batch.commit();
+        }
+
+        res.json({ success: true, confirmed: logs.length });
+    } catch (e) {
+        console.error('Erro ao confirmar todos os logs:', e);
+        res.status(500).json({ error: 'Erro ao confirmar logs em massa.' });
+    }
+});
+
+app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações em massa.' });
+        }
+
+        const snap = await db.collection('logs').get();
+        let reversiveis = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(log => log.rollbackPossible === true);
+
+        reversiveis.sort((a, b) => {
+            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
+            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
+            return tb - ta;
+        });
+
+        let revertidos = 0;
+        for (const log of reversiveis) {
+            try {
+                const { collection, docId, previousData, action } = log;
+                if (action === 'excluiu' || action === 'editou') {
+                    await db.collection(collection).doc(docId).set(previousData);
+                } else if (action === 'criou') {
+                    await db.collection(collection).doc(docId).delete();
+                } else {
+                    continue;
+                }
+                await db.collection('logs').doc(log.id).update({
+                    revertedAt: new Date(),
+                    revertedBy: req.user.email,
+                    rollbackPossible: false
+                });
+                await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback em massa do log ${log.id}`);
+                revertidos++;
+            } catch (innerError) {
+                console.error(`Falha ao reverter log ${log.id}:`, innerError);
+            }
+        }
+
+        res.json({ success: true, reverted: revertidos });
+    } catch (e) {
+        console.error('Erro no rollback em massa:', e);
+        res.status(500).json({ error: 'Erro ao executar rollback em massa.' });
+    }
+});
+
+app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem limpar o histórico.' });
+        }
+
+        const snap = await db.collection('logs').get();
+        const toDelete = snap.docs.filter(doc => doc.data().rollbackPossible !== true);
+
+        if (toDelete.length === 0) {
+            return res.json({ success: true, deleted: 0 });
+        }
+
+        const batchSize = 500;
+        for (let i = 0; i < toDelete.length; i += batchSize) {
+            const batch = db.batch();
+            const slice = toDelete.slice(i, i + batchSize);
+            slice.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+
+        res.json({ success: true, deleted: toDelete.length });
+    } catch (e) {
+        console.error('Erro ao limpar histórico:', e);
+        res.status(500).json({ error: 'Erro ao limpar histórico.' });
+    }
+});
+
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
         let snap;
@@ -862,6 +1095,34 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
         if (!nome || !tipo) {
             return res.status(400).json({ error: 'Nome e tipo são obrigatórios.' });
         }
+<<<<<<< HEAD
+=======
+
+        // 🔧 GERAÇÃO AUTOMÁTICA DE MATRÍCULA PARA PROFESSOR
+        if (tipo === 'professor' && !matricula) {
+            const todosProfessores = await db.collection('alunosBib')
+                .where('tipo', '==', 'professor')
+                .get();
+
+            let ultimoNumero = 0;
+            todosProfessores.forEach(doc => {
+                const mat = doc.data().matricula;
+                if (mat && mat.startsWith('SGBGP')) {
+                    const num = parseInt(mat.replace('SGBGP', ''), 10);
+                    if (!isNaN(num) && num > ultimoNumero) {
+                        ultimoNumero = num;
+                    }
+                }
+            });
+
+            const proximoNumero = ultimoNumero + 1;
+            matricula = `SGBGP${String(proximoNumero).padStart(3, '0')}`;
+        }
+
+        if (!matricula) {
+            return res.status(400).json({ error: 'Matrícula é obrigatória para alunos.' });
+        }
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 
         // 🔧 Geração automática para professor se a matrícula não foi enviada
         if (tipo === 'professor' && !matricula) {
@@ -913,6 +1174,7 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
             tipo,
             criadoEm: new Date()
         });
+
         db.collection('logs').add({
             adminEmail: req.user.email,
             action: 'criou',
@@ -920,9 +1182,17 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
             details: `${nome} (${matricula}) [${tipo}]`,
             timestamp: new Date()
         });
+<<<<<<< HEAD
         res.json({ success: true, id: ref.id, matricula });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao cadastrar.' });
+=======
+
+        res.json({ success: true, id: ref.id, matricula });
+    } catch (e) {
+        console.error('Erro ao cadastrar:', e);
+        res.status(500).json({ error: 'Erro ao cadastrar. ' + e.message });
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
     }
 });
 
@@ -938,7 +1208,7 @@ app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
             .limit(1)
             .get();
         if (!existente.empty && existente.docs[0].id !== req.params.id) {
-            return res.status(400).json({ error: 'Já existe outro aluno com essa matrícula.' });
+            return res.status(400).json({ error: 'Já existe outro cadastro com essa matrícula.' });
         }
 
         if (!isSuperAdmin(req.user)) {
@@ -1199,7 +1469,11 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
+<<<<<<< HEAD
 // BIBLIOTECA — EMPRÉSTIMOS (mantido igual)
+=======
+// BIBLIOTECA — EMPRÉSTIMOS
+>>>>>>> 43bf2a31aa26e0303ba21da8656de17d98aa1577
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
