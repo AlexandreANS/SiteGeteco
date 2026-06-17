@@ -826,95 +826,9 @@ app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
     }
 });
 
-app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs em massa.' });
-        }
-
-        const snap = await db.collection('logs').get();
-        let logs = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(log => log.rollbackPossible === true);
-
-        logs.sort((a, b) => {
-            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
-            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
-            return tb - ta;
-        });
-
-        if (logs.length === 0) {
-            return res.json({ success: true, confirmed: 0 });
-        }
-
-        const batchSize = 500;
-        for (let i = 0; i < logs.length; i += batchSize) {
-            const batch = db.batch();
-            const slice = logs.slice(i, i + batchSize);
-            slice.forEach(log => {
-                batch.update(db.collection('logs').doc(log.id), {
-                    previousData: admin.firestore.FieldValue.delete(),
-                    newData: admin.firestore.FieldValue.delete(),
-                    rollbackPossible: false
-                });
-            });
-            await batch.commit();
-        }
-
-        res.json({ success: true, confirmed: logs.length });
-    } catch (e) {
-        console.error('Erro ao confirmar todos os logs:', e);
-        res.status(500).json({ error: 'Erro ao confirmar logs em massa.' });
-    }
-});
-
-app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações em massa.' });
-        }
-
-        const snap = await db.collection('logs').get();
-        let reversiveis = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(log => log.rollbackPossible === true);
-
-        reversiveis.sort((a, b) => {
-            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
-            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
-            return tb - ta;
-        });
-
-        let revertidos = 0;
-        for (const log of reversiveis) {
-            try {
-                const { collection, docId, previousData, action } = log;
-                if (action === 'excluiu' || action === 'editou') {
-                    await db.collection(collection).doc(docId).set(previousData);
-                } else if (action === 'criou') {
-                    await db.collection(collection).doc(docId).delete();
-                } else {
-                    continue;
-                }
-                await db.collection('logs').doc(log.id).update({
-                    revertedAt: new Date(),
-                    revertedBy: req.user.email,
-                    rollbackPossible: false
-                });
-                await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback em massa do log ${log.id}`);
-                revertidos++;
-            } catch (innerError) {
-                console.error(`Falha ao reverter log ${log.id}:`, innerError);
-            }
-        }
-
-        res.json({ success: true, reverted: revertidos });
-    } catch (e) {
-        console.error('Erro no rollback em massa:', e);
-        res.status(500).json({ error: 'Erro ao executar rollback em massa.' });
-    }
-});
-
+// ══════════════════════════════════════════════════════════════════
+// LIMPAR HISTÓRICO (somente logs não reversíveis)
+// ══════════════════════════════════════════════════════════════════
 app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -1085,31 +999,42 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Nome e tipo são obrigatórios.' });
         }
 
-        // 🔧 GERAÇÃO AUTOMÁTICA DE MATRÍCULA PARA PROFESSOR
-        if (tipo === 'professor' && !matricula) {
-            const todosProfessores = await db.collection('alunosBib')
-                .where('tipo', '==', 'professor')
-                .get();
-
-            let ultimoNumero = 0;
-            todosProfessores.forEach(doc => {
-                const mat = doc.data().matricula;
-                if (mat && mat.startsWith('SGBGP')) {
-                    const num = parseInt(mat.replace('SGBGP', ''), 10);
-                    if (!isNaN(num) && num > ultimoNumero) {
-                        ultimoNumero = num;
-                    }
-                }
-            });
-
-            const proximoNumero = ultimoNumero + 1;
-            matricula = `SGBGP${String(proximoNumero).padStart(3, '0')}`;
-        }
-
+        // Se matrícula não fornecida, gerar automaticamente
         if (!matricula) {
-            return res.status(400).json({ error: 'Matrícula é obrigatória para alunos.' });
+            if (tipo === 'professor') {
+                const todosProfessores = await db.collection('alunosBib')
+                    .where('tipo', '==', 'professor')
+                    .get();
+                let ultimoNumero = 0;
+                todosProfessores.forEach(doc => {
+                    const mat = doc.data().matricula;
+                    if (mat && mat.startsWith('SGBGP')) {
+                        const num = parseInt(mat.replace('SGBGP', ''), 10);
+                        if (!isNaN(num) && num > ultimoNumero) {
+                            ultimoNumero = num;
+                        }
+                    }
+                });
+                matricula = `SGBGP${String(ultimoNumero + 1).padStart(3, '0')}`;
+            } else { // aluno
+                const todosAlunos = await db.collection('alunosBib')
+                    .where('tipo', '==', 'aluno')
+                    .get();
+                let ultimoNumero = 0;
+                todosAlunos.forEach(doc => {
+                    const mat = doc.data().matricula;
+                    if (mat && mat.startsWith('SGBG')) {
+                        const num = parseInt(mat.replace('SGBG', ''), 10);
+                        if (!isNaN(num) && num > ultimoNumero) {
+                            ultimoNumero = num;
+                        }
+                    }
+                });
+                matricula = `SGBG${String(ultimoNumero + 1).padStart(4, '0')}`;
+            }
         }
 
+        // Verificar unicidade
         const existente = await db.collection('alunosBib')
             .where('matricula', '==', matricula)
             .limit(1)
@@ -1153,18 +1078,18 @@ app.post('/api/alunosBib', requireAdmin, async (req, res) => {
 
 app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     try {
-        const { matricula, nome, tipo } = req.body;
-        if (!matricula || !nome || !tipo) {
-            return res.status(400).json({ error: 'Matrícula, nome e tipo são obrigatórios.' });
+        const { nome, tipo } = req.body;
+        if (!nome || !tipo) {
+            return res.status(400).json({ error: 'Nome e tipo são obrigatórios.' });
         }
 
-        const existente = await db.collection('alunosBib')
-            .where('matricula', '==', matricula)
-            .limit(1)
-            .get();
-        if (!existente.empty && existente.docs[0].id !== req.params.id) {
-            return res.status(400).json({ error: 'Já existe outro cadastro com essa matrícula.' });
+        // Buscar matrícula atual para log
+        const docSnap = await db.collection('alunosBib').doc(req.params.id).get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Cadastro não encontrado.' });
         }
+        const dadosAtuais = docSnap.data();
+        const matriculaAtual = dadosAtuais.matricula;
 
         if (!isSuperAdmin(req.user)) {
             await criarSolicitacao({
@@ -1172,27 +1097,28 @@ app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
                 collection: 'alunosBib',
                 method: 'PUT',
                 itemId: req.params.id,
-                data: { matricula, nome, tipo },
-                details: `${nome} (${matricula}) [${tipo}]`
+                data: { nome, tipo },
+                details: `${nome} (${matriculaAtual}) [${tipo}]`
             });
             return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
         }
 
         await db.collection('alunosBib').doc(req.params.id).update({
-            matricula,
             nome,
             tipo,
             atualizadoEm: new Date()
         });
+
         db.collection('logs').add({
             adminEmail: req.user.email,
             action: 'editou',
             collection: 'alunosBib',
-            details: `${nome} (${matricula}) [${tipo}]`,
+            details: `${nome} (${matriculaAtual}) [${tipo}]`,
             timestamp: new Date()
         });
         res.json({ success: true });
     } catch (e) {
+        console.error('Erro ao editar:', e);
         res.status(500).json({ error: 'Erro ao editar.' });
     }
 });
