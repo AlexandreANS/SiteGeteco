@@ -82,11 +82,6 @@
         #qtd-emprestimo:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
         .input-qtd-dev { width: 50px; padding: 4px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--txt-primary); text-align: center; font-family: var(--font); }
 
-        .log-info { flex: 1; }
-        .log-action { font-weight: 500; }
-        .log-detail { font-size: 0.9rem; }
-        .log-meta { font-size: 0.7rem; color: var(--txt-muted); }
-
         select, .bib-select, .filtro-tipo-select {
             -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important;
             background-color: var(--bg-input) !important; color: var(--txt-primary) !important;
@@ -117,6 +112,32 @@
         .btn-approve-admin:hover { background: var(--green); color: white; }
         .btn-approve-admin:disabled { opacity: 0.5; cursor: not-allowed; }
         .mass-actions { display: flex; gap: 0.5rem; }
+
+        /* ===== ÁREA DE LOGS EXPANDIDA ===== */
+        #logs-list {
+            max-height: 70vh;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        #logs-list li {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .log-info {
+            flex: 1;
+        }
+        .log-action {
+            font-weight: 500;
+        }
+        .log-detail {
+            font-size: 0.82rem;
+            opacity: 0.9;
+        }
+        .log-meta {
+            font-size: 0.72rem;
+            color: var(--txt-muted);
+        }
     </style>
 </head>
 <body class="dashboard-body">
@@ -362,12 +383,6 @@
 
         <!-- ── ABA: LOGS ── -->
         <div id="logs" class="tab-pane">
-            <!-- SOLICITAÇÕES PENDENTES COMENTADAS
-            <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
-                <h3>⏳ Solicitações Pendentes de Aprovação</h3>
-                <ul id="solicitacoes-list" class="item-list"><li style="color:var(--txt-muted)">Carregando...</li></ul>
-            </div>
-            -->
             <div class="list-container">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                     <h3 style="margin:0;">Histórico de Atividades</h3>
@@ -1054,6 +1069,9 @@
                                 ${actionsHtml}
                             </li>`;
                 }).join('');
+
+                // Scroll reset após carregar
+                logsList.scrollTop = 0;
 
                 // Eventos para rollback individuais
                 document.querySelectorAll('.btn-rollback').forEach(btn => {
