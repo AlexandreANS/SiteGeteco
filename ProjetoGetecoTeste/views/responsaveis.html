@@ -1,11 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GETECO - Biblioteca</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" type="image/png" href="/images/logo.png" />
   <style>
     .bib-grid {
       display: grid;
@@ -56,6 +56,12 @@
     .bib-badge.emprestado {
       background: #fee2e2;
       color: #991b1b;
+    }
+    .bib-quantidade {
+      font-size: 0.8rem;
+      color: #065f46;
+      font-weight: 500;
+      margin-top: 0.2rem;
     }
     .bib-filtros {
       display: flex;
@@ -109,7 +115,7 @@
   <header>
     <nav class="navbar">
       <a href="/" class="logo" aria-label="Ir para a página inicial">
-        <img src="/images/logo.png" alt="GETECO - Início" class="site-logo">
+        <img src="/images/logo.png" alt="GETECO - Início" class="site-logo" />
       </a>
       <ul class="nav-links">
         <li><a href="/sobre">História</a></li>
@@ -126,7 +132,7 @@
   <section class="section">
     <h2>Acervo da Biblioteca</h2>
     <p style="text-align:center;color:var(--texto-suave,#6b7280);max-width:600px;margin:0 auto 2rem;">
-      Consulte os livros disponíveis e veja quais estão emprestados no momento.
+      Consulte os livros disponíveis e veja quantos exemplares estão à disposição.
     </p>
 
     <input
@@ -135,12 +141,12 @@
       class="bib-busca"
       placeholder="🔍  Buscar por título ou autor..."
       aria-label="Buscar livros"
-    >
+    />
 
     <div class="bib-filtros" role="group" aria-label="Filtrar acervo">
       <button class="bib-filtro-btn active" data-filtro="todos">Todos</button>
       <button class="bib-filtro-btn" data-filtro="disponivel">Disponíveis</button>
-      <button class="bib-filtro-btn" data-filtro="emprestado">Emprestados</button>
+      <button class="bib-filtro-btn" data-filtro="emprestado">Indisponíveis</button>
     </div>
 
     <div id="bib-container">
@@ -153,23 +159,36 @@
   <footer></footer>
 
   <script>
-    let todosLivros = [];
+    // ---------- UTILITÁRIOS ----------
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ---------- ESTADO ----------
+    let livros = [];
     let filtroAtivo = 'todos';
     let buscaAtiva  = '';
 
+    // ---------- RENDERIZAÇÃO ----------
     function renderizarLivros() {
       const container = document.getElementById('bib-container');
 
-      const filtrados = todosLivros.filter(livro => {
+      const filtrados = livros.filter(livro => {
         const okFiltro =
           filtroAtivo === 'todos' ||
-          (filtroAtivo === 'disponivel' && !livro.emprestado) ||
-          (filtroAtivo === 'emprestado' && livro.emprestado);
+          (filtroAtivo === 'disponivel' && (livro.quantidadeDisponivel ?? 0) > 0) ||
+          (filtroAtivo === 'emprestado' && (livro.quantidadeDisponivel ?? 0) === 0);
 
         const q = buscaAtiva.toLowerCase();
         const okBusca =
           !q ||
-          (livro.nome  || '').toLowerCase().includes(q) ||
+          (livro.nome || '').toLowerCase().includes(q) ||
           (livro.autor || '').toLowerCase().includes(q);
 
         return okFiltro && okBusca;
@@ -180,42 +199,49 @@
         return;
       }
 
-      // Escapa HTML para prevenir XSS
-      function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      }
-
       container.innerHTML = `<div class="bib-grid">
         ${filtrados.map(livro => {
-          const disponivel = !livro.emprestado;
+          const disponiveis = livro.quantidadeDisponivel ?? 0;
+          const disponivel = disponiveis > 0;
+
+          // Exibe a quantidade apenas se houver exemplares disponíveis
+          const quantidadeHtml = disponivel
+            ? `<div class="bib-quantidade">${disponiveis} ${disponiveis === 1 ? 'exemplar disponível' : 'exemplares disponíveis'}</div>`
+            : '';
+
           return `
             <div class="bib-card">
               <span class="bib-card-icon">${disponivel ? '📗' : '📕'}</span>
-              <span class="bib-card-titulo">${escapeHtml(livro.nome) || '—'}</span>
+              <span class="bib-card-titulo">${escapeHtml(livro.nome)}</span>
               <span class="bib-card-autor">${escapeHtml(livro.autor) || '—'}</span>
               ${livro.codigo ? `<span class="bib-card-codigo">Cód. ${escapeHtml(livro.codigo)}</span>` : ''}
+              ${quantidadeHtml}
               <span class="bib-badge ${disponivel ? 'disponivel' : 'emprestado'}">
-                ${disponivel ? '✓ Disponível' : '✗ Emprestado'}
+                ${disponivel ? '✓ Disponível' : '✗ Indisponível'}
               </span>
             </div>`;
         }).join('')}
       </div>`;
     }
 
-    // Carregar livros
+    // ---------- CARREGAR DADOS ----------
     fetch('/api/livros')
-      .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+      .then(res => {
+        if (!res.ok) throw new Error(`Erro ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        todosLivros = data;
+        livros = data;  // Array de objetos com { id, nome, autor, codigo, quantidade, quantidadeDisponivel, ... }
         renderizarLivros();
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('Falha ao carregar acervo:', err);
         document.getElementById('bib-container').innerHTML =
           '<p style="text-align:center;color:var(--texto-suave,#6b7280)">Não foi possível carregar o acervo.</p>';
       });
 
-    // Filtros de disponibilidade
+    // ---------- EVENTOS ----------
+    // Filtros
     document.querySelectorAll('.bib-filtro-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.bib-filtro-btn').forEach(b => b.classList.remove('active'));
@@ -225,7 +251,7 @@
       });
     });
 
-    // Busca por título/autor
+    // Busca
     document.getElementById('bib-busca').addEventListener('input', e => {
       buscaAtiva = e.target.value;
       renderizarLivros();
