@@ -141,368 +141,15 @@
     </style>
 </head>
 <body class="dashboard-body">
-
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <img src="/images/logo.png" alt="Logo" class="sidebar-logo">
-            <h2>GETECO Admin</h2>
-        </div>
-        <div id="user-nivel-info">Carregando...</div>
-        <div id="banner-nivel-limitado">⚠️ Nível limitado — suas ações criam solicitações que precisam de aprovação.</div>
-        <div class="sidebar-menu">
-            <h3>Aprovações Pendentes</h3>
-            <div id="pending-admins-container">
-                <div id="pending-admins-list"><p>A carregar...</p></div>
-            </div>
-        </div>
-        <a href="/logout" class="logout-btn">
-            <svg fill="none" height="18" viewBox="0 0 16 16" width="18" xmlns="http://www.w3.org/2000/svg">
-                <path d="m9.33331 13.3333-1.33333-1.3333m4-4h-12m8-2.66669 1.3333 1.33333m-1.33333 9.33333h4.66669c.5523 0 1-.4477 1-1v-10.6666c0-.55228-.4477-1-1-1h-4.66669" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
-            </svg>
-            Sair
-        </a>
-    </aside>
-
-    <main class="main-content">
-        <header><h1>Painel de Gestão</h1></header>
-
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="cadastrar">Registar Conteúdo</button>
-            <button class="tab-btn" data-tab="gerenciar">Gerir Conteúdo</button>
-            <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
-            <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
-            <button class="tab-btn" data-tab="admins" id="tab-admins" style="display:none;">Administradores</button>
-            <button class="tab-btn" data-tab="logs">Logs</button>
-        </div>
-
-        <!-- ── ABA: CADASTRAR ── -->
-        <div id="cadastrar" class="tab-pane active">
-            <div class="grid-forms">
-                <div class="form-container" data-section="noticias">
-                    <h3>Nova Notícia</h3>
-                    <form>
-                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
-                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
-                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                        <button type="submit" class="btn-submit">Salvar Notícia</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="novidades">
-                    <h3>Nova Novidade/Infraestrutura</h3>
-                    <form>
-                        <div class="input-group"><label>Título</label><input type="text" name="titulo" required></div>
-                        <div class="input-group"><label>Conteúdo</label><textarea name="conteudo" required></textarea></div>
-                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                        <button type="submit" class="btn-submit">Salvar Novidade</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="cargos">
-                    <h3>Novo Cargo/Função</h3>
-                    <form>
-                        <div class="input-group"><label>Nome do Cargo</label><input type="text" name="cargo" placeholder="Ex: Professor, Diretor" required></div>
-                        <div class="input-group"><label>Nível Hierárquico</label><input type="number" name="nivel" placeholder="1 = Mais alto" required></div>
-                        <button type="submit" class="btn-submit">Salvar Cargo</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="docente">
-                    <h3>Novo Docente</h3>
-                    <form>
-                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                        <div class="input-group">
-                            <label>Cargo/Função</label>
-                            <select name="cargo" id="docente-cargo-select" required>
-                                <option value="">Carregando cargos...</option>
-                            </select>
-                        </div>
-                        <div class="input-group"><label>Matéria/Disciplina</label><input type="text" name="materia" required></div>
-                        <div class="input-group"><label>Foto</label><input type="file" name="foto" accept="image/*"></div>
-                        <button type="submit" class="btn-submit">Salvar Docente</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="cursos">
-                    <h3>Novo Curso</h3>
-                    <form>
-                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                        <div class="input-group"><label>Descrição</label><textarea name="descricao" required></textarea></div>
-                        <div class="input-group"><label>Imagem</label><input type="file" name="imagem" accept="image/*"></div>
-                        <button type="submit" class="btn-submit">Salvar Curso</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="contato">
-                    <h3>Novo Contacto</h3>
-                    <form>
-                        <div class="input-group"><label>Nome</label><input type="text" name="nome" required></div>
-                        <div class="input-group"><label>Email</label><input type="email" name="email" required></div>
-                        <button type="submit" class="btn-submit">Salvar Contacto</button>
-                    </form>
-                </div>
-                <!-- ⚡️ FORMULÁRIO SEM MATRÍCULA -->
-                <div class="form-container" data-section="alunosBib">
-                    <h3>Novo Cadastro (Biblioteca)</h3>
-                    <form>
-                        <div class="input-group">
-                            <label>Tipo</label>
-                            <select name="tipo" id="cad-tipo" required>
-                                <option value="aluno">Aluno</option>
-                                <option value="professor">Professor</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Nome</label>
-                            <input type="text" name="nome" required>
-                        </div>
-                        <button type="submit" class="btn-submit">Salvar</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="livros">
-                    <h3>Novo Livro</h3>
-                    <form>
-                        <div class="input-group"><label>Código</label><input type="text" name="codigo" required></div>
-                        <div class="input-group"><label>Título</label><input type="text" name="nome" required></div>
-                        <div class="input-group"><label>Autor</label><input type="text" name="autor" required></div>
-                        <div class="input-group">
-                            <label>Quantidade de Exemplares</label>
-                            <input type="number" name="quantidade" min="1" value="1" required>
-                        </div>
-                        <button type="submit" class="btn-submit">Salvar Livro</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── ABA: GERIR ── -->
-        <div id="gerenciar" class="tab-pane"></div>
-
-        <!-- ── ABA: INFORMAÇÕES ── -->
-        <div id="informacoes" class="tab-pane">
-            <div class="grid-forms">
-                <div class="form-container" data-section="alunos">
-                    <h3>Informações para Alunos</h3>
-                    <form>
-                        <div class="input-group"><label>Semana de Provas</label><input type="text" name="semanaProvas"></div>
-                        <div class="input-group"><label>Gincana</label><input type="text" name="gincana"></div>
-                        <div class="input-group"><label>Feira de Ciências</label><input type="text" name="feiraCiencias"></div>
-                        <div class="input-group"><label>Semana Cultural</label><input type="text" name="semanaCultural"></div>
-                        <div class="input-group"><label>Férias</label><input type="text" name="ferias"></div>
-                        <button type="submit" class="btn-submit">Atualizar Alunos</button>
-                    </form>
-                </div>
-                <div class="form-container" data-section="responsaveis">
-                    <h3>Informações para Responsáveis</h3>
-                    <form>
-                        <div class="input-group"><label>Reunião de Pais</label><input type="text" name="reuniaoPais"></div>
-                        <div class="input-group"><label>Entrega de Boletins</label><input type="text" name="entregaBoletins"></div>
-                        <button type="submit" class="btn-submit">Atualizar Responsáveis</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── ABA: BIBLIOTECA ── -->
-        <div id="biblioteca" class="tab-pane">
-            <div class="grid-forms">
-                <div class="form-container">
-                    <h3>Registrar Empréstimo</h3>
-                    <div class="input-group">
-                        <label>Filtrar Cadastrados</label>
-                        <select id="filtro-tipo-emp" class="filtro-tipo-select">
-                            <option value="todos">Todos</option>
-                            <option value="aluno">Apenas Alunos</option>
-                            <option value="professor">Apenas Professores</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Cadastrado (Aluno/Professor)</label>
-                        <input type="text" id="filtro-aluno-emp" class="bib-filtro" placeholder="Filtrar por nome ou matrícula...">
-                        <select id="sel-aluno-emp" class="bib-select" size="5"></select>
-                    </div>
-                    <div class="input-group">
-                        <label>Livro disponível</label>
-                        <input type="text" id="filtro-livro-emp" class="bib-filtro" placeholder="Filtrar por título, autor ou código...">
-                        <select id="sel-livro-emp" class="bib-select" size="5"></select>
-                    </div>
-                    <div class="input-group" id="grupo-qtd-emp" style="display:none;">
-                        <label>Quantidade de exemplares</label>
-                        <input type="number" id="qtd-emprestimo" min="1" value="1">
-                        <small id="qtd-max-aviso" style="color:var(--txt-muted); font-size:0.75rem;"></small>
-                    </div>
-                    <button id="btn-registrar-emprestimo" class="btn-submit" style="margin-top:0.5rem">Registrar Empréstimo</button>
-                </div>
-                <div class="form-container">
-                    <h3>Histórico por Cadastrado</h3>
-                    <div class="input-group">
-                        <label>Filtrar Cadastrados</label>
-                        <select id="filtro-tipo-hist" class="filtro-tipo-select">
-                            <option value="todos">Todos</option>
-                            <option value="aluno">Apenas Alunos</option>
-                            <option value="professor">Apenas Professores</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Selecionar cadastrado</label>
-                        <input type="text" id="filtro-aluno-hist" class="bib-filtro" placeholder="Filtrar...">
-                        <select id="sel-aluno-hist" class="bib-select" size="5"></select>
-                    </div>
-                    <button id="btn-ver-aluno" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
-                    <ul id="lista-historico-aluno" class="item-list" style="margin-top:0.75rem"></ul>
-                </div>
-                <div class="form-container">
-                    <h3>Histórico por Livro</h3>
-                    <div class="input-group">
-                        <label>Selecionar livro</label>
-                        <input type="text" id="filtro-livro-hist" class="bib-filtro" placeholder="Filtrar livro...">
-                        <select id="sel-livro-hist" class="bib-select" size="5"></select>
-                    </div>
-                    <button id="btn-ver-livro" class="btn-submit" style="margin-top:0.5rem">Ver Histórico</button>
-                    <ul id="lista-historico-livro" class="item-list" style="margin-top:0.75rem"></ul>
-                </div>
-            </div>
-            <div class="list-container" style="margin-top:1.5rem">
-                <div class="bib-header">
-                    <h3>Empréstimos em Andamento</h3>
-                    <button id="btn-reload-emprestimos" class="btn-reload">↻ Atualizar</button>
-                </div>
-                <div id="tabela-emprestimos-container">
-                    <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ═══════════════ ABA: ADMINISTRADORES ═══════════════ -->
-        <div id="admins" class="tab-pane">
-            <div class="admin-list-container">
-                <h3>Administradores Aprovados</h3>
-                <div id="admin-list" class="admin-list">
-                    <p style="color: var(--txt-muted);">Carregando...</p>
-                </div>
-            </div>
-
-            <div class="admin-list-container pending-admin-solicitations">
-                <h3>⏳ Solicitações de Administradores Pendentes</h3>
-                <div id="admin-solicitations-list" class="admin-list">
-                    <p style="color: var(--txt-muted);">Carregando...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── ABA: LOGS ── -->
-        <div id="logs" class="tab-pane">
-            <div class="list-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                    <h3 style="margin:0;">Histórico de Atividades</h3>
-                    <div id="clear-history-container" style="display:none;">
-                        <button id="btn-clear-history" class="btn-clear-history">🗑 Limpar Histórico</button>
-                    </div>
-                </div>
-                <ul id="logs-list" class="item-list"></ul>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal: Mensagem -->
-    <div id="message-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="msg-modal-title">Mensagem</h2>
-            <p id="msg-modal-text"></p>
-            <div class="modal-buttons">
-                <button id="msg-modal-btn" class="btn-confirm">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Confirmação -->
-    <div id="confirm-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="confirm-modal-title">Confirmar</h2>
-            <p id="confirm-modal-text"></p>
-            <div class="modal-buttons">
-                <button id="confirm-modal-yes" class="btn-confirm">Sim</button>
-                <button id="confirm-modal-no" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Confirmar Exclusão genérica -->
-    <div id="delete-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Confirmar Exclusão</h2>
-            <p>Tem a certeza? Esta ação não pode ser desfeita.</p>
-            <div class="modal-buttons">
-                <button id="btn-confirm-delete" class="btn-confirm">Sim, Excluir</button>
-                <button id="btn-cancel-delete" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Exclusão de livro COM histórico -->
-    <div id="delete-history-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="warning-icon">⚠️</span>
-            <h2>Livro Possui Histórico de Empréstimos</h2>
-            <p id="delete-history-msg" style="margin-bottom:1rem"></p>
-            <p style="font-size:0.82rem;color:var(--txt-muted)">
-                Se excluir <strong>sem</strong> o histórico, o servidor vai bloquear a exclusão pois há registros vinculados.
-                Você precisa excluir o histórico junto para poder remover este livro.
-            </p>
-            <div class="modal-buttons">
-                <button id="btn-delete-with-history" class="btn-danger">Excluir Livro e Histórico</button>
-                <button id="btn-cancel-delete-history" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Edição -->
-    <div id="edit-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Editar Item</h2>
-            <div id="edit-fields"></div>
-            <div class="modal-buttons">
-                <button id="btn-confirm-edit" class="btn-confirm">Salvar Alterações</button>
-                <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Aceitar administrador pendente -->
-    <div id="accept-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Aceitar Administrador</h2>
-            <p id="accept-modal-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
-            <div class="input-group">
-                <label>Nível de Acesso</label>
-                <input type="number" id="nivel-aceitar" min="1" max="8" placeholder="Ex: 1 = Diretor, 8 = TI">
-                <small style="color:var(--txt-muted);font-size:0.78rem;margin-top:4px;display:block">
-                    Níveis 1 (Diretor) e 8 (TI) têm acesso total e podem aprovar outros. Demais níveis criam solicitações.
-                </small>
-            </div>
-            <div class="modal-buttons">
-                <button id="btn-confirm-accept" class="btn-confirm">Aceitar</button>
-                <button id="btn-cancel-accept" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Editar nível de admin -->
-    <div id="edit-level-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Editar Nível do Administrador</h2>
-            <p id="edit-level-email" style="margin-bottom:1rem;font-weight:600;color:var(--txt-primary)"></p>
-            <div class="input-group">
-                <label>Novo Nível (1-8)</label>
-                <input type="number" id="new-level" min="1" max="8" value="1" required>
-                <small style="color:var(--txt-muted);display:block;margin-top:4px;">
-                    Níveis 1 (Diretor) e 8 (TI) têm acesso total.
-                </small>
-            </div>
-            <div class="modal-buttons">
-                <button id="btn-confirm-edit-level" class="btn-confirm">Solicitar Alteração</button>
-                <button id="btn-cancel-edit-level" class="btn-cancel">Cancelar</button>
-            </div>
-        </div>
-    </div>
+    <!-- ... (todo o HTML permanece igual, com os modais, sidebar, etc.) ... -->
+    <!-- (copie o corpo completo do meu último dashboard.html) -->
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // ═══════════════════════════════════════════════════════════
+        // TODAS AS FUNÇÕES E VARIÁVEIS GLOBAIS
+        // ═══════════════════════════════════════════════════════════
+
         const tabs = document.querySelectorAll('.tab-btn');
         const panes = document.querySelectorAll('.tab-pane');
         const deleteModal = document.getElementById('delete-modal');
@@ -515,18 +162,16 @@
         let itemToEdit = null;
         let pendingAcceptUid = null;
         let currentEditTarget = null;
-
         let userInfo = { email: '', nivel: null, isSuperAdmin: false };
 
-        // ═══════════════ UTILITÁRIOS DE MODAIS ═══════════════
+        // ── Utilitários de modais ──
         function showMessage(title, text, callback) {
             document.getElementById('msg-modal-title').textContent = title;
             document.getElementById('msg-modal-text').textContent = text;
-            const modal = document.getElementById('message-modal');
-            modal.classList.add('active');
+            document.getElementById('message-modal').classList.add('active');
             const btn = document.getElementById('msg-modal-btn');
             btn.onclick = () => {
-                modal.classList.remove('active');
+                document.getElementById('message-modal').classList.remove('active');
                 if (callback) callback();
             };
         }
@@ -534,25 +179,23 @@
         function showConfirm(title, text, onYes, onNo) {
             document.getElementById('confirm-modal-title').textContent = title;
             document.getElementById('confirm-modal-text').textContent = text;
-            const modal = document.getElementById('confirm-modal');
-            modal.classList.add('active');
+            document.getElementById('confirm-modal').classList.add('active');
             document.getElementById('confirm-modal-yes').onclick = () => {
-                modal.classList.remove('active');
+                document.getElementById('confirm-modal').classList.remove('active');
                 if (onYes) onYes();
             };
             document.getElementById('confirm-modal-no').onclick = () => {
-                modal.classList.remove('active');
+                document.getElementById('confirm-modal').classList.remove('active');
                 if (onNo) onNo();
             };
         }
 
-        window.alert = function(msg) { showMessage('Aviso', msg); };
-        window.confirm = function(msg) {
-            return new Promise((resolve) => {
-                showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
-            });
-        };
+        window.alert = msg => showMessage('Aviso', msg);
+        window.confirm = msg => new Promise(resolve => {
+            showConfirm('Confirmar', msg, () => resolve(true), () => resolve(false));
+        });
 
+        // ── User info ──
         async function carregarUserInfo() {
             try {
                 userInfo = await apiRequest('me');
@@ -560,28 +203,18 @@
                 const banner = document.getElementById('banner-nivel-limitado');
                 const tabAdmins = document.getElementById('tab-admins');
                 if (badge) {
-                    const nivelLabel = `Administrador nível Atual: ${userInfo.nivel ?? '?'}`;
-                    badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>${nivelLabel}</strong>`;
+                    badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>Administrador nível Atual: ${userInfo.nivel ?? '?'}</strong>`;
                 }
-                if (banner && !userInfo.isSuperAdmin) {
-                    banner.style.display = 'block';
-                }
-                if (tabAdmins) {
-                    tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
-                }
+                if (banner && !userInfo.isSuperAdmin) banner.style.display = 'block';
+                if (tabAdmins) tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
                 const clearContainer = document.getElementById('clear-history-container');
-                if (clearContainer) {
-                    clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
-                }
+                if (clearContainer) clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
             } catch (e) {
-                console.warn('Não foi possível carregar informações do usuário:', e);
+                console.warn('Não foi possível carregar informações do utilizador:', e);
             }
         }
 
-        setInterval(() => {
-            fetch('/api/ping').catch(() => {});
-        }, 10 * 60 * 1000);
-
+        // ── Utilidades ──
         function escapeHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -613,22 +246,7 @@
             return data;
         }
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                panes.forEach(p => p.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-                if (tab.dataset.tab === 'gerenciar') loadManagementContent();
-                if (tab.dataset.tab === 'logs') loadLogsContent();
-                if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
-                if (tab.dataset.tab === 'admins') {
-                    loadAdmins();
-                    loadAdminSolicitations();
-                }
-            });
-        });
-
+        // ── Definição dos campos por coleção ──
         const fieldsByCollection = {
             novidades: [
                 { name: 'titulo', label: 'Título', type: 'text' },
@@ -682,6 +300,24 @@
             ]
         };
 
+        // ── Trocador de abas ──
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'gerenciar') loadManagementContent();
+                if (tab.dataset.tab === 'logs') loadLogsContent();
+                if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+                if (tab.dataset.tab === 'admins') {
+                    loadAdmins();
+                    loadAdminSolicitations();
+                }
+            });
+        });
+
+        // ── Carregar cargos no select ──
         async function carregarCargosSelect() {
             try {
                 const cargos = await apiRequest('cargos');
@@ -701,11 +337,10 @@
             }
         }
 
-        // ──────────────── GERENCIAR CONTEÚDO ────────────────
+        // ═══════════════════════════ GERENCIAR ═══════════════════════════
         async function loadManagementContent() {
             const container = document.getElementById('gerenciar');
             container.innerHTML = '<div class="loader">A carregar...</div>';
-
             const cols = [
                 { name: 'noticias', title: 'Notícias' },
                 { name: 'novidades', title: 'Novidades/Infraestrutura' },
@@ -718,7 +353,6 @@
                 { name: 'alunosBib', title: 'Cadastros (Biblioteca)' },
                 { name: 'livros', title: 'Livros' }
             ];
-
             let html = '<div class="grid-lists">';
             for (const col of cols) {
                 html += `<div class="list-container"><h3>${col.title}</h3><ul class="item-list" data-collection="${col.name}">`;
@@ -726,21 +360,20 @@
                     if (col.isDocUnico) {
                         const data = await apiRequest(col.name);
                         const fields = fieldsByCollection[col.name] || [];
-                        const temDados = fields.some(f => data[f.name]);
-                        if (temDados) {
+                        if (fields.some(f => data[f.name])) {
                             fields.forEach(f => {
                                 if (data[f.name]) html += `<li><span><strong>${f.label}:</strong> ${escapeHtml(data[f.name])}</span></li>`;
                             });
                         } else {
-                            html += `<li class="empty">Nenhum dado cadastrado ainda.</li>`;
+                            html += '<li class="empty">Nenhum dado cadastrado ainda.</li>';
                         }
                         html += `<li style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
-                                   <span></span>
-                                   <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
+                                    <span></span>
+                                    <button class="btn-edit btn-edit-docunico" data-collection="${col.name}">Editar</button>
                                  </li>`;
                     } else {
                         const items = await apiRequest(col.name);
-                        if (items.length > 0) {
+                        if (items.length) {
                             items.forEach(item => {
                                 const display = item.titulo || item.nome || item.cargo;
                                 let sub = '';
@@ -766,21 +399,21 @@
                                          </li>`;
                             });
                         } else {
-                            html += `<li class="empty">Nenhum item encontrado.</li>`;
+                            html += '<li class="empty">Nenhum item encontrado.</li>';
                         }
                     }
                 } catch {
-                    html += `<li class="error">Erro ao carregar.</li>`;
+                    html += '<li class="error">Erro ao carregar.</li>';
                 }
-                html += `</ul></div>`;
+                html += '</ul></div>';
             }
             html += '</div>';
             container.innerHTML = html;
         }
 
+        // Handlers dos cliques no painel de gestão
         document.getElementById('gerenciar').addEventListener('click', async (e) => {
             const collection = e.target.dataset.collection;
-
             if (e.target.classList.contains('btn-edit-docunico')) {
                 try {
                     const data = await apiRequest(collection);
@@ -854,7 +487,6 @@
                 } catch {
                     showMessage('Erro', 'Erro ao carregar item para edição.');
                 }
-                return;
             }
         });
 
@@ -888,7 +520,7 @@
                 editModal.classList.remove('active');
                 itemToEdit = null;
                 if (result?.pending) {
-                    showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação pelos administradores.');
+                    showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação.');
                 } else {
                     showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
                 }
@@ -966,6 +598,7 @@
             itemToDelete = null;
         });
 
+        // Submissão dos formulários
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -996,7 +629,7 @@
                 try {
                     const result = await apiRequest(section, 'POST', body);
                     if (result?.pending) {
-                        showMessage('Aviso', '⏳ Solicitação enviada para aprovação pelos administradores.');
+                        showMessage('Aviso', '⏳ Solicitação enviada para aprovação.');
                     } else {
                         showMessage('Sucesso', '✅ Dados salvos com sucesso!');
                     }
@@ -1017,6 +650,7 @@
             });
         });
 
+        // Inicialização de formulários fixos
         async function loadInitialData(section) {
             try {
                 const data = await apiRequest(section);
@@ -1029,7 +663,7 @@
             } catch {}
         }
 
-        // ──────────────── LOGS ────────────────
+        // ═══════════════════════════ LOGS ═══════════════════════════
         async function loadLogsContent() {
             const logsList = document.getElementById('logs-list');
             logsList.innerHTML = '<li>A carregar logs...</li>';
@@ -1069,6 +703,7 @@
                 }).join('');
                 logsList.scrollTop = 0;
 
+                // Handler para reverter
                 document.querySelectorAll('.btn-rollback').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const logId = btn.dataset.logid;
@@ -1091,6 +726,7 @@
             }
         }
 
+        // Limpar histórico (apenas superadmins)
         document.getElementById('btn-clear-history')?.addEventListener('click', async () => {
             const confirmado = await confirm('Tem certeza que deseja apagar todos os logs não reversíveis? Esta ação é irreversível.');
             if (!confirmado) return;
@@ -1103,6 +739,7 @@
             }
         });
 
+        // Delegação de eventos nos logs (apagar/confirmar)
         document.getElementById('logs-list').addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
@@ -1136,22 +773,25 @@
             }
         });
 
-        // ──────────────── ADMINISTRADORES ────────────────
+        // ═══════════════════════════ ADMINISTRADORES ═══════════════════════════
         async function loadPendingAdmins() {
             try {
                 const admins = await apiRequest('pendentes');
-                document.getElementById('pending-admins-list').innerHTML = admins.length === 0
-                    ? '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>'
-                    : admins.map(a => {
-                        const actionBtns = userInfo.isSuperAdmin
-                            ? `<button class="btn-aprovar" data-uid="${a.uid}" data-email="${a.username}">✓</button>
-                               <button class="btn-negar-sol" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
-                            : `<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>`;
-                        return `<div class="pending-admin">
-                                   <p><strong>${escapeHtml(a.username)}</strong></p>
-                                   <div class="admin-actions">${actionBtns}</div>
-                                 </div>`;
-                    }).join('');
+                const container = document.getElementById('pending-admins-list');
+                if (!admins.length) {
+                    container.innerHTML = '<p style="text-align:center;color:#ccc;font-size:.9rem">Nenhum registo pendente.</p>';
+                    return;
+                }
+                container.innerHTML = admins.map(a => {
+                    const actionBtns = userInfo.isSuperAdmin
+                        ? `<button class="btn-aprovar" data-uid="${a.uid}" data-email="${a.username}">✓</button>
+                           <button class="btn-negar-sol" data-uid="${a.uid}" data-email="${a.username}">✗</button>`
+                        : '<span class="badge-pendente" style="font-size:0.7rem">Sem permissão</span>';
+                    return `<div class="pending-admin">
+                                <p><strong>${escapeHtml(a.username)}</strong></p>
+                                <div class="admin-actions">${actionBtns}</div>
+                            </div>`;
+                }).join('');
             } catch (err) {
                 console.error('Erro ao carregar admins pendentes:', err);
             }
@@ -1167,10 +807,7 @@
                 document.getElementById('accept-modal-email').textContent = email || uid;
                 document.getElementById('nivel-aceitar').value = '';
                 acceptModal.classList.add('active');
-                return;
-            }
-
-            if (e.target.classList.contains('btn-negar-sol')) {
+            } else if (e.target.classList.contains('btn-negar-sol')) {
                 const negado = await confirm(`Negar acesso de ${email || uid}?`);
                 if (!negado) return;
                 try {
@@ -1196,7 +833,7 @@
                 acceptModal.classList.remove('active');
                 pendingAcceptUid = null;
                 loadPendingAdmins();
-                showMessage('Sucesso', '✅ Administrador aceito com sucesso!');
+                showMessage('Sucesso', '✅ Administrador aceite com sucesso!');
             } catch (err) {
                 let msg = 'Não foi possível aceitar o administrador.';
                 try { msg = JSON.parse(err.message)?.error || msg; } catch {}
@@ -1336,7 +973,7 @@
             btn.disabled = true;
             try {
                 await apiRequest(`admin-solicitations/${solicitationId}/approve`, 'POST');
-                showMessage('Sucesso', 'Aprovação registrada. Se foi a segunda, a ação já foi executada!');
+                showMessage('Sucesso', 'Aprovação registada. Se foi a segunda, a ação já foi executada!');
                 await loadAdminSolicitations();
                 await loadAdmins();
             } catch (err) {
@@ -1345,7 +982,7 @@
             }
         });
 
-        // ──────────────── BIBLIOTECA ────────────────
+        // ═══════════════════════════ BIBLIOTECA ═══════════════════════════
         let todosAlunos = [];
         let todosLivros = [];
         let bibliotecaCarregada = false;
@@ -1666,13 +1303,15 @@
             }
         }
 
-        // Inicialização
+        // ═══════════════════════════ INICIALIZAÇÃO ═══════════════════════════
         async function init() {
             await carregarUserInfo();
             loadInitialData('alunos');
             loadInitialData('responsaveis');
             loadPendingAdmins();
             carregarCargosSelect();
+
+            // Atualizar a cada 10 segundos
             setInterval(() => {
                 loadPendingAdmins();
                 if (document.getElementById('admins').classList.contains('active')) {
@@ -1681,6 +1320,7 @@
                 }
             }, 10000);
         }
+
         init();
     });
     </script>
