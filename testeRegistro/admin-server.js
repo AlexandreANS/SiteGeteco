@@ -8,9 +8,53 @@ const fs = require("fs");
 const https = require("https");
 const http = require("http");
 const cloudinary = require("cloudinary").v2;
+// ══════════════════════════════════════════════════════════════════
+// VALIDAÇÃO DE E-MAIL — AbstractAPI
+// ══════════════════════════════════════════════════════════════════
 
-// Se usar dotenv para ambiente local
-// require('dotenv').config();
+// Regex robusta: rejeita formatos claramente inválidos
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+const ABSTRACT_EMAIL_API_KEY = "16dafc1181bc4ee98d8da4206b21fca6";
+
+/**
+ * Verifica se um e-mail é real usando a AbstractAPI.
+ * Detecta: domínios inexistentes, caixas inválidas e e-mails descartáveis.
+ * Retorna { valid: true } ou { valid: false, reason: '...' }
+ */
+async function validarEmail(email) {
+    if (!email || typeof email !== 'string') {
+        return { valid: false, reason: 'E-mail não informado.' };
+    }
+
+    const emailLimpo = email.trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(emailLimpo)) {
+        return { valid: false, reason: 'Formato de e-mail inválido.' };
+    }
+
+    try {
+        const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${ABSTRACT_EMAIL_API_KEY}&email=${encodeURIComponent(emailLimpo)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // E-mail descartável (Mailinator, Guerrilla Mail, etc.)
+        if (data.is_disposable_email?.value === true) {
+            return { valid: false, reason: 'E-mails temporários ou descartáveis não são permitidos.' };
+        }
+
+        // Domínio ou caixa não entregável
+        if (data.deliverability !== 'DELIVERABLE') {
+            return { valid: false, reason: 'Este e-mail não parece válido ou não pode receber mensagens.' };
+        }
+
+        return { valid: true };
+    } catch (err) {
+        // Se a API estiver fora do ar, deixa passar para não bloquear o usuário
+        console.warn('AbstractAPI indisponível, validação ignorada:', err.message);
+        return { valid: true };
+    }
+}
 
 // --- INICIALIZAÇÃO DO FIREBASE ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -75,6 +119,8 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // ══════════════════════════════════════════════════════════════════
 // SISTEMA DE NÍVEIS / PERMISSÕES
+// Nível 1 = Diretor, Nível 8 = TI — podem executar ações direto.
+// Outros níveis geram solicitações que super-admins aprovam/negam.
 // ══════════════════════════════════════════════════════════════════
 const SUPER_NIVEIS = [1, 8];
 
@@ -82,6 +128,7 @@ function isSuperAdmin(claims) {
     return claims && SUPER_NIVEIS.includes(Number(claims.nivel));
 }
 
+// Auth Middleware — qualquer admin aprovado
 async function requireAdmin(req, res, next) {
     const sessionCookie = req.cookies.session || '';
     try {
@@ -91,6 +138,21 @@ async function requireAdmin(req, res, next) {
             return next();
         }
         res.status(403).redirect("/login");
+    } catch (e) {
+        res.status(401).redirect("/login");
+    }
+}
+
+// Auth Middleware — apenas super-admins (nível 1 ou 8)
+async function requireSuperAdmin(req, res, next) {
+    const sessionCookie = req.cookies.session || '';
+    try {
+        const claims = await auth.verifySessionCookie(sessionCookie, true);
+        if (claims.isAdmin && isSuperAdmin(claims)) {
+            req.user = claims;
+            return next();
+        }
+        res.status(403).json({ error: 'Requer nível de super-administrador (Diretor ou TI).' });
     } catch (e) {
         res.status(401).redirect("/login");
     }
@@ -106,6 +168,7 @@ app.get('/api/ping', async (req, res) => {
     }
 });
 
+// Retorna informações do usuário logado
 app.get('/api/me', requireAdmin, (req, res) => {
     res.json({
         email: req.user.email,
@@ -123,20 +186,12 @@ app.get("/aguardando", (req, res) => res.sendFile(path.join(views, "aguardando.h
 app.get("/edit-post", requireAdmin, (req, res) => res.sendFile(path.join(views, "edit-post.html")));
 app.get("/", (req, res) => res.redirect("/login"));
 
-// ══════════════════════════════════════════════════════════════════
-// API Login – permite login a administradores já aprovados
-// (já não verifica se o e‑mail foi verificado)
-// ══════════════════════════════════════════════════════════════════
+// API Login
 app.post("/sessionLogin", async (req, res) => {
     try {
         const { idToken } = req.body;
         const decoded = await auth.verifyIdToken(idToken);
-        
-        // Só administradores podem fazer login
-        if (!decoded.isAdmin) {
-            return res.status(403).send('Não autorizado');
-        }
-
+        if (!decoded.isAdmin) return res.status(403).send('Não autorizado');
         const cookie = await auth.createSessionCookie(idToken, { expiresIn: 432000000 });
         res.cookie('session', cookie, {
             maxAge: 432000000,
@@ -159,49 +214,27 @@ app.post("/checkAdmin", async (req, res) => {
     }
 });
 
-// ══════════════════════════════════════════════════════════════════
-// REGISTRO – apenas verificação básica de formato e duplicidade
-// (sem validação MX, sem envio de e‑mails, sem emailVerified)
-// ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { uid, email, timestamp } = req.body;
+        if (!uid || !email) return res.status(400).json({ error: 'Dados de registro incompletos.' });
 
-        if (!email || !password) {
-            return res.status(400).json({ error: 'E‑mail e senha são obrigatórios.' });
-        }
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: 'Formato de e‑mail inválido.' });
+        // ✅ VALIDAÇÃO DE E-MAIL REAL: formato + existência do domínio via DNS
+        const emailCheck = await validarEmail(email);
+        if (!emailCheck.valid) {
+            return res.status(400).json({ error: emailCheck.reason });
         }
 
-        let userRecord;
-        try {
-            // Criar utilizador sem forçar emailVerified (Firebase trata como false por padrão)
-            userRecord = await auth.createUser({
-                email,
-                password
-            });
-        } catch (e) {
-            if (e.code === 'auth/email-already-exists') {
-                return res.status(409).json({ error: 'Este e‑mail já está registado.' });
-            }
-            throw e;
-        }
-
-        await auth.setCustomUserClaims(userRecord.uid, { status: 'pending' });
-
-        await db.collection('registrations').doc(userRecord.uid).set({
+        const user = await auth.getUser(uid);
+        if (user.email !== email) return res.status(400).json({ error: 'Dados de usuário inválidos.' });
+        await auth.setCustomUserClaims(uid, { status: 'pending' });
+        await db.collection('registrations').doc(uid).set({
             email,
-            uid: userRecord.uid,
+            uid,
             status: 'pending',
-            requestedAt: new Date()
+            requestedAt: timestamp ? new Date(timestamp) : new Date()
         });
-
-        res.json({ success: true, message: 'Conta criada com sucesso! Aguarde a aprovação do administrador.' });
+        res.json({ success: true });
     } catch (e) {
         console.error('Erro ao processar registro:', e);
         res.status(500).json({ error: 'Não foi possível processar o registro.' });
@@ -214,29 +247,32 @@ app.get("/logout", (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// HELPER: REGISTRAR LOG
+// HELPER: CRIAR SOLICITAÇÃO
 // ══════════════════════════════════════════════════════════════════
-async function registrarLog(adminEmail, action, collection, docId, previousData, newData, details) {
-    const logData = {
-        adminEmail,
-        action,
+async function criarSolicitacao({ user, collection, method, itemId = null, data, details, subAction = null }) {
+    await db.collection('solicitacoes').add({
         collection,
-        docId,
-        timestamp: new Date(),
-        details: details || '',
-        rollbackPossible: false
-    };
-    if (previousData) {
-        logData.previousData = previousData;
-        logData.rollbackPossible = true;
-    }
-    if (newData) logData.newData = newData;
-    const ref = await db.collection('logs').add(logData);
-    return ref.id;
+        method,
+        itemId,
+        data: data || null,
+        details,
+        subAction,
+        requestedBy: user.email,
+        requestedByNivel: user.nivel ?? null,
+        requestedAt: new Date(),
+        status: 'pending'
+    });
+    db.collection('logs').add({
+        adminEmail: user.email,
+        action: `solicitou ${method === 'POST' ? 'criar' : method === 'PUT' ? 'editar' : 'excluir'}`,
+        collection,
+        details,
+        timestamp: new Date()
+    });
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CRUD GENÉRICO (noticias, novidades, cursos, contato, cargos)
+// CRUD GENÉRICO
 // ══════════════════════════════════════════════════════════════════
 const collections = ['noticias', 'novidades', 'cursos', 'contato', 'cargos'];
 
@@ -266,8 +302,19 @@ collections.forEach(col => {
             if (req.file) data.imagem = await uploadImagem(req.file);
             const details = data.titulo || data.nome || data.cargo || '';
 
+            if (!isSuperAdmin(req.user)) {
+                await criarSolicitacao({ user: req.user, collection: col, method: 'POST', data, details });
+                return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
+            }
+
             const ref = await db.collection(col).add(data);
-            await registrarLog(req.user.email, 'criou', col, ref.id, null, data, details);
+            db.collection('logs').add({
+                adminEmail: req.user.email,
+                action: 'criou',
+                collection: col,
+                details,
+                timestamp: new Date()
+            });
             res.json({ success: true, id: ref.id });
         } catch (e) {
             console.error(`ERRO ao criar em ${col}:`, JSON.stringify(e));
@@ -277,17 +324,31 @@ collections.forEach(col => {
 
     app.put(`/api/${col}/:id`, requireAdmin, upload.single('imagem'), async (req, res) => {
         try {
-            const docRef = db.collection(col).doc(req.params.id);
-            const oldDoc = await docRef.get();
-            const previousData = oldDoc.exists ? oldDoc.data() : null;
-
             const data = { ...req.body, dataAtualizacao: new Date() };
             Object.keys(data).forEach(k => { if (data[k] === '') delete data[k]; });
             if (req.file) data.imagem = await uploadImagem(req.file);
             const details = data.titulo || data.nome || data.cargo || req.params.id;
 
-            await docRef.update(data);
-            await registrarLog(req.user.email, 'editou', col, req.params.id, previousData, data, details);
+            if (!isSuperAdmin(req.user)) {
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'PUT',
+                    itemId: req.params.id,
+                    data,
+                    details
+                });
+                return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
+            }
+
+            await db.collection(col).doc(req.params.id).update(data);
+            db.collection('logs').add({
+                adminEmail: req.user.email,
+                action: 'editou',
+                collection: col,
+                details,
+                timestamp: new Date()
+            });
             res.json({ success: true });
         } catch (e) {
             console.error(`ERRO ao editar em ${col}:`, JSON.stringify(e));
@@ -297,12 +358,26 @@ collections.forEach(col => {
 
     app.delete(`/api/${col}/:id`, requireAdmin, async (req, res) => {
         try {
-            const docRef = db.collection(col).doc(req.params.id);
-            const oldDoc = await docRef.get();
-            const previousData = oldDoc.exists ? oldDoc.data() : null;
+            if (!isSuperAdmin(req.user)) {
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'DELETE',
+                    itemId: req.params.id,
+                    data: null,
+                    details: req.params.id
+                });
+                return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
+            }
 
-            await docRef.delete();
-            await registrarLog(req.user.email, 'excluiu', col, req.params.id, previousData, null, req.params.id);
+            await db.collection(col).doc(req.params.id).delete();
+            db.collection('logs').add({
+                adminEmail: req.user?.email || 'admin',
+                action: 'excluiu',
+                collection: col,
+                details: req.params.id,
+                timestamp: new Date()
+            });
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: 'Erro ao deletar.' });
@@ -343,8 +418,25 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
         };
         if (req.file) data.foto = await uploadImagem(req.file);
 
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'POST',
+                data,
+                details: data.nome
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
+        }
+
         const ref = await db.collection('docente').add(data);
-        await registrarLog(req.user.email, 'criou', 'docente', ref.id, null, data, data.nome);
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'docente',
+            details: data.nome,
+            timestamp: new Date()
+        });
         res.json({ success: true, id: ref.id });
     } catch (e) {
         console.error('ERRO ao criar docente:', JSON.stringify(e));
@@ -354,10 +446,6 @@ app.post('/api/docente', requireAdmin, upload.single('foto'), async (req, res) =
 
 app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res) => {
     try {
-        const docRef = db.collection('docente').doc(req.params.id);
-        const oldDoc = await docRef.get();
-        const previousData = oldDoc.exists ? oldDoc.data() : null;
-
         const data = {
             nome: req.body.nome,
             cargo: req.body.cargo,
@@ -367,8 +455,26 @@ app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res
         Object.keys(data).forEach(k => { if (!data[k]) delete data[k]; });
         if (req.file) data.foto = await uploadImagem(req.file);
 
-        await docRef.update(data);
-        await registrarLog(req.user.email, 'editou', 'docente', req.params.id, previousData, data, data.nome || req.params.id);
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'PUT',
+                itemId: req.params.id,
+                data,
+                details: data.nome || req.params.id
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
+        }
+
+        await db.collection('docente').doc(req.params.id).update(data);
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'editou',
+            collection: 'docente',
+            details: data.nome || req.params.id,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         console.error('ERRO ao editar docente:', JSON.stringify(e));
@@ -378,12 +484,19 @@ app.put('/api/docente/:id', requireAdmin, upload.single('foto'), async (req, res
 
 app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
     try {
-        const docRef = db.collection('docente').doc(req.params.id);
-        const oldDoc = await docRef.get();
-        const previousData = oldDoc.exists ? oldDoc.data() : null;
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'docente',
+                method: 'DELETE',
+                itemId: req.params.id,
+                data: null,
+                details: req.params.id
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
+        }
 
-        await docRef.delete();
-        await registrarLog(req.user.email, 'excluiu', 'docente', req.params.id, previousData, null, req.params.id);
+        await db.collection('docente').doc(req.params.id).delete();
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao deletar docente.' });
@@ -391,7 +504,7 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// DADOS ÚNICOS (alunos, responsaveis)
+// DADOS ÚNICOS
 // ══════════════════════════════════════════════════════════════════
 ['alunos', 'responsaveis'].forEach(col => {
     app.get(`/api/${col}`, async (req, res) => {
@@ -405,12 +518,17 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 
     app.post(`/api/${col}`, requireAdmin, async (req, res) => {
         try {
-            const docRef = db.collection(col).doc('main');
-            const oldDoc = await docRef.get();
-            const previousData = oldDoc.exists ? oldDoc.data() : null;
-
-            await docRef.set(req.body, { merge: true });
-            await registrarLog(req.user.email, 'atualizou', col, 'main', previousData, req.body, `Atualização de ${col}`);
+            if (!isSuperAdmin(req.user)) {
+                await criarSolicitacao({
+                    user: req.user,
+                    collection: col,
+                    method: 'POST',
+                    data: req.body,
+                    details: `Atualização de ${col}`
+                });
+                return res.status(202).json({ pending: true, message: 'Solicitação enviada para aprovação.' });
+            }
+            await db.collection(col).doc('main').set(req.body, { merge: true });
             res.json({ success: true });
         } catch (e) {
             res.status(500).json({ error: 'Erro ao salvar dados.' });
@@ -419,30 +537,22 @@ app.delete('/api/docente/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// PENDENTES (listagem e aceitar/negar)
+// PENDENTES, LOGS E SOLICITAÇÕES
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/pendentes', requireAdmin, async (req, res) => {
     try {
         const list = await auth.listUsers(100);
-        const pendentes = [];
-
-        for (const user of list.users) {
-            if (user.customClaims?.status === 'pending') {
-                pendentes.push({ uid: user.uid, username: user.email });
-            }
-        }
-
-        res.json(pendentes);
+        res.json(list.users
+            .filter(u => u.customClaims?.status === 'pending')
+            .map(u => ({ uid: u.uid, username: u.email }))
+        );
     } catch (e) {
         res.status(500).json({ error: 'Erro ao listar pendentes.' });
     }
 });
 
-app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
+app.post('/api/pendentes/aceitar', requireSuperAdmin, async (req, res) => {
     try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem aprovar novos admins.' });
-        }
         const { uid, nivel } = req.body;
         const nivelNum = parseInt(nivel, 10);
         const NIVEIS_VALIDOS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -465,11 +575,8 @@ app.post('/api/pendentes/aceitar', requireAdmin, async (req, res) => {
     }
 });
 
-app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
+app.post('/api/pendentes/negar', requireSuperAdmin, async (req, res) => {
     try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem negar admins.' });
-        }
         const { uid } = req.body;
         await db.collection('registrations').doc(uid).update({
             status: 'denied',
@@ -483,306 +590,233 @@ app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
     }
 });
 
-// ══════════════════════════════════════════════════════════════════
-// LOGS E ROLLBACK (rotas fixas antes das com :id)
-// ══════════════════════════════════════════════════════════════════
-
-// Listar logs
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
-        const snap = await db.collection('logs').get();
-        let logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        logs.sort((a, b) => {
-            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
-            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
-            return tb - ta;
-        });
-        logs = logs.slice(0, 100);
-        res.json(logs);
+        const snap = await db.collection('logs')
+            .orderBy('timestamp', 'desc')
+            .limit(50)
+            .get();
+        res.json(snap.docs.map(d => d.data()));
     } catch (e) {
-        console.error('Erro ao buscar logs:', e);
         res.status(500).json({ error: 'Erro ao buscar logs.' });
     }
 });
 
-// Confirmar todos (do mais novo para o mais antigo)
-app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
+app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs em massa.' });
+        let snap;
+        if (isSuperAdmin(req.user)) {
+            snap = await db.collection('solicitacoes')
+                .where('status', '==', 'pending')
+                .orderBy('requestedAt', 'desc')
+                .get();
+        } else {
+            snap = await db.collection('solicitacoes')
+                .where('requestedBy', '==', req.user.email)
+                .where('status', '==', 'pending')
+                .orderBy('requestedAt', 'desc')
+                .get();
         }
-
-        const snap = await db.collection('logs').get();
-        let logs = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(log => log.rollbackPossible === true);
-
-        logs.sort((a, b) => {
-            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
-            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
-            return tb - ta;
-        });
-
-        if (logs.length === 0) {
-            return res.json({ success: true, confirmed: 0 });
-        }
-
-        const batchSize = 500;
-        for (let i = 0; i < logs.length; i += batchSize) {
-            const batch = db.batch();
-            const slice = logs.slice(i, i + batchSize);
-            slice.forEach(log => {
-                batch.update(db.collection('logs').doc(log.id), {
-                    previousData: admin.firestore.FieldValue.delete(),
-                    newData: admin.firestore.FieldValue.delete(),
-                    rollbackPossible: false
-                });
-            });
-            await batch.commit();
-        }
-
-        res.json({ success: true, confirmed: logs.length });
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
-        console.error('Erro ao confirmar todos os logs:', e);
-        res.status(500).json({ error: 'Erro ao confirmar logs em massa.' });
+        res.status(500).json({ error: 'Erro ao listar solicitações.' });
     }
 });
 
-// Reverter todos (do mais novo para o mais antigo)
-app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações em massa.' });
-        }
+async function executarAcao(sol) {
+    const { collection, method, itemId, data } = sol;
 
-        const snap = await db.collection('logs').get();
-        let reversiveis = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(log => log.rollbackPossible === true);
-
-        reversiveis.sort((a, b) => {
-            const ta = a.timestamp?.seconds || a.timestamp?._seconds || 0;
-            const tb = b.timestamp?.seconds || b.timestamp?._seconds || 0;
-            return tb - ta;
-        });
-
-        let revertidos = 0;
-        for (const log of reversiveis) {
-            try {
-                const { collection, docId, previousData, action } = log;
-                if (action === 'excluiu' || action === 'editou') {
-                    await db.collection(collection).doc(docId).set(previousData);
-                } else if (action === 'criou') {
-                    await db.collection(collection).doc(docId).delete();
-                } else {
-                    continue;
-                }
-                await db.collection('logs').doc(log.id).update({
-                    revertedAt: new Date(),
-                    revertedBy: req.user.email,
-                    rollbackPossible: false
-                });
-                await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback em massa do log ${log.id}`);
-                revertidos++;
-            } catch (innerError) {
-                console.error(`Falha ao reverter log ${log.id}:`, innerError);
+    if (method === 'DELETE' && collection === 'livros') {
+        if (data?.deleteHistory) {
+            const hist = await db.collection('emprestimos')
+                .where('livroId', '==', itemId)
+                .get();
+            if (!hist.empty) {
+                const batch = db.batch();
+                hist.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
             }
         }
-
-        res.json({ success: true, reverted: revertidos });
-    } catch (e) {
-        console.error('Erro no rollback em massa:', e);
-        res.status(500).json({ error: 'Erro ao executar rollback em massa.' });
+        await db.collection(collection).doc(itemId).delete();
+        return;
     }
-});
 
-// Limpar histórico (apenas logs não reversíveis)
-// ⚠️ Esta rota está ANTES das rotas com :id para evitar conflito
-app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem limpar o histórico.' });
-        }
-
-        const snap = await db.collection('logs').get();
-        const toDelete = snap.docs.filter(doc => doc.data().rollbackPossible !== true);
-
-        if (toDelete.length === 0) {
-            return res.json({ success: true, deleted: 0 });
-        }
-
-        const batchSize = 500;
-        for (let i = 0; i < toDelete.length; i += batchSize) {
-            const batch = db.batch();
-            const slice = toDelete.slice(i, i + batchSize);
-            slice.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-        }
-
-        res.json({ success: true, deleted: toDelete.length });
-    } catch (e) {
-        console.error('Erro ao limpar histórico:', e);
-        res.status(500).json({ error: 'Erro ao limpar histórico.' });
+    if (method === 'DELETE') {
+        await db.collection(collection).doc(itemId).delete();
+        return;
     }
-});
 
-// Rollback individual
-app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações.' });
-        }
-
-        const logRef = db.collection('logs').doc(req.params.id);
-        const logSnap = await logRef.get();
-        if (!logSnap.exists) return res.status(404).json({ error: 'Log não encontrado.' });
-        const log = logSnap.data();
-        if (!log.rollbackPossible) {
-            return res.status(400).json({ error: 'Este log não pode ser revertido.' });
-        }
-
-        const { collection, docId, previousData, action } = log;
-        if (!previousData && action !== 'criou') {
-            return res.status(400).json({ error: 'Dados anteriores não disponíveis para rollback.' });
-        }
-
-        if (action === 'excluiu' || action === 'editou') {
-            await db.collection(collection).doc(docId).set(previousData);
-        } else if (action === 'criou') {
-            await db.collection(collection).doc(docId).delete();
+    if (method === 'POST') {
+        if (collection === 'alunos' || collection === 'responsaveis') {
+            await db.collection(collection).doc('main').set(data, { merge: true });
         } else {
-            return res.status(400).json({ error: 'Ação não suportada para rollback.' });
+            await db.collection(collection).add({ ...data });
         }
-
-        await logRef.update({ revertedAt: new Date(), revertedBy: req.user.email });
-        await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback do log ${req.params.id}`);
-
-        res.json({ success: true });
-    } catch (e) {
-        console.error('Erro no rollback:', e);
-        res.status(500).json({ error: 'Erro ao executar rollback.' });
+        return;
     }
-});
 
-// Confirmar log individual
-app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
+    if (method === 'PUT') {
+        await db.collection(collection).doc(itemId).update({ ...data, aprovadoEm: new Date() });
+        return;
+    }
+}
+
+app.post('/api/solicitacoes/:id/aprovar', requireSuperAdmin, async (req, res) => {
     try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs.' });
-        }
-        const docRef = db.collection('logs').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Log não encontrado.' });
-        }
-        const log = docSnap.data();
-        if (!log.rollbackPossible) {
-            return res.status(400).json({ error: 'Este log já está confirmado.' });
-        }
-        await docRef.update({
-            previousData: admin.firestore.FieldValue.delete(),
-            newData: admin.firestore.FieldValue.delete(),
-            rollbackPossible: false
+        const solRef = db.collection('solicitacoes').doc(req.params.id);
+        const solSnap = await solRef.get();
+        if (!solSnap.exists) return res.status(404).json({ error: 'Solicitação não encontrada.' });
+        const sol = solSnap.data();
+        if (sol.status !== 'pending') return res.status(400).json({ error: 'Solicitação já resolvida.' });
+
+        await executarAcao(sol);
+
+        await solRef.update({
+            status: 'approved',
+            resolvedBy: req.user.email,
+            resolvedAt: new Date()
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'aprovou solicitação',
+            collection: sol.collection,
+            details: sol.details,
+            timestamp: new Date()
         });
         res.json({ success: true });
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao confirmar log.' });
+        console.error('ERRO ao aprovar solicitação:', e);
+        res.status(500).json({ error: `Erro ao executar ação: ${e.message}` });
     }
 });
 
-// Apagar log individual
-app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
+app.post('/api/solicitacoes/:id/negar', requireSuperAdmin, async (req, res) => {
     try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
-        }
-        const docRef = db.collection('logs').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Log não encontrado.' });
-        }
-        const log = docSnap.data();
-        if (log.rollbackPossible === true) {
-            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
-        }
-        await docRef.delete();
+        const solRef = db.collection('solicitacoes').doc(req.params.id);
+        const solSnap = await solRef.get();
+        if (!solSnap.exists) return res.status(404).json({ error: 'Solicitação não encontrada.' });
+        if (solSnap.data().status !== 'pending') return res.status(400).json({ error: 'Solicitação já resolvida.' });
+
+        await solRef.update({
+            status: 'denied',
+            resolvedBy: req.user.email,
+            resolvedAt: new Date()
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'negou solicitação',
+            collection: solSnap.data().collection,
+            details: solSnap.data().details,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao apagar log.' });
+        res.status(500).json({ error: 'Erro ao negar solicitação.' });
     }
 });
 
 // ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — ALUNOS/PROFESSORES
+// BIBLIOTECA — ALUNOS (com nível)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/alunosBib', requireAdmin, async (req, res) => {
     try {
         const snap = await db.collection('alunosBib').get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao listar cadastros.' });
+        res.status(500).json({ error: 'Erro ao listar alunos.' });
     }
 });
 
 app.get('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     try {
         const doc = await db.collection('alunosBib').doc(req.params.id).get();
-        if (!doc.exists) return res.status(404).json({ error: 'Cadastro não encontrado.' });
+        if (!doc.exists) return res.status(404).json({ error: 'Aluno não encontrado.' });
         res.json({ id: doc.id, ...doc.data() });
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao buscar cadastro.' });
+        res.status(500).json({ error: 'Erro ao buscar aluno.' });
     }
 });
 
-async function gerarMatricula(tipo) {
-    const prefixo = tipo === 'professor' ? 'SGBGP' : 'SGBG';
-    const query = await db.collection('alunosBib')
-        .where('tipo', '==', tipo)
-        .get();
-    const count = query.size;
-    const numero = String(count + 1).padStart(4, '0');
-    return prefixo + numero;
-}
-
 app.post('/api/alunosBib', requireAdmin, async (req, res) => {
     try {
-        const { tipo, nome } = req.body;
-        if (!tipo || !nome) return res.status(400).json({ error: 'Tipo e nome são obrigatórios.' });
-        if (tipo !== 'aluno' && tipo !== 'professor') {
-            return res.status(400).json({ error: 'Tipo inválido. Use "aluno" ou "professor".' });
+        const { matricula, nome } = req.body;
+        if (!matricula || !nome) return res.status(400).json({ error: 'Matrícula e nome são obrigatórios.' });
+
+        const existente = await db.collection('alunosBib')
+            .where('matricula', '==', matricula)
+            .limit(1)
+            .get();
+        if (!existente.empty) return res.status(400).json({ error: 'Já existe um aluno com essa matrícula.' });
+
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'POST',
+                data: { matricula, nome },
+                details: `${nome} (${matricula})`
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
         }
 
-        const matricula = await gerarMatricula(tipo);
         const ref = await db.collection('alunosBib').add({
             matricula,
             nome,
-            tipo,
             criadoEm: new Date()
         });
-        await registrarLog(req.user.email, 'criou', 'alunosBib', ref.id, null, { matricula, nome, tipo }, `${nome} (${matricula})`);
-        res.json({ success: true, id: ref.id, matricula });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'alunosBib',
+            details: `${nome} (${matricula})`,
+            timestamp: new Date()
+        });
+        res.json({ success: true, id: ref.id });
     } catch (e) {
-        console.error('Erro ao cadastrar:', e);
-        res.status(500).json({ error: 'Erro ao cadastrar.', detalhe: e.message });
+        res.status(500).json({ error: 'Erro ao cadastrar aluno.' });
     }
 });
 
 app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
     try {
-        const { matricula, nome, tipo } = req.body;
-        if (!matricula || !nome || !tipo) {
-            return res.status(400).json({ error: 'Matrícula, nome e tipo são obrigatórios.' });
+        const { matricula, nome } = req.body;
+        if (!matricula || !nome) return res.status(400).json({ error: 'Matrícula e nome são obrigatórios.' });
+
+        const existente = await db.collection('alunosBib')
+            .where('matricula', '==', matricula)
+            .limit(1)
+            .get();
+        if (!existente.empty && existente.docs[0].id !== req.params.id) {
+            return res.status(400).json({ error: 'Já existe outro aluno com essa matrícula.' });
         }
 
-        const docRef = db.collection('alunosBib').doc(req.params.id);
-        const oldDoc = await docRef.get();
-        const previousData = oldDoc.exists ? oldDoc.data() : null;
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'PUT',
+                itemId: req.params.id,
+                data: { matricula, nome },
+                details: `${nome} (${matricula})`
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
+        }
 
-        await docRef.update({ matricula, nome, tipo, atualizadoEm: new Date() });
-        await registrarLog(req.user.email, 'editou', 'alunosBib', req.params.id, previousData, { matricula, nome, tipo }, `${nome} (${matricula})`);
+        await db.collection('alunosBib').doc(req.params.id).update({
+            matricula,
+            nome,
+            atualizadoEm: new Date()
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'editou',
+            collection: 'alunosBib',
+            details: `${nome} (${matricula})`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao editar cadastro.' });
+        res.status(500).json({ error: 'Erro ao editar aluno.' });
     }
 });
 
@@ -793,18 +827,32 @@ app.delete('/api/alunosBib/:id', requireAdmin, async (req, res) => {
             .where('devolvido', '==', false)
             .get();
         if (!empAtivos.empty) {
-            return res.status(400).json({ error: 'Não é possível excluir um cadastro com empréstimos em andamento.' });
+            return res.status(400).json({ error: 'Não é possível excluir um aluno com empréstimos em andamento.' });
         }
 
-        const docRef = db.collection('alunosBib').doc(req.params.id);
-        const oldDoc = await docRef.get();
-        const previousData = oldDoc.exists ? oldDoc.data() : null;
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'alunosBib',
+                method: 'DELETE',
+                itemId: req.params.id,
+                data: null,
+                details: req.params.id
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
+        }
 
-        await docRef.delete();
-        await registrarLog(req.user.email, 'excluiu', 'alunosBib', req.params.id, previousData, null, req.params.id);
+        await db.collection('alunosBib').doc(req.params.id).delete();
+        db.collection('logs').add({
+            adminEmail: req.user?.email || 'admin',
+            action: 'excluiu',
+            collection: 'alunosBib',
+            details: req.params.id,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao excluir cadastro.' });
+        res.status(500).json({ error: 'Erro ao excluir aluno.' });
     }
 });
 
@@ -846,7 +894,18 @@ app.post('/api/livros', requireAdmin, async (req, res) => {
             .get();
         if (!existente.empty) return res.status(400).json({ error: 'Já existe um livro com esse código.' });
 
-        const data = {
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'livros',
+                method: 'POST',
+                data: { codigo, nome, autor, quantidade: qtd },
+                details: `${nome} — ${autor} (${qtd}x)`
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de criação enviada para aprovação.' });
+        }
+
+        const ref = await db.collection('livros').add({
             codigo,
             nome,
             autor,
@@ -854,9 +913,14 @@ app.post('/api/livros', requireAdmin, async (req, res) => {
             quantidadeDisponivel: qtd,
             emprestado: false,
             criadoEm: new Date()
-        };
-        const ref = await db.collection('livros').add(data);
-        await registrarLog(req.user.email, 'criou', 'livros', ref.id, null, data, `${nome} — ${autor} (${qtd}x)`);
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'criou',
+            collection: 'livros',
+            details: `${nome} — ${autor} (${qtd}x)`,
+            timestamp: new Date()
+        });
         res.json({ success: true, id: ref.id });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao cadastrar livro.' });
@@ -878,17 +942,25 @@ app.put('/api/livros/:id', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Já existe outro livro com esse código.' });
         }
 
-        const docRef = db.collection('livros').doc(req.params.id);
-        const oldDoc = await docRef.get();
-        const previousData = oldDoc.exists ? oldDoc.data() : null;
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'livros',
+                method: 'PUT',
+                itemId: req.params.id,
+                data: { codigo, nome, autor, quantidade: parseInt(quantidade, 10) || undefined },
+                details: `${nome} — ${autor}`
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de edição enviada para aprovação.' });
+        }
 
-        const docAtual = await docRef.get();
+        const docAtual = await db.collection('livros').doc(req.params.id).get();
         const atual = docAtual.data() || {};
         const novaQtd = parseInt(quantidade, 10) || atual.quantidade || 1;
         const emprestados = (atual.quantidade || 1) - (atual.quantidadeDisponivel ?? (atual.emprestado ? 0 : 1));
         const novaDisp = Math.max(0, novaQtd - emprestados);
 
-        const data = {
+        await db.collection('livros').doc(req.params.id).update({
             codigo,
             nome,
             autor,
@@ -896,9 +968,14 @@ app.put('/api/livros/:id', requireAdmin, async (req, res) => {
             quantidadeDisponivel: novaDisp,
             emprestado: novaDisp <= 0,
             atualizadoEm: new Date()
-        };
-        await docRef.update(data);
-        await registrarLog(req.user.email, 'editou', 'livros', req.params.id, previousData, data, `${nome} — ${autor}`);
+        });
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'editou',
+            collection: 'livros',
+            details: `${nome} — ${autor}`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao editar livro.' });
@@ -907,8 +984,7 @@ app.put('/api/livros/:id', requireAdmin, async (req, res) => {
 
 app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
     try {
-        const docRef = db.collection('livros').doc(req.params.id);
-        const doc = await docRef.get();
+        const doc = await db.collection('livros').doc(req.params.id).get();
         if (!doc.exists) return res.status(404).json({ error: 'Livro não encontrado.' });
         const livro = doc.data();
 
@@ -935,7 +1011,17 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
             });
         }
 
-        const previousData = livro;
+        if (!isSuperAdmin(req.user)) {
+            await criarSolicitacao({
+                user: req.user,
+                collection: 'livros',
+                method: 'DELETE',
+                itemId: req.params.id,
+                data: { deleteHistory },
+                details: `${livro.nome} — ${livro.autor}${deleteHistory ? ' (com histórico)' : ''}`
+            });
+            return res.status(202).json({ pending: true, message: 'Solicitação de exclusão enviada para aprovação.' });
+        }
 
         if (deleteHistory && temHistorico) {
             const hist = await db.collection('emprestimos')
@@ -946,8 +1032,14 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
             await batch.commit();
         }
 
-        await docRef.delete();
-        await registrarLog(req.user.email, 'excluiu', 'livros', req.params.id, previousData, null, `${livro.nome}${deleteHistory ? ' (histórico incluído)' : ''}`);
+        await db.collection('livros').doc(req.params.id).delete();
+        db.collection('logs').add({
+            adminEmail: req.user?.email || 'admin',
+            action: 'excluiu',
+            collection: 'livros',
+            details: `${livro.nome}${deleteHistory ? ' (histórico incluído)' : ''}`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Erro ao excluir livro.' });
@@ -955,7 +1047,7 @@ app.delete('/api/livros/:id', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// BIBLIOTECA — EMPRÉSTIMOS
+// BIBLIOTECA — EMPRÉSTIMOS (com quantidade e devolução parcial)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
@@ -975,7 +1067,7 @@ app.get('/api/emprestimos/aluno/:id', requireAdmin, async (req, res) => {
             .get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao buscar empréstimos do cadastrado.' });
+        res.status(500).json({ error: 'Erro ao buscar empréstimos do aluno.' });
     }
 });
 
@@ -994,7 +1086,7 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
     try {
         const { alunoId, livroId, quantidade } = req.body;
         if (!alunoId || !livroId) {
-            return res.status(400).json({ error: 'Cadastrado e livro são obrigatórios.' });
+            return res.status(400).json({ error: 'Aluno e livro são obrigatórios.' });
         }
 
         const qtd = parseInt(quantidade, 10) || 1;
@@ -1010,7 +1102,7 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
                 t.get(livroRef)
             ]);
 
-            if (!alunoSnap.exists) throw Object.assign(new Error('Cadastrado não encontrado.'), { code: 404 });
+            if (!alunoSnap.exists) throw Object.assign(new Error('Aluno não encontrado.'), { code: 404 });
             if (!livroSnap.exists) throw Object.assign(new Error('Livro não encontrado.'), { code: 404 });
 
             const livro = livroSnap.data();
@@ -1050,7 +1142,13 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
             });
         });
 
-        await registrarLog(req.user.email, 'emprestou', 'emprestimos', null, null, { alunoId, livroId, qtd }, `${logNomeAluno} ← ${qtd}x ${logNomeLivro}`);
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'emprestou',
+            collection: 'emprestimos',
+            details: `${logNomeAluno} ← ${qtd}x ${logNomeLivro}`,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         if (e.code === 404) return res.status(404).json({ error: e.message });
@@ -1060,6 +1158,7 @@ app.post('/api/emprestimos', requireAdmin, async (req, res) => {
     }
 });
 
+// ═══ DEVOLUÇÃO PARCIAL ═══
 app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
     try {
         const empRef = db.collection('emprestimos').doc(req.params.id);
@@ -1095,10 +1194,12 @@ app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
             const novaDisp = (livro.quantidadeDisponivel ?? 0) + qtdDevolver;
 
             if (qtdDevolver < totalEmprestado) {
+                // Devolução parcial
                 const novaQtd = totalEmprestado - qtdDevolver;
                 t.update(empRef, { quantidade: novaQtd });
                 logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (parcial, resta ${novaQtd})`;
             } else {
+                // Devolução total
                 t.update(empRef, { devolvido: true, dataDevolucao: new Date() });
                 logDetalhes = `${alunoNome} → ${qtdDevolver}x ${livroNome} (total)`;
             }
@@ -1109,170 +1210,19 @@ app.put('/api/emprestimos/:id/devolver', requireAdmin, async (req, res) => {
             });
         });
 
-        await registrarLog(req.user.email, 'devolveu', 'emprestimos', req.params.id, null, { quantidade }, logDetalhes);
+        db.collection('logs').add({
+            adminEmail: req.user.email,
+            action: 'devolveu',
+            collection: 'emprestimos',
+            details: logDetalhes,
+            timestamp: new Date()
+        });
         res.json({ success: true });
     } catch (e) {
         if (e.code === 404) return res.status(404).json({ error: e.message });
         if (e.code === 400) return res.status(400).json({ error: e.message });
         console.error('ERRO ao registrar devolução:', e);
         res.status(500).json({ error: 'Erro ao registrar devolução.' });
-    }
-});
-
-// ══════════════════════════════════════════════════════════════════
-// NOVA ABA: ADMINISTRADORES
-// ══════════════════════════════════════════════════════════════════
-app.get('/api/admins', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Acesso negado.' });
-        }
-        const snap = await db.collection('registrations')
-            .where('status', '==', 'approved')
-            .get();
-        const admins = [];
-        snap.forEach(doc => {
-            const data = doc.data();
-            admins.push({
-                uid: doc.id,
-                email: data.email,
-                nivel: data.nivel
-            });
-        });
-        res.json(admins);
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao listar administradores.' });
-    }
-});
-
-app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem criar este tipo de solicitação.' });
-        }
-        const { type, targetUid, targetEmail, newNivel } = req.body;
-        if (!type || !targetUid || !targetEmail) {
-            return res.status(400).json({ error: 'Dados incompletos.' });
-        }
-        if (type !== 'edit' && type !== 'delete') {
-            return res.status(400).json({ error: 'Tipo inválido.' });
-        }
-        if (type === 'edit' && (newNivel === undefined || newNivel < 1 || newNivel > 8)) {
-            return res.status(400).json({ error: 'Nível inválido.' });
-        }
-
-        const solicitation = {
-            type,
-            targetUid,
-            targetEmail,
-            requestedBy: req.user.email,
-            requestedAt: new Date(),
-            status: 'pending',
-            approvals: [req.user.email],          // auto-aprovação do criador
-            requiredApprovals: 2
-        };
-        if (type === 'edit') {
-            solicitation.newNivel = newNivel;
-        }
-
-        const ref = await db.collection('adminSolicitations').add(solicitation);
-        res.json({ success: true, id: ref.id });
-    } catch (e) {
-        console.error('Erro ao criar solicitação admin:', e);
-        res.status(500).json({ error: 'Erro interno.' });
-    }
-});
-
-app.get('/api/admin-solicitations', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Acesso negado.' });
-        }
-        const snap = await db.collection('adminSolicitations')
-            .where('status', '==', 'pending')
-            .get();
-        const solicitations = [];
-        snap.forEach(doc => {
-            solicitations.push({ id: doc.id, ...doc.data() });
-        });
-        res.json(solicitations);
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao listar solicitações.' });
-    }
-});
-
-app.post('/api/admin-solicitations/:id/approve', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem aprovar.' });
-        }
-
-        const docRef = db.collection('adminSolicitations').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Solicitação não encontrada.' });
-        }
-        const solicitation = docSnap.data();
-        if (solicitation.status !== 'pending') {
-            return res.status(400).json({ error: 'Solicitação já foi processada.' });
-        }
-        if (solicitation.approvals.includes(req.user.email)) {
-            return res.status(400).json({ error: 'Você já aprovou esta solicitação.' });
-        }
-
-        const newApprovals = [...solicitation.approvals, req.user.email];
-        let newStatus = 'pending';
-        if (newApprovals.length >= solicitation.requiredApprovals) {
-            newStatus = 'approved';
-        }
-
-        await docRef.update({ approvals: newApprovals, status: newStatus });
-
-        if (newStatus === 'approved') {
-            const { type, targetUid, newNivel } = solicitation;
-
-            let oldNivel = null;
-            let targetEmailLog = solicitation.targetEmail;
-            try {
-                const targetUser = await auth.getUser(targetUid);
-                oldNivel = targetUser.customClaims?.nivel ?? null;
-                targetEmailLog = targetUser.email || targetEmailLog;
-            } catch (e) {}
-
-            try {
-                if (type === 'edit') {
-                    await auth.setCustomUserClaims(targetUid, { nivel: newNivel, isAdmin: true });
-                    await db.collection('registrations').doc(targetUid).update({ nivel: newNivel });
-                } else if (type === 'delete') {
-                    await auth.deleteUser(targetUid);
-                    await db.collection('registrations').doc(targetUid).delete();
-                }
-                await docRef.update({ executedAt: new Date() });
-
-                const detalhe = type === 'edit'
-                    ? `Nível de ${targetEmailLog} alterado de ${oldNivel ?? '?'} para ${newNivel}. Solicitado por ${solicitation.requestedBy}, aprovado por ${newApprovals.join(', ')}`
-                    : `Administrador ${targetEmailLog} excluído. Solicitado por ${solicitation.requestedBy}, aprovado por ${newApprovals.join(', ')}`;
-
-                await registrarLog(
-                    req.user.email,
-                    `executou ação admin (${type})`,
-                    'admins',
-                    targetUid,
-                    null,
-                    null,
-                    detalhe
-                );
-            } catch (execError) {
-                console.error('Erro ao executar ação admin:', execError);
-                await docRef.update({ status: 'error', errorMessage: execError.message });
-                return res.status(500).json({ error: 'Ação aprovada mas falhou na execução: ' + execError.message });
-            }
-        }
-
-        res.json({ success: true, executed: newStatus === 'approved' });
-    } catch (e) {
-        console.error('Erro ao aprovar solicitação admin:', e);
-        res.status(500).json({ error: 'Erro interno.' });
     }
 });
 
