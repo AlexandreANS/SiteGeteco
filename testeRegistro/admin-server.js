@@ -161,7 +161,7 @@ app.post("/checkAdmin", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// NOVA FUNÇÃO: valida se domínio do e‑mail possui registros MX
+// VALIDAÇÃO DE DOMÍNIO
 // ══════════════════════════════════════════════════════════════════
 async function isEmailDomainValid(email) {
     try {
@@ -175,7 +175,7 @@ async function isEmailDomainValid(email) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// Registro — agora valida domínio e cria usuário via Admin SDK
+// Registro
 // ══════════════════════════════════════════════════════════════════
 app.post('/register', async (req, res) => {
     try {
@@ -501,7 +501,7 @@ app.post('/api/pendentes/negar', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════
-// LOGS E ROLLBACK
+// LOGS E ROLLBACK (com novas ações em massa e individuais)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
@@ -516,6 +516,7 @@ app.get('/api/logs', requireAdmin, async (req, res) => {
     }
 });
 
+// Rollback individual
 app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {
@@ -530,7 +531,7 @@ app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Este log não pode ser revertido.' });
         }
 
-        const { collection, docId, previousData, action, newData } = log;
+        const { collection, docId, previousData, action } = log;
         if (!previousData && action !== 'criou') {
             return res.status(400).json({ error: 'Dados anteriores não disponíveis para rollback.' });
         }
@@ -550,6 +551,144 @@ app.post('/api/logs/:id/rollback', requireAdmin, async (req, res) => {
     } catch (e) {
         console.error('Erro no rollback:', e);
         res.status(500).json({ error: 'Erro ao executar rollback.' });
+    }
+});
+
+// Confirmar log individual (torna não reversível)
+app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (!log.rollbackPossible) {
+            return res.status(400).json({ error: 'Este log já está confirmado.' });
+        }
+        await docRef.update({
+            previousData: admin.firestore.FieldValue.delete(),
+            newData: admin.firestore.FieldValue.delete(),
+            rollbackPossible: false
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao confirmar log.' });
+    }
+});
+
+// Apagar log individual (apenas se não reversível)
+app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
+    // Rota fixa: limpar histórico (precisa vir antes de :id)
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem limpar o histórico.' });
+        }
+        const snap = await db.collection('logs')
+            .where('rollbackPossible', '!=', true)
+            .get();
+        const batch = db.batch();
+        snap.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        res.json({ success: true, deleted: snap.size });
+    } catch (e) {
+        console.error('Erro ao limpar histórico:', e);
+        res.status(500).json({ error: 'Erro ao limpar histórico.' });
+    }
+});
+
+app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (log.rollbackPossible === true) {
+            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
+        }
+        await docRef.delete();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao apagar log.' });
+    }
+});
+
+// Confirmar todos os logs reversíveis (em massa)
+app.post('/api/logs/confirm-all', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem confirmar logs em massa.' });
+        }
+        const snap = await db.collection('logs')
+            .where('rollbackPossible', '==', true)
+            .get();
+        const batch = db.batch();
+        snap.docs.forEach(doc => {
+            batch.update(doc.ref, {
+                previousData: admin.firestore.FieldValue.delete(),
+                newData: admin.firestore.FieldValue.delete(),
+                rollbackPossible: false
+            });
+        });
+        await batch.commit();
+        res.json({ success: true, confirmed: snap.size });
+    } catch (e) {
+        console.error('Erro ao confirmar todos os logs:', e);
+        res.status(500).json({ error: 'Erro ao confirmar logs em massa.' });
+    }
+});
+
+// Reverter todos os logs reversíveis (em massa)
+app.post('/api/logs/rollback-all', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem reverter ações em massa.' });
+        }
+        const snap = await db.collection('logs')
+            .where('rollbackPossible', '==', true)
+            .orderBy('timestamp', 'desc')
+            .get();
+        if (snap.empty) {
+            return res.json({ success: true, reverted: 0 });
+        }
+
+        const logs = [];
+        snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
+
+        let revertidos = 0;
+        for (const log of logs) {
+            try {
+                const { collection, docId, previousData, action } = log;
+                if (action === 'excluiu' || action === 'editou') {
+                    await db.collection(collection).doc(docId).set(previousData);
+                } else if (action === 'criou') {
+                    await db.collection(collection).doc(docId).delete();
+                } else {
+                    continue;
+                }
+                await db.collection('logs').doc(log.id).update({
+                    revertedAt: new Date(),
+                    revertedBy: req.user.email,
+                    rollbackPossible: false
+                });
+                await registrarLog(req.user.email, 'reverteu', collection, docId, null, null, `Rollback em massa do log ${log.id}`);
+                revertidos++;
+            } catch (innerError) {
+                console.error(`Falha ao reverter log ${log.id}:`, innerError);
+            }
+        }
+        res.json({ success: true, reverted: revertidos });
+    } catch (e) {
+        console.error('Erro no rollback em massa:', e);
+        res.status(500).json({ error: 'Erro ao executar rollback em massa.' });
     }
 });
 
@@ -988,7 +1127,6 @@ app.get('/api/admins', requireAdmin, async (req, res) => {
     }
 });
 
-// Criar solicitação de ação administrativa (editar nível ou excluir)
 app.post('/api/admin-solicitations', requireAdmin, async (req, res) => {
     try {
         if (!isSuperAdmin(req.user)) {

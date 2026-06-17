@@ -8,609 +8,115 @@
     <link rel="icon" type="image/png" href="/images/logo.png">
     <style>
         /* ===== ESTILOS BASE (VISUAL ORIGINAL) ===== */
-        .btn-edit {
-            background: var(--blue-dim);
-            color: var(--blue);
-            border: 1px solid rgba(58, 130, 246, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-            margin-right: 4px;
-        }
-        .btn-edit:hover {
-            background: var(--blue);
-            color: white;
-            border-color: var(--blue);
-        }
-        .btn-delete {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-            margin-right: 4px;
-        }
-        .btn-delete:hover {
-            background: var(--red);
-            color: white;
-            border-color: var(--red);
-        }
-        .btn-aprovar {
-            background: var(--green-dim);
-            color: var(--green);
-            border: 1px solid rgba(34, 197, 94, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-        }
-        .btn-aprovar:hover {
-            background: var(--green);
-            color: white;
-            border-color: var(--green);
-        }
-        .btn-negar-sol {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-        }
-        .btn-negar-sol:hover {
-            background: var(--red);
-            color: white;
-            border-color: var(--red);
-        }
-        .btn-rollback {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(245, 158, 11, .25);
-            padding: 2px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-        }
-        .btn-rollback:hover {
-            background: var(--amber);
-            color: #1a1000;
-            border-color: var(--amber);
-        }
+        .btn-edit { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(58,130,246,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); margin-right: 4px; }
+        .btn-edit:hover { background: var(--blue); color: white; border-color: var(--blue); }
+        .btn-delete { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); margin-right: 4px; }
+        .btn-delete:hover { background: var(--red); color: white; border-color: var(--red); }
+        .btn-aprovar { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-aprovar:hover { background: var(--green); color: white; border-color: var(--green); }
+        .btn-negar-sol { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-negar-sol:hover { background: var(--red); color: white; border-color: var(--red); }
+        .btn-rollback { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.25); padding: 2px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-rollback:hover { background: var(--amber); color: #1a1000; border-color: var(--amber); }
+        .btn-confirm-log { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.2); padding: 2px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-confirm-log:hover { background: var(--green); color: white; border-color: var(--green); }
+        .btn-delete-log { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.2); padding: 2px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-delete-log:hover { background: var(--red); color: white; border-color: var(--red); }
 
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.active {
-            display: flex;
-        }
-        .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 2rem;
-            width: 100%;
-            max-width: 520px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal-content h2 {
-            margin-bottom: 1rem;
-            color: var(--txt-primary);
-            font-size: 1.05rem;
-            font-weight: 600;
-        }
-        .modal-content p {
-            color: var(--txt-secondary);
-            font-size: 0.9rem;
-        }
-        .modal-content .input-group {
-            margin-bottom: 1rem;
-        }
-        .modal-content label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: var(--txt-secondary);
-        }
-        .modal-content input,
-        .modal-content textarea,
-        .modal-content select {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            box-sizing: border-box;
-            outline: none;
-            transition: var(--trans-fast);
-        }
-        .modal-content input:focus,
-        .modal-content textarea:focus,
-        .modal-content select:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
-        }
-        .modal-content textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        .modal-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1.25rem;
-            flex-wrap: wrap;
-        }
-        .btn-confirm {
-            background: var(--blue);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--font);
-            transition: background 0.15s ease;
-            flex: 1;
-            min-width: 80px;
-        }
-        .btn-confirm:hover {
-            background: var(--blue-dark);
-        }
-        .btn-cancel {
-            background: var(--bg-input);
-            color: var(--txt-secondary);
-            border: 1px solid var(--border);
-            padding: 0.6rem 1.5rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--font);
-            transition: all 0.15s ease;
-            flex: 1;
-            min-width: 80px;
-        }
-        .btn-cancel:hover {
-            background: var(--border);
-        }
-        .btn-danger {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, .25);
-            padding: 0.65rem 1.2rem;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.88rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-        }
-        .btn-danger:hover {
-            background: var(--red);
-            color: white;
-        }
-        .warning-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .modal-content h2 { margin-bottom: 1rem; color: var(--txt-primary); font-size: 1.05rem; font-weight: 600; }
+        .modal-content p { color: var(--txt-secondary); font-size: 0.9rem; }
+        .modal-content .input-group { margin-bottom: 1rem; }
+        .modal-content label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.8rem; color: var(--txt-secondary); }
+        .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 0.65rem 0.9rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--txt-primary); font-family: var(--font); box-sizing: border-box; outline: none; transition: var(--trans-fast); }
+        .modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
+        .modal-content textarea { min-height: 80px; resize: vertical; }
+        .modal-buttons { display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap; }
+        .btn-confirm { background: var(--blue); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s ease; flex: 1; min-width: 80px; }
+        .btn-confirm:hover { background: var(--blue-dark); }
+        .btn-cancel { background: var(--bg-input); color: var(--txt-secondary); border: 1px solid var(--border); padding: 0.6rem 1.5rem; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: var(--font); transition: all 0.15s ease; flex: 1; min-width: 80px; }
+        .btn-cancel:hover { background: var(--border); }
+        .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.25); padding: 0.65rem 1.2rem; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-danger:hover { background: var(--red); color: white; }
+        .warning-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
 
-        li {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-        li span {
-            flex: 1;
-        }
-        .li-actions {
-            display: flex;
-            gap: 4px;
-            flex-shrink: 0;
-        }
+        li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+        li span { flex: 1; }
+        .li-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
-        .bib-filtro {
-            width: 100%;
-            padding: 0.6rem 0.9rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            margin-bottom: 4px;
-            box-sizing: border-box;
-            outline: none;
-            transition: var(--trans-fast);
-        }
-        .bib-filtro::placeholder {
-            color: var(--txt-muted);
-        }
-        .bib-filtro:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
-        }
-        .bib-select {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            box-sizing: border-box;
-            padding: 4px;
-            min-height: 100px;
-            outline: none;
-        }
-        .bib-select option {
-            background: var(--bg-card);
-            color: var(--txt-primary);
-        }
-        .bib-select option:checked {
-            background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%);
-            color: white;
-        }
-        .bib-select:focus {
-            border-color: var(--border-focus);
-        }
-        .filtro-tipo-select {
-            width: 100%;
-            padding: 0.6rem 0.9rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            color: var(--txt-primary);
-            font-family: var(--font);
-            outline: none;
-            transition: var(--trans-fast);
-        }
-        .filtro-tipo-select:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
-        }
+        .bib-filtro { width: 100%; padding: 0.6rem 0.9rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--txt-primary); font-family: var(--font); margin-bottom: 4px; box-sizing: border-box; outline: none; transition: var(--trans-fast); }
+        .bib-filtro::placeholder { color: var(--txt-muted); }
+        .bib-filtro:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
+        .bib-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--txt-primary); font-family: var(--font); box-sizing: border-box; padding: 4px; min-height: 100px; outline: none; }
+        .bib-select option { background: var(--bg-card); color: var(--txt-primary); }
+        .bib-select option:checked { background: var(--blue) linear-gradient(0deg, var(--blue) 0%, var(--blue) 100%); color: white; }
+        .bib-select:focus { border-color: var(--border-focus); }
+        .filtro-tipo-select { width: 100%; padding: 0.6rem 0.9rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.875rem; color: var(--txt-primary); font-family: var(--font); outline: none; transition: var(--trans-fast); }
+        .filtro-tipo-select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
 
-        .tabela-bib {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-        .tabela-bib thead tr {
-            background: var(--bg-input);
-        }
-        .tabela-bib th {
-            padding: 10px 14px;
-            text-align: left;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.9px;
-            color: var(--txt-muted);
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        .tabela-bib td {
-            padding: 11px 14px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            color: var(--txt-secondary);
-        }
-        .tabela-bib td:first-child {
-            color: var(--txt-primary);
-            font-weight: 500;
-        }
-        .tabela-bib tbody tr:last-child td {
-            border-bottom: none;
-        }
-        .tabela-bib tbody tr:hover td {
-            background: rgba(58, 130, 246, .04);
-        }
-        .btn-devolver {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(245, 158, 11, .25);
-            padding: 4px 12px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-            white-space: nowrap;
-        }
-        .btn-devolver:hover {
-            background: var(--amber);
-            color: #1a1000;
-            border-color: var(--amber);
-        }
-        .btn-reload {
-            background: rgba(255, 255, 255, .10);
-            color: var(--txt-secondary);
-            border: 1px solid rgba(255, 255, 255, .15);
-            padding: 5px 12px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.82rem;
-            font-family: var(--font);
-            transition: var(--trans-fast);
-        }
-        .btn-reload:hover {
-            background: rgba(255, 255, 255, .16);
-            color: var(--txt-primary);
-        }
-        .bib-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
+        .tabela-bib { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.875rem; }
+        .tabela-bib thead tr { background: var(--bg-input); }
+        .tabela-bib th { padding: 10px 14px; text-align: left; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: var(--txt-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .tabela-bib td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--txt-secondary); }
+        .tabela-bib td:first-child { color: var(--txt-primary); font-weight: 500; }
+        .tabela-bib tbody tr:last-child td { border-bottom: none; }
+        .tabela-bib tbody tr:hover td { background: rgba(58,130,246,.04); }
+        .btn-devolver { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.25); padding: 4px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; font-family: var(--font); transition: var(--trans-fast); white-space: nowrap; }
+        .btn-devolver:hover { background: var(--amber); color: #1a1000; border-color: var(--amber); }
+        .btn-reload { background: rgba(255,255,255,.10); color: var(--txt-secondary); border: 1px solid rgba(255,255,255,.15); padding: 5px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem; font-family: var(--font); transition: var(--trans-fast); }
+        .btn-reload:hover { background: rgba(255,255,255,.16); color: var(--txt-primary); }
+        .bib-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 
-        .badge-ativo {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(245, 158, 11, .2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-devolvido {
-            background: var(--green-dim);
-            color: var(--green);
-            border: 1px solid rgba(34, 197, 94, .2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-pendente {
-            background: var(--amber-dim);
-            color: var(--amber);
-            border: 1px solid rgba(245, 158, 11, .2);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
+        .badge-ativo { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+        .badge-devolvido { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+        .badge-pendente { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,.2); padding: 2px 8px; border-radius: 9999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
 
-        #lista-historico-aluno li,
-        #lista-historico-livro li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
+        #lista-historico-aluno li, #lista-historico-livro li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
 
-        #banner-nivel-limitado {
-            display: none;
-            margin: 0.5rem 0.75rem;
-            background: rgba(245, 158, 11, .1);
-            border: 1px solid rgba(245, 158, 11, .3);
-            border-radius: var(--radius-sm);
-            padding: 0.5rem 0.75rem;
-            font-size: 0.78rem;
-            color: var(--amber);
-            line-height: 1.4;
-        }
-        #user-nivel-info {
-            padding: 0.35rem 1rem;
-            font-size: 0.78rem;
-            color: var(--txt-muted);
-        }
+        #banner-nivel-limitado { display: none; margin: 0.5rem 0.75rem; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.78rem; color: var(--amber); line-height: 1.4; }
+        #user-nivel-info { padding: 0.35rem 1rem; font-size: 0.78rem; color: var(--txt-muted); }
 
-        #qtd-emprestimo {
-            width: 100%;
-            padding: 0.65rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--txt-primary);
-            font-family: var(--font);
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            outline: none;
-            transition: var(--trans-fast);
-        }
-        #qtd-emprestimo:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(58, 130, 246, .1);
-        }
-        .input-qtd-dev {
-            width: 50px;
-            padding: 4px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--txt-primary);
-            text-align: center;
-            font-family: var(--font);
-        }
+        #qtd-emprestimo { width: 100%; padding: 0.65rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--txt-primary); font-family: var(--font); font-size: 0.9rem; box-sizing: border-box; outline: none; transition: var(--trans-fast); }
+        #qtd-emprestimo:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(58,130,246,.1); }
+        .input-qtd-dev { width: 50px; padding: 4px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--txt-primary); text-align: center; font-family: var(--font); }
 
-        .log-info {
-            flex: 1;
-        }
-        .log-action {
-            font-weight: 500;
-        }
-        .log-detail {
-            font-size: 0.9rem;
-        }
-        .log-meta {
-            font-size: 0.7rem;
-            color: var(--txt-muted);
-        }
+        .log-info { flex: 1; }
+        .log-action { font-weight: 500; }
+        .log-detail { font-size: 0.9rem; }
+        .log-meta { font-size: 0.7rem; color: var(--txt-muted); }
 
-        /* ===== CORREÇÃO DOS SELECTS ===== */
-        select,
-        .bib-select,
-        .filtro-tipo-select {
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            background-color: var(--bg-input) !important;
-            color: var(--txt-primary) !important;
+        select, .bib-select, .filtro-tipo-select {
+            -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important;
+            background-color: var(--bg-input) !important; color: var(--txt-primary) !important;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
-            background-repeat: no-repeat !important;
-            background-position: right 0.7em center !important;
-            background-size: 1em !important;
+            background-repeat: no-repeat !important; background-position: right 0.7em center !important; background-size: 1em !important;
             padding-right: 2.5rem !important;
         }
-
-        select[size],
-        .bib-select[size] {
-            background-image: none !important;
-            padding-right: 4px !important;
-        }
-
-        option,
-        .bib-select option {
-            background-color: var(--bg-card) !important;
-            color: var(--txt-primary) !important;
-        }
+        select[size], .bib-select[size] { background-image: none !important; padding-right: 4px !important; }
+        option, .bib-select option { background-color: var(--bg-card) !important; color: var(--txt-primary) !important; }
 
         /* ===== NOVOS ESTILOS PARA ABA ADMINS ===== */
-        .admin-list-container {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .admin-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .admin-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-        .admin-item:last-child {
-            border-bottom: none;
-        }
-        .admin-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        .admin-email {
-            font-weight: 600;
-            color: var(--txt-primary);
-        }
-        .admin-level {
-            font-size: 0.8rem;
-            color: var(--txt-muted);
-        }
-        .admin-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .btn-edit-level {
-            background: var(--blue-dim);
-            color: var(--blue);
-            border: 1px solid rgba(58, 130, 246, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .btn-edit-level:hover {
-            background: var(--blue);
-            color: white;
-        }
-        .btn-delete-admin {
-            background: var(--red-dim);
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .btn-delete-admin:hover {
-            background: var(--red);
-            color: white;
-        }
-        .pending-admin-solicitations {
-            margin-top: 1.5rem;
-        }
-        .solicitation-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-        .approval-count {
-            font-size: 0.75rem;
-            color: var(--txt-muted);
-        }
-        .btn-approve-admin {
-            background: var(--green-dim);
-            color: var(--green);
-            border: 1px solid rgba(34, 197, 94, .2);
-            padding: 4px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-        .btn-approve-admin:hover {
-            background: var(--green);
-            color: white;
-        }
-        .btn-approve-admin:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .admin-list-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .admin-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        .admin-item:last-child { border-bottom: none; }
+        .admin-info { display: flex; flex-direction: column; gap: 0.25rem; }
+        .admin-email { font-weight: 600; color: var(--txt-primary); }
+        .admin-level { font-size: 0.8rem; color: var(--txt-muted); }
+        .admin-actions { display: flex; gap: 0.5rem; }
+        .btn-edit-level { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(58,130,246,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+        .btn-edit-level:hover { background: var(--blue); color: white; }
+        .btn-delete-admin { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+        .btn-delete-admin:hover { background: var(--red); color: white; }
+        .pending-admin-solicitations { margin-top: 1.5rem; }
+        .solicitation-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+        .approval-count { font-size: 0.75rem; color: var(--txt-muted); }
+        .btn-approve-admin { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.2); padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+        .btn-approve-admin:hover { background: var(--green); color: white; }
+        .btn-approve-admin:disabled { opacity: 0.5; cursor: not-allowed; }
+        .mass-actions { display: flex; gap: 0.5rem; }
     </style>
 </head>
 <body class="dashboard-body">
@@ -856,12 +362,21 @@
 
         <!-- ── ABA: LOGS ── -->
         <div id="logs" class="tab-pane">
+            <!-- SOLICITAÇÕES PENDENTES COMENTADAS
             <div class="list-container" id="container-solicitacoes" style="margin-bottom:1.5rem">
                 <h3>⏳ Solicitações Pendentes de Aprovação</h3>
                 <ul id="solicitacoes-list" class="item-list"><li style="color:var(--txt-muted)">Carregando...</li></ul>
             </div>
+            -->
             <div class="list-container">
-                <h3>Histórico de Atividades</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="margin:0;">Histórico de Atividades</h3>
+                    <div class="mass-actions" id="mass-actions" style="display:none;">
+                        <button id="btn-confirm-all" class="btn-reload" title="Confirmar todos os logs reversíveis">✓ Confirmar todos</button>
+                        <button id="btn-rollback-all" class="btn-reload" title="Reverter todos os logs reversíveis">↩ Reverter todos</button>
+                        <button id="btn-clear-history" class="btn-reload" title="Apagar todos os logs não reversíveis">🗑 Limpar histórico</button>
+                    </div>
+                </div>
                 <ul id="logs-list" class="item-list"></ul>
             </div>
         </div>
@@ -950,7 +465,7 @@
         </div>
     </div>
 
-    <!-- Modal: Editar nível de admin (nova) -->
+    <!-- Modal: Editar nível de admin -->
     <div id="edit-level-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>Editar Nível do Administrador</h2>
@@ -982,7 +497,7 @@
         let itemToDelete = null;
         let itemToEdit = null;
         let pendingAcceptUid = null;
-        let currentEditTarget = null; // para modal editar nível
+        let currentEditTarget = null;
 
         let userInfo = { email: '', nivel: null, isSuperAdmin: false };
 
@@ -1495,79 +1010,7 @@
 
         async function loadLogsContent() {
             const logsList = document.getElementById('logs-list');
-            const solList = document.getElementById('solicitacoes-list');
             logsList.innerHTML = '<li>A carregar logs...</li>';
-            if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Carregando...</li>';
-
-            try {
-                const solic = await apiRequest('solicitacoes');
-                if (solList) {
-                    if (!solic.length) {
-                        solList.innerHTML = '<li style="color:var(--txt-muted);font-style:italic">Nenhuma solicitação pendente.</li>';
-                    } else {
-                        const methodLabel = { POST: 'criar', PUT: 'editar', DELETE: 'excluir' };
-                        solList.innerHTML = solic.map(s => {
-                            const acaoBtns = userInfo.isSuperAdmin
-                                ? `<div class="li-actions">
-                                     <button class="btn-aprovar" data-id="${s.id}">✓ Aprovar</button>
-                                     <button class="btn-negar-sol" data-id="${s.id}">✗ Negar</button>
-                                   </div>`
-                                : `<span class="badge-pendente">Aguardando</span>`;
-                            return `<li data-sol-id="${s.id}">
-                                      <div class="log-info">
-                                          <strong>${escapeHtml(s.requestedBy)}</strong>
-                                          <span class="log-action"> solicitou ${methodLabel[s.method] || s.method}</span>
-                                          em <em>${escapeHtml(s.collection)}</em>
-                                          <br><small class="log-detail">"${escapeHtml(s.details || 'Sem detalhes')}"</small>
-                                          <br><small class="log-meta">${formatTs(s.requestedAt)}</small>
-                                      </div>
-                                      ${acaoBtns}
-                                    </li>`;
-                        }).join('');
-
-                        if (userInfo.isSuperAdmin) {
-                            solList.querySelectorAll('.btn-aprovar').forEach(btn => {
-                                btn.addEventListener('click', async () => {
-                                    const aprovado = await confirm('Aprovar esta solicitação e executar a ação imediatamente?');
-                                    if (!aprovado) return;
-                                    btn.disabled = true;
-                                    btn.textContent = '...';
-                                    try {
-                                        await apiRequest(`solicitacoes/${btn.dataset.id}/aprovar`, 'POST');
-                                        await loadLogsContent();
-                                        showMessage('Sucesso', '✅ Solicitação aprovada e ação executada!');
-                                    } catch (err) {
-                                        let msg = 'Erro ao aprovar.';
-                                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
-                                        showMessage('Erro', msg);
-                                        btn.disabled = false;
-                                        btn.textContent = '✓ Aprovar';
-                                    }
-                                });
-                            });
-
-                            solList.querySelectorAll('.btn-negar-sol').forEach(btn => {
-                                btn.addEventListener('click', async () => {
-                                    const negado = await confirm('Negar esta solicitação? A ação não será executada.');
-                                    if (!negado) return;
-                                    btn.disabled = true;
-                                    btn.textContent = '...';
-                                    try {
-                                        await apiRequest(`solicitacoes/${btn.dataset.id}/negar`, 'POST');
-                                        await loadLogsContent();
-                                    } catch {
-                                        showMessage('Erro', 'Erro ao negar solicitação.');
-                                        btn.disabled = false;
-                                        btn.textContent = '✗ Negar';
-                                    }
-                                });
-                            });
-                        }
-                    }
-                }
-            } catch {
-                if (solList) solList.innerHTML = '<li style="color:var(--txt-muted)">Erro ao carregar solicitações.</li>';
-            }
 
             try {
                 const logs = await apiRequest('logs');
@@ -1576,11 +1019,30 @@
                     return;
                 }
 
+                const massDiv = document.getElementById('mass-actions');
+                if (massDiv) {
+                    massDiv.style.display = userInfo.isSuperAdmin ? 'flex' : 'none';
+                }
+
                 logsList.innerHTML = logs.map(log => {
-                    let rollbackBtn = '';
-                    if (userInfo.isSuperAdmin && log.rollbackPossible) {
-                        rollbackBtn = `<button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>`;
+                    const isReversible = log.rollbackPossible === true;
+                    let actionsHtml = '';
+
+                    if (userInfo.isSuperAdmin) {
+                        if (isReversible) {
+                            actionsHtml = `
+                                <div class="li-actions" style="gap:6px;">
+                                    <button class="btn-confirm-log" data-logid="${log.id}">✓ Confirmar</button>
+                                    <button class="btn-rollback" data-logid="${log.id}">↩ Reverter</button>
+                                </div>`;
+                        } else {
+                            actionsHtml = `
+                                <div class="li-actions" style="gap:6px;">
+                                    <button class="btn-delete-log" data-logid="${log.id}">🗑 Apagar</button>
+                                </div>`;
+                        }
                     }
+
                     const details = log.details || 'Sem detalhes';
                     return `<li>
                                 <div class="log-info">
@@ -1589,10 +1051,11 @@
                                     <br><span class="log-detail">${escapeHtml(details)}</span>
                                     <br><span class="log-meta">${formatTs(log.timestamp)}</span>
                                 </div>
-                                ${rollbackBtn}
+                                ${actionsHtml}
                             </li>`;
                 }).join('');
 
+                // Eventos para rollback individuais
                 document.querySelectorAll('.btn-rollback').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const logId = btn.dataset.logid;
@@ -1614,6 +1077,79 @@
                 logsList.innerHTML = '<li>Erro ao carregar os logs.</li>';
             }
         }
+
+        // Eventos para ações em massa
+        document.getElementById('btn-confirm-all')?.addEventListener('click', async () => {
+            const confirmado = await confirm('Tem certeza que deseja CONFIRMAR todos os logs reversíveis? Eles perderão a capacidade de reversão.');
+            if (!confirmado) return;
+            try {
+                await apiRequest('logs/confirm-all', 'POST');
+                showMessage('Sucesso', 'Todos os logs reversíveis foram confirmados.');
+                loadLogsContent();
+            } catch (err) {
+                showMessage('Erro', 'Erro ao confirmar logs em massa.');
+            }
+        });
+
+        document.getElementById('btn-rollback-all')?.addEventListener('click', async () => {
+            const confirmado = await confirm('Tem certeza que deseja REVERTER todos os logs reversíveis? Isso desfará várias alterações.');
+            if (!confirmado) return;
+            try {
+                await apiRequest('logs/rollback-all', 'POST');
+                showMessage('Sucesso', 'Rollback em massa concluído.');
+                loadLogsContent();
+                loadManagementContent();
+            } catch (err) {
+                showMessage('Erro', 'Erro ao executar rollback em massa.');
+            }
+        });
+
+        document.getElementById('btn-clear-history')?.addEventListener('click', async () => {
+            const confirmado = await confirm('Tem certeza que deseja APAGAR todo o histórico (apenas logs não reversíveis)?');
+            if (!confirmado) return;
+            try {
+                await apiRequest('logs/clear', 'DELETE');
+                showMessage('Sucesso', 'Histórico limpo.');
+                loadLogsContent();
+            } catch (err) {
+                showMessage('Erro', 'Erro ao limpar histórico.');
+            }
+        });
+
+        // Delegação de eventos nos logs individuais
+        document.getElementById('logs-list').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            if (btn.classList.contains('btn-delete-log')) {
+                const logId = btn.dataset.logid;
+                const confirmado = await confirm('Apagar este registro de log?');
+                if (!confirmado) return;
+                btn.disabled = true;
+                try {
+                    await apiRequest(`logs/${logId}`, 'DELETE');
+                    const li = btn.closest('li');
+                    if (li) li.remove();
+                    showMessage('Sucesso', 'Log apagado.');
+                } catch (err) {
+                    showMessage('Erro', 'Erro ao apagar log.');
+                    btn.disabled = false;
+                }
+            } else if (btn.classList.contains('btn-confirm-log')) {
+                const logId = btn.dataset.logid;
+                const confirmado = await confirm('Confirmar este log? Ele perderá a capacidade de reversão e poderá ser apagado.');
+                if (!confirmado) return;
+                btn.disabled = true;
+                try {
+                    await apiRequest(`logs/${logId}/confirm`, 'POST');
+                    showMessage('Sucesso', 'Log confirmado. Agora ele pode ser apagado.');
+                    loadLogsContent();
+                } catch (err) {
+                    showMessage('Erro', 'Erro ao confirmar log.');
+                    btn.disabled = false;
+                }
+            }
+        });
 
         async function loadPendingAdmins() {
             try {
@@ -2073,7 +1609,6 @@
             }
         }
 
-        // Eventos para ações na lista de admins
         document.getElementById('admin-list').addEventListener('click', (e) => {
             const uid = e.target.dataset.uid;
             if (!uid) return;
@@ -2102,7 +1637,6 @@
             }
         });
 
-        // Modal editar nível
         document.getElementById('btn-confirm-edit-level').addEventListener('click', async () => {
             if (!currentEditTarget) return;
             const newNivel = parseInt(document.getElementById('new-level').value, 10);
@@ -2131,7 +1665,6 @@
             currentEditTarget = null;
         });
 
-        // Aprovação de solicitações de admin
         document.getElementById('admin-solicitations-list').addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-approve-admin');
             if (!btn || btn.disabled) return;
