@@ -731,6 +731,9 @@ app.post('/api/admin-solicitations/:id/approve', requireSuperAdmin, async (req, 
     }
 });
 
+// ══════════════════════════════════════════════════════════════════
+// LOGS
+// ══════════════════════════════════════════════════════════════════
 app.get('/api/logs', requireAdmin, async (req, res) => {
     try {
         const snap = await db.collection('logs')
@@ -805,29 +808,8 @@ app.post('/api/logs/:id/confirm', requireAdmin, async (req, res) => {
     }
 });
 
-app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
-    try {
-        if (!isSuperAdmin(req.user)) {
-            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
-        }
-        const docRef = db.collection('logs').doc(req.params.id);
-        const docSnap = await docRef.get();
-        if (!docSnap.exists) {
-            return res.status(404).json({ error: 'Log não encontrado.' });
-        }
-        const log = docSnap.data();
-        if (log.rollbackPossible === true) {
-            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
-        }
-        await docRef.delete();
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: 'Erro ao apagar log.' });
-    }
-});
-
 // ══════════════════════════════════════════════════════════════════
-// LIMPAR HISTÓRICO (somente logs não reversíveis)
+// LIMPAR HISTÓRICO — DEVE VIR ANTES DE DELETE /api/logs/:id
 // ══════════════════════════════════════════════════════════════════
 app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     try {
@@ -857,8 +839,30 @@ app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     }
 });
 
+// ── Apagar log individual — DEPOIS de /clear ──
+app.delete('/api/logs/:id', requireAdmin, async (req, res) => {
+    try {
+        if (!isSuperAdmin(req.user)) {
+            return res.status(403).json({ error: 'Apenas superadministradores podem apagar logs.' });
+        }
+        const docRef = db.collection('logs').doc(req.params.id);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            return res.status(404).json({ error: 'Log não encontrado.' });
+        }
+        const log = docSnap.data();
+        if (log.rollbackPossible === true) {
+            return res.status(400).json({ error: 'Este log ainda é reversível. Confirme-o antes de apagar.' });
+        }
+        await docRef.delete();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Erro ao apagar log.' });
+    }
+});
+
 // ══════════════════════════════════════════════════════════════════
-// SOLICITAÇÕES (CONTEÚDO) — CORRIGIDO (sem orderBy para evitar índice)
+// SOLICITAÇÕES (CONTEÚDO)
 // ══════════════════════════════════════════════════════════════════
 app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
@@ -1091,7 +1095,6 @@ app.put('/api/alunosBib/:id', requireAdmin, async (req, res) => {
             return res.status(400).json({ error: 'Nome e tipo são obrigatórios.' });
         }
 
-        // Buscar matrícula atual para log
         const docSnap = await db.collection('alunosBib').doc(req.params.id).get();
         if (!docSnap.exists) {
             return res.status(404).json({ error: 'Cadastro não encontrado.' });

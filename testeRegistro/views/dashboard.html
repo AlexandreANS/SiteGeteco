@@ -119,6 +119,18 @@
         .log-action { font-weight: 500; }
         .log-detail { font-size: 0.82rem; opacity: 0.9; }
         .log-meta { font-size: 0.72rem; color: var(--txt-muted); }
+
+        /* ── Solicitações ── */
+        #solicitacoes-list { font-size: 0.875rem; line-height: 1.5; }
+        #solicitacoes-list li { padding: 0.75rem 0; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; }
+        .sol-info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 2px; }
+        .sol-meta { font-size: 0.72rem; color: var(--txt-muted); }
+        .sol-method { font-weight: 700; }
+        .sol-method-post  { color: var(--green); }
+        .sol-method-put   { color: var(--blue); }
+        .sol-method-delete{ color: var(--red); }
+        .sol-detail { font-size: 0.82rem; color: var(--txt-secondary); margin-top: 2px; }
+        .sol-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 2px; }
     </style>
 </head>
 <body class="dashboard-body">
@@ -153,6 +165,7 @@
             <button class="tab-btn" data-tab="informacoes">Informações Fixas</button>
             <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
             <button class="tab-btn" data-tab="admins" id="tab-admins" style="display:none;">Administradores</button>
+            <button class="tab-btn" data-tab="solicitacoes" id="tab-solicitacoes">Solicitações</button>
             <button class="tab-btn" data-tab="logs">Logs</button>
         </div>
 
@@ -217,7 +230,6 @@
                         <button type="submit" class="btn-submit">Salvar Contacto</button>
                     </form>
                 </div>
-                <!-- ⚡️ FORMULÁRIO SEM MATRÍCULA -->
                 <div class="form-container" data-section="alunosBib">
                     <h3>Novo Cadastro (Biblioteca)</h3>
                     <form>
@@ -346,6 +358,20 @@
                 <div id="tabela-emprestimos-container">
                     <p style="color:#6b7280;text-align:center;padding:1rem">Carregando...</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ ABA: SOLICITAÇÕES ═══════════════ -->
+        <div id="solicitacoes" class="tab-pane">
+            <div class="list-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="margin:0;" id="sol-titulo">Solicitações de Conteúdo Pendentes</h3>
+                    <button id="btn-reload-solicitacoes" class="btn-reload">↻ Atualizar</button>
+                </div>
+                <p id="sol-subtitulo" style="font-size:0.82rem; color:var(--txt-muted); margin-bottom:0.75rem; display:none;"></p>
+                <ul id="solicitacoes-list" class="item-list">
+                    <li class="empty" style="justify-content:center; color:var(--txt-muted);">Carregando...</li>
+                </ul>
             </div>
         </div>
 
@@ -486,7 +512,6 @@
     (function() {
         'use strict';
 
-        // ── Função auxiliar para adicionar eventos com segurança ──
         function safeOn(id, event, handler) {
             const el = document.getElementById(id);
             if (!el) {
@@ -581,13 +606,43 @@
                     const badge = document.getElementById('user-nivel-info');
                     const banner = document.getElementById('banner-nivel-limitado');
                     const tabAdmins = document.getElementById('tab-admins');
+
                     if (badge) {
                         badge.innerHTML = `<span style="opacity:.7">${userInfo.email}</span><br><strong>Administrador nível Atual: ${userInfo.nivel ?? '?'}</strong>`;
                     }
-                    if (banner && !userInfo.isSuperAdmin) banner.style.display = 'block';
-                    if (tabAdmins) tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
+                    // Banner de nível limitado apenas para não-superadmins
+                    if (banner) {
+                        banner.style.display = userInfo.isSuperAdmin ? 'none' : 'block';
+                    }
+                    // Aba Administradores apenas para superadmins
+                    if (tabAdmins) {
+                        tabAdmins.style.display = userInfo.isSuperAdmin ? 'inline-block' : 'none';
+                    }
+                    // Aba Solicitações visível para TODOS os admins
+                    // (já está visível por padrão no HTML — sem display:none)
+
+                    // Botão limpar histórico apenas para superadmins
                     const clearContainer = document.getElementById('clear-history-container');
-                    if (clearContainer) clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
+                    if (clearContainer) {
+                        clearContainer.style.display = userInfo.isSuperAdmin ? 'block' : 'none';
+                    }
+
+                    // Atualiza subtítulo da aba Solicitações conforme nível
+                    const solSubtitulo = document.getElementById('sol-subtitulo');
+                    const solTitulo = document.getElementById('sol-titulo');
+                    if (userInfo.isSuperAdmin) {
+                        if (solTitulo) solTitulo.textContent = 'Solicitações de Conteúdo Pendentes';
+                        if (solSubtitulo) {
+                            solSubtitulo.textContent = 'Revise e execute ou cancele cada solicitação enviada pelos demais administradores.';
+                            solSubtitulo.style.display = 'block';
+                        }
+                    } else {
+                        if (solTitulo) solTitulo.textContent = 'Minhas Solicitações Pendentes';
+                        if (solSubtitulo) {
+                            solSubtitulo.textContent = 'Suas edições estão aguardando aprovação de um superadministrador (Nível 1 ou 8).';
+                            solSubtitulo.style.display = 'block';
+                        }
+                    }
                 } catch (e) {
                     console.warn('Erro ao carregar informações do utilizador:', e);
                 }
@@ -658,6 +713,7 @@
                     if (tab.dataset.tab === 'gerenciar') loadManagementContent();
                     if (tab.dataset.tab === 'logs') loadLogsContent();
                     if (tab.dataset.tab === 'biblioteca') carregarBiblioteca();
+                    if (tab.dataset.tab === 'solicitacoes') loadSolicitacoes();
                     if (tab.dataset.tab === 'admins') {
                         loadAdmins();
                         loadAdminSolicitations();
@@ -829,7 +885,7 @@
                                     return `<div class="input-group"><label>${f.label}</label><input type="file" name="${f.name}" accept="image/*"></div>`;
                                 }
                                 if (f.type === 'select') {
-                                    const options = f.options.map(opt => 
+                                    const options = f.options.map(opt =>
                                         `<option value="${opt}" ${item[f.name] === opt ? 'selected' : ''}>${opt}</option>`
                                     ).join('');
                                     return `<div class="input-group"><label>${f.label}</label><select name="${f.name}">${options}</select></div>`;
@@ -881,7 +937,7 @@
                     editModal?.classList.remove('active');
                     itemToEdit = null;
                     if (result?.pending) {
-                        showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação.');
+                        showMessage('Aviso', '⏳ Solicitação de edição enviada para aprovação. Acesse a aba "Solicitações" para acompanhar.');
                     } else {
                         showMessage('Sucesso', '✅ Alterações salvas com sucesso!');
                     }
@@ -913,7 +969,7 @@
                 try {
                     const result = await apiRequest(`${collection}/${id}`, 'DELETE');
                     if (result?.pending) {
-                        showMessage('Aviso', '⏳ Solicitação de exclusão enviada para aprovação.');
+                        showMessage('Aviso', '⏳ Solicitação de exclusão enviada para aprovação. Acesse a aba "Solicitações" para acompanhar.');
                     } else {
                         element?.remove();
                         showMessage('Sucesso', 'Item excluído com sucesso.');
@@ -990,7 +1046,7 @@
                     try {
                         const result = await apiRequest(section, 'POST', body);
                         if (result?.pending) {
-                            showMessage('Aviso', '⏳ Solicitação enviada para aprovação.');
+                            showMessage('Aviso', '⏳ Solicitação enviada para aprovação. Acesse a aba "Solicitações" para acompanhar.');
                         } else {
                             showMessage('Sucesso', '✅ Dados salvos com sucesso!');
                         }
@@ -1127,6 +1183,123 @@
                     } catch (err) {
                         showMessage('Erro', 'Erro ao confirmar log.');
                         btn.disabled = false;
+                    }
+                }
+            });
+
+            // ═══════════════ SOLICITAÇÕES (CONTEÚDO) ═══════════════
+            const COL_LABELS = {
+                noticias: 'Notícias',
+                novidades: 'Novidades/Infraestrutura',
+                cursos: 'Cursos',
+                docente: 'Corpo Docente',
+                cargos: 'Cargos e Funções',
+                contato: 'Contactos',
+                alunos: 'Calendário de Alunos',
+                responsaveis: 'Calendário de Responsáveis',
+                alunosBib: 'Cadastros (Biblioteca)',
+                livros: 'Livros'
+            };
+            const METHOD_LABELS = {
+                POST:   { text: '➕ Criar',   cls: 'sol-method-post'   },
+                PUT:    { text: '✏️ Editar',  cls: 'sol-method-put'    },
+                DELETE: { text: '🗑 Excluir', cls: 'sol-method-delete' }
+            };
+
+            async function loadSolicitacoes() {
+                const list = document.getElementById('solicitacoes-list');
+                if (!list) return;
+                list.innerHTML = '<li style="justify-content:center;color:var(--txt-muted);border:none;">A carregar...</li>';
+
+                try {
+                    const sols = await apiRequest('solicitacoes');
+
+                    if (!sols.length) {
+                        const msg = userInfo.isSuperAdmin
+                            ? 'Nenhuma solicitação de conteúdo pendente.'
+                            : 'Nenhuma solicitação pendente. Suas alterações aparecem aqui até serem aprovadas.';
+                        list.innerHTML = `<li style="justify-content:center;color:var(--txt-muted);font-style:italic;border:none;">${msg}</li>`;
+                        return;
+                    }
+
+                    list.innerHTML = sols.map(s => {
+                        const method = METHOD_LABELS[s.method] || { text: s.method, cls: '' };
+                        const colLabel = COL_LABELS[s.collection] || escapeHtml(s.collection);
+
+                        // Superadmin vê botões; não-superadmin vê só o badge
+                        const actionHtml = userInfo.isSuperAdmin
+                            ? `<div class="sol-actions">
+                                   <button class="btn-aprovar" data-id="${escapeHtml(s.id)}">✓ Aprovar</button>
+                                   <button class="btn-negar-sol" data-id="${escapeHtml(s.id)}">✗ Negar</button>
+                               </div>`
+                            : `<span class="badge-pendente" style="align-self:flex-start;margin-top:2px;">⏳ Aguardando</span>`;
+
+                        return `
+                            <li data-id="${escapeHtml(s.id)}">
+                                <div class="sol-info">
+                                    <span class="sol-meta">
+                                        ${escapeHtml(s.requestedBy)} · Nível ${s.requestedByNivel ?? '?'} · ${formatTs(s.requestedAt)}
+                                    </span>
+                                    <span>
+                                        <span class="sol-method ${method.cls}">${method.text}</span>
+                                        em <strong>${colLabel}</strong>
+                                    </span>
+                                    <span class="sol-detail">${escapeHtml(s.details || 'Sem detalhes')}</span>
+                                </div>
+                                ${actionHtml}
+                            </li>`;
+                    }).join('');
+
+                } catch (err) {
+                    console.error('Erro ao carregar solicitações:', err);
+                    list.innerHTML = '<li style="color:var(--red);border:none;">Erro ao carregar solicitações.</li>';
+                }
+            }
+
+            // Botão atualizar da aba Solicitações
+            safeOn('btn-reload-solicitacoes', 'click', () => loadSolicitacoes());
+
+            // Eventos de aprovar / negar
+            document.getElementById('solicitacoes-list')?.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button');
+                if (!btn || !userInfo.isSuperAdmin) return;
+                const id = btn.dataset.id;
+                if (!id) return;
+
+                if (btn.classList.contains('btn-aprovar')) {
+                    const ok = await confirm('Aprovar esta solicitação e executar a ação imediatamente?');
+                    if (!ok) return;
+                    btn.disabled = true;
+                    btn.textContent = '...';
+                    try {
+                        await apiRequest(`solicitacoes/${id}/aprovar`, 'POST');
+                        showMessage('Sucesso', '✅ Solicitação aprovada e executada com sucesso!');
+                        loadSolicitacoes();
+                        // Atualiza Gerir se estiver aberta
+                        if (document.getElementById('gerenciar')?.classList.contains('active')) {
+                            loadManagementContent();
+                        }
+                    } catch (err) {
+                        let msg = 'Erro ao aprovar a solicitação.';
+                        try { msg = JSON.parse(err.message)?.error || msg; } catch {}
+                        showMessage('Erro', msg);
+                        btn.disabled = false;
+                        btn.textContent = '✓ Aprovar';
+                    }
+
+                } else if (btn.classList.contains('btn-negar-sol')) {
+                    const ok = await confirm('Negar esta solicitação? A ação será cancelada permanentemente.');
+                    if (!ok) return;
+                    btn.disabled = true;
+                    btn.textContent = '...';
+                    try {
+                        await apiRequest(`solicitacoes/${id}/negar`, 'POST');
+                        showMessage('Aviso', '❌ Solicitação negada. A ação foi cancelada.');
+                        loadSolicitacoes();
+                    } catch (err) {
+                        showMessage('Erro', 'Erro ao negar a solicitação.');
+                        btn.disabled = false;
+                        btn.textContent = '✗ Negar';
                     }
                 }
             });
@@ -1287,7 +1460,7 @@
                     document.getElementById('edit-level-modal')?.classList.add('active');
                 } else if (e.target.classList.contains('btn-delete-admin')) {
                     const email = e.target.dataset.email;
-                    showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`, 
+                    showConfirm('Excluir Administrador', `Tem certeza que deseja solicitar a exclusão de ${email}? Esta ação precisará de 2 aprovações.`,
                         async () => {
                             try {
                                 await apiRequest('admin-solicitations', 'POST', {
@@ -1699,6 +1872,10 @@
                     if (document.getElementById('admins')?.classList.contains('active')) {
                         loadAdmins();
                         loadAdminSolicitations();
+                    }
+                    // Atualiza solicitações automaticamente se a aba estiver aberta
+                    if (document.getElementById('solicitacoes')?.classList.contains('active')) {
+                        loadSolicitacoes();
                     }
                 }, 10000);
             }
