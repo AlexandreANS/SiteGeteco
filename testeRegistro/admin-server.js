@@ -857,23 +857,31 @@ app.delete('/api/logs/clear', requireAdmin, async (req, res) => {
     }
 });
 
+// ══════════════════════════════════════════════════════════════════
+// SOLICITAÇÕES (CONTEÚDO) — CORRIGIDO (sem orderBy para evitar índice)
+// ══════════════════════════════════════════════════════════════════
 app.get('/api/solicitacoes', requireAdmin, async (req, res) => {
     try {
         let snap;
         if (isSuperAdmin(req.user)) {
             snap = await db.collection('solicitacoes')
                 .where('status', '==', 'pending')
-                .orderBy('requestedAt', 'desc')
                 .get();
         } else {
             snap = await db.collection('solicitacoes')
                 .where('requestedBy', '==', req.user.email)
                 .where('status', '==', 'pending')
-                .orderBy('requestedAt', 'desc')
                 .get();
         }
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        docs.sort((a, b) => {
+            const ta = a.requestedAt?.toMillis ? a.requestedAt.toMillis() : 0;
+            const tb = b.requestedAt?.toMillis ? b.requestedAt.toMillis() : 0;
+            return tb - ta;
+        });
+        res.json(docs);
     } catch (e) {
+        console.error('Erro ao listar solicitações:', e);
         res.status(500).json({ error: 'Erro ao listar solicitações.' });
     }
 });
